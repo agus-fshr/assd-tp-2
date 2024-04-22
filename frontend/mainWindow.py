@@ -1,6 +1,5 @@
 # mainWindow.py
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtWidgets import QTabWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 
 class MainWindow(QMainWindow):
     """ 

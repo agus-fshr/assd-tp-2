@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScro
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
 
-from frontend.pages.PageBaseClass import PageBaseClass
+from frontend.pages.PageBaseClass import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider
 
 class ExamplePage(PageBaseClass):

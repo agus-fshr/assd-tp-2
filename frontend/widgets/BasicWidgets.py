@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy
-from PyQt5.QtWidgets import QLabel, QLineEdit, QWidget, QSlider, QPushButton
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy, QLabel, QLineEdit, QWidget, QSlider, QPushButton
 from PyQt5.QtGui import QColor, QRegExpValidator
 from PyQt5.QtCore import Qt, QRegExp
 

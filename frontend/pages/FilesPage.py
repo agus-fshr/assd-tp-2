@@ -1,8 +1,9 @@
-from frontend.pages.PageBaseClass import PageBaseClass
-from frontend.widgets.BasicWidgets import Button
 from PyQt5.QtWidgets import QLabel, QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout, QMessageBox
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
+
+from frontend.pages.PageBaseClass import *
+from frontend.widgets.BasicWidgets import Button
 
 class FilesPage(PageBaseClass):
     def __init__(self):
