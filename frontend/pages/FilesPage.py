@@ -8,7 +8,7 @@ from frontend.widgets.BasicWidgets import Button
 class FilesPage(PageBaseClass):
     def __init__(self):
         super().__init__()  # Init base class
-        self.title = "File Explorer"
+        self.title = "Files"
 
     def initUI(self, layout):
         # Local widgets
