@@ -2,8 +2,8 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 
-from frontend.MainWindow import *
 from backend.MainModel import *
+from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
 from frontend.pages.ExamplePage import *
 
