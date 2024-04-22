@@ -1,4 +1,5 @@
 import mido
+import json
 
 class MainModel:
     def __init__(self):
@@ -33,3 +34,25 @@ class MainModel:
                 print(f"Error importing {file_metadata['name']}: {e}")
                 continue
             file_metadata["status"] = "OK"
+
+    def get_midi_metadata(self, name=""):
+        if name in self.midi_objects:
+            midi_obj = self.midi_objects[name]
+            track_meta = {}
+            
+            for i, track in enumerate(midi_obj.tracks):
+                # get MetaMessages from the track
+                meta_msgs = [msg.dict() for msg in track if isinstance(msg, mido.MetaMessage)]
+                track_meta[f"track_{i}"] = meta_msgs
+
+            midi_meta = {
+                "name": name,
+                "type": midi_obj.type,
+                "ticks_per_beat": midi_obj.ticks_per_beat,
+                "length": midi_obj.length,
+                "trackCount": len(midi_obj.tracks),
+                "trackMeta": track_meta
+            }
+            return json.dumps(midi_meta, indent=4)
+        else:
+            raise ValueError(f"MIDI Object '{name}' not found in the list")

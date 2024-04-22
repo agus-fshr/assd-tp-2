@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy, QLabel, QLineEdit, QWidget, QSlider, QPushButton
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy, QLabel, QLineEdit, QWidget, QSlider, QPushButton, QMenu, QAction
 from PyQt5.QtGui import QColor, QRegExpValidator
 from PyQt5.QtCore import Qt, QRegExp
 
@@ -78,8 +78,9 @@ class TextInput(QWidget):
         self.on_change(text)
 
 
+# Horizontal Slider Class
 class Slider(QWidget):
-    def __init__(self, label="Slider", range=(0, 100), step=1, on_change=lambda value: (), minWidth=200):
+    def __init__(self, label="Slider", range=(0, 100), step=1, on_change=lambda value: None, minWidth=200):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -114,3 +115,42 @@ class Slider(QWidget):
     def on_change_callback(self, value):
         self.displayValue.setText(" = " + str(value))
         self.on_change(value)
+
+
+class DropDownMenu(Button):
+    def __init__(self, title = "Select", showSelected = True, onChoose = lambda: None, options=[]):
+        super(DropDownMenu, self).__init__(title)
+        self.options = options
+        self.onChoose = onChoose
+        self.showSelected = showSelected
+        self.menu = QMenu(self)
+        self.setMenu(self.menu)
+        self.set_options(options)
+        self.selected_option = (title, lambda: None)    # default option (label, callback)
+        self.menu.setStyleSheet("""
+            QMenu::item:selected {
+                background-color: lightblue;
+                color: black;
+            }
+        """)
+
+    def set_options(self, options=[('Select', lambda: None)]):
+        # release previous connected actions
+        for action in self.menu.actions():
+            action.triggered.disconnect()
+        self.menu.clear()
+
+        # create new actions
+        for opt in options:
+            name, callback = opt
+            action = QAction(name, self)
+            action.triggered.connect(lambda _, option=opt: self.update_selected_option(opt))
+            self.menu.addAction(action)
+
+    def update_selected_option(self, option):
+        self.selected_option = option
+        name, callback = option
+        callback()  # call the option's callback function
+        if self.showSelected:
+            self.setText(name)
+        self.onChoose()

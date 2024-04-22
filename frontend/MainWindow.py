@@ -1,5 +1,6 @@
 # mainWindow.py
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PyQt5.QtGui import QIcon
 
 class MainWindow(QMainWindow):
     """ 
@@ -21,6 +22,7 @@ class MainWindow(QMainWindow):
 
     def initUI(self, pages):
         self.setWindowTitle('Sintetizador MIDI')
+        self.setWindowIcon(QIcon('frontend/assets/con.png'))
         
         # center window on screen
         screen = QApplication.primaryScreen()

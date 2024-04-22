@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 
 from frontend.pages.PageBaseClass import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider
+from frontend.widgets.ConsoleWidget import ConsoleWidget
 
 class ExamplePage(PageBaseClass):
     def __init__(self):
@@ -13,19 +14,13 @@ class ExamplePage(PageBaseClass):
     def initUI(self, layout):
         # Class widgets (used externally with self.)
         self.statusLabel = QLabel("Nothing to report")
-        self.consoleOutput = QLabel("Console output will appear here")
+        self.consoleOutput = ConsoleWidget()
         self.textA = TextInput(label="Input A", regex="[0-9\-\.]*", on_change=self.on_input)
         self.sliderB = Slider(label="Input B", range=(0, 100), step=1, on_change=self.on_input)
 
         # Local widgets (used only in the initUI method)
-        scrollArea = QScrollArea()
         topHLayout = QHBoxLayout()
         botHLayout = QHBoxLayout()
-
-        # Set scroll area properties
-        scrollArea.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        scrollArea.setWidget(self.consoleOutput)
-        scrollArea.setWidgetResizable(True)
 
         # Setup top layout
         topHLayout.addWidget(self.textA)
@@ -44,7 +39,7 @@ class ExamplePage(PageBaseClass):
         layout.addLayout(topHLayout)
         layout.addWidget(Button("Click Me", on_click=self.on_click))
         layout.addLayout(botHLayout)
-        layout.addWidget(scrollArea)
+        layout.addWidget(self.consoleOutput)
 
     # input callback
     def on_input(self, dataInput):
