@@ -37,6 +37,7 @@ class TracksPage(PageBaseClass):
         for name in self.model.midi_objects.keys():
             opt = (name, lambda: self.on_midi_selected(name))
             options.append(opt)
+            raise Exception("Error: siempre esta llamando la ultima opcion de la lista de opciones")
         self.dropDown.set_options(options)
         self.availableMIDIs.setText(f"Available MIDI files: {len(options)}")
 
