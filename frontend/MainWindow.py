@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
 
     def initUI(self, pages):
         self.setWindowTitle('Sintetizador MIDI')
-        self.setWindowIcon(QIcon('frontend/assets/con.png'))
+        self.setWindowIcon(QIcon('frontend/assets/icon.png'))
         
         # center window on screen
         screen = QApplication.primaryScreen()

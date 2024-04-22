@@ -1,10 +1,12 @@
 import mido
 import json
+from backend.MIDI_utils import MetaMessageParser
 
 class MainModel:
     def __init__(self):
         self.file_metadata = [] # list of dict(name, path, status)
         self.midi_objects = {}  # dict of mido.MidiFile objects indexed by <name>
+
 
     # Add files to the list of files to import
     def add_files(self, filepaths=[]):
@@ -21,6 +23,7 @@ class MainModel:
             else:
                 self.file_metadata.append(dict(name=filename, path=path, status="Pending"))
 
+
     # Import the MIDI files and store them in midi_objects
     def import_files(self):
         self.midi_objects = {}
@@ -35,15 +38,15 @@ class MainModel:
                 continue
             file_metadata["status"] = "OK"
 
+
     def get_midi_metadata(self, name=""):
         if name in self.midi_objects:
             midi_obj = self.midi_objects[name]
-            track_meta = {}
             
+            track_meta = []
             for i, track in enumerate(midi_obj.tracks):
                 # get MetaMessages from the track
-                meta_msgs = [msg.dict() for msg in track if isinstance(msg, mido.MetaMessage)]
-                track_meta[f"track_{i}"] = meta_msgs
+                track_meta.append(MetaMessageParser(track))
 
             midi_meta = {
                 "name": name,
@@ -53,6 +56,11 @@ class MainModel:
                 "trackCount": len(midi_obj.tracks),
                 "trackMeta": track_meta
             }
-            return json.dumps(midi_meta, indent=4)
+            return midi_meta
         else:
             raise ValueError(f"MIDI Object '{name}' not found in the list")
+        
+    def get_pretty_midi_metadata_str(self, name=""):
+        midi_meta = self.get_midi_metadata(name)
+        if isinstance(midi_meta, dict):
+            return json.dumps(midi_meta, indent=4)

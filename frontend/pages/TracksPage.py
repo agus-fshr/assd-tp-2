@@ -5,6 +5,7 @@ from PyQt5.QtCore import Qt
 from frontend.pages.PageBaseClass import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
+from frontend.views.CardViews import CardViewWidget, CardListWidget
 
 class TracksPage(PageBaseClass):
     def __init__(self):
@@ -13,9 +14,9 @@ class TracksPage(PageBaseClass):
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
-        self.consoleOutput = ConsoleWidget()
         self.availableMIDIs = QLabel("Available MIDI files: 0")
         self.dropDown = DropDownMenu("Select MIDI File", showSelected=False)
+        self.trackList = CardListWidget()
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
@@ -28,7 +29,8 @@ class TracksPage(PageBaseClass):
 
         # Add widgets to page layout
         layout.addLayout(topHLayout)
-        layout.addWidget(self.consoleOutput)
+        layout.addWidget(self.trackList)
+
 
     def refresh_midi_options(self):
         options = []
@@ -40,13 +42,13 @@ class TracksPage(PageBaseClass):
 
     def on_midi_selected(self, name):
         midi_meta = self.model.get_midi_metadata(name)
-        self.consoleOutput.setText(midi_meta)
-
-    # Printear el data model
-    def print_to_console(self):
-        midi_meta = self.model.get_midi_metadata("test.mid")
-        
-        self.consoleOutput.setText(midi_meta)
+        self.trackList.clear()
+        for trackMeta in midi_meta["trackMeta"]:
+            childTextData = f"Port: {trackMeta['port']}     " if "port" in trackMeta else ""
+            childTextData += f"Channel: {trackMeta['channel_prefix']}\n" if 'channel_prefix' in trackMeta else ""
+            childTextData += f"Ref. Channels: {trackMeta['refChannels']}        {trackMeta['ticks']}" if 'refChannels' in trackMeta else ""
+            card = CardViewWidget(child=QLabel(childTextData), mainTitle=trackMeta["name"])     # Esta medio confuso el uso de "name"
+            self.trackList.addCard(card)
 
 
     def on_tab_focus(self):

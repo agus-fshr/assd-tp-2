@@ -132,6 +132,10 @@ class DropDownMenu(Button):
                 background-color: lightblue;
                 color: black;
             }
+            QMenu::item {
+                background-color: white;
+                color: black;
+            }
         """)
 
     def set_options(self, options=[('Select', lambda: None)]):

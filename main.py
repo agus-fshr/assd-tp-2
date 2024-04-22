@@ -5,8 +5,10 @@ from PyQt5.QtWidgets import QApplication
 from backend.MainModel import *
 from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
-from frontend.pages.ExamplePage import *
 from frontend.pages.TracksPage import *
+from frontend.pages.ExamplePage import *
+from frontend.pages.TracksMetadataPage import *
+
 
     
 if __name__ == '__main__':
@@ -20,6 +22,7 @@ if __name__ == '__main__':
     pages = [
         FilesPage(),
         TracksPage(),
+        TracksMetadataPage(),
         ExamplePage(),
     ]
     ex = MainWindow(pages=pages, model=mainModel)

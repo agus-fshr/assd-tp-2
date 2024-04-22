@@ -6,56 +6,29 @@ from frontend.pages.PageBaseClass import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
 
-class ExamplePage(PageBaseClass):
+class TracksMetadataPage(PageBaseClass):
     def __init__(self):
         super().__init__()
-        self.title = "Example Page"
+        self.title = "Tracks Metadata"
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
-        self.statusLabel = QLabel("Nothing to report")
         self.consoleOutput = ConsoleWidget()
+        self.availableMIDIs = QLabel("Available MIDI files: 0")
         self.dropDown = DropDownMenu("Select MIDI File", showSelected=False)
-        self.textA = TextInput(label="Input A", regex="[0-9\-\.]*", on_change=self.on_input)
-        self.sliderB = Slider(label="Input B", range=(0, 100), step=1, on_change=self.on_input)
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
-        botHLayout = QHBoxLayout()
 
         # Setup top layout
-        topHLayout.addWidget(self.textA)
-        topHLayout.addWidget(self.sliderB)
+        topHLayout.addWidget(self.dropDown)
         topHLayout.addSpacing(20)
-        topHLayout.addWidget(self.statusLabel)
-        topHLayout.addStretch(1) # Add a stretch object
-
-        # Setup bottom layout
-        botHLayout.addWidget(self.dropDown)
-        botHLayout.addStretch(1)
+        topHLayout.addWidget(self.availableMIDIs)
+        topHLayout.addStretch(1)
 
         # Add widgets to page layout
-        layout.addWidget(QLabel("This is an example page."))
         layout.addLayout(topHLayout)
-        layout.addWidget(Button("Click Me", on_click=self.on_click))
-        layout.addSpacing(20)
-        layout.addLayout(botHLayout)
         layout.addWidget(self.consoleOutput)
-
-    # input callback
-    def on_input(self, dataInput):
-        self.statusLabel.setText(f"Some input changed to '{dataInput}'")
-
-    # Sumar A+B
-    def on_click(self):
-        try:
-            a = float(self.textA.text())
-            b = self.sliderB.value()
-            self.statusLabel.setText(f"Button clicked, A+B={a+b:.2f}")
-        except ValueError as e:
-            self.statusLabel.setText(f"Error: {e}")
-            QMessageBox.critical(self, 'Error', str(e)) # Show a dialog with the error
-
 
     def refresh_midi_options(self):
         options = []
@@ -63,9 +36,10 @@ class ExamplePage(PageBaseClass):
             opt = (name, lambda: self.on_midi_selected(name))
             options.append(opt)
         self.dropDown.set_options(options)
+        self.availableMIDIs.setText(f"Available MIDI files: {len(options)}")
 
     def on_midi_selected(self, name):
-        midi_meta = str(self.model.midi_objects[name].__dict__)
+        midi_meta = self.model.get_pretty_midi_metadata_str(name)
         self.consoleOutput.setText(midi_meta)
 
 
