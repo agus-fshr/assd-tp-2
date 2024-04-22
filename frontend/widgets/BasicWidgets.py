@@ -146,9 +146,9 @@ class DropDownMenu(Button):
 
         # create new actions
         for opt in options:
-            name, callback = opt
+            name, _ = opt
             action = QAction(name, self)
-            action.triggered.connect(lambda _, option=opt: self.update_selected_option(opt))
+            action.triggered.connect(lambda _, option=opt: self.update_selected_option(option))
             self.menu.addAction(action)
 
     def update_selected_option(self, option):

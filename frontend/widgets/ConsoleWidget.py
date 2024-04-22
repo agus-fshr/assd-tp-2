@@ -27,7 +27,7 @@ class ConsoleWidget(QWidget):
         topHLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         topHLayout.addWidget(self.lineCount)
         topHLayout.addStretch(1)
-        topHLayout.addWidget(Button("Clear Console", on_click=lambda: self.setText(self.defaultText)))
+        topHLayout.addWidget(Button("Clear Console", on_click=lambda: self.clearConsole()))
         vlayout.addLayout(topHLayout)
         vlayout.addWidget(self.consoleOutput)
         
@@ -35,6 +35,10 @@ class ConsoleWidget(QWidget):
         self.setLayout(vlayout)
         
         # Additional styling or functionality can be added here as needed
+
+    def clearConsole(self):
+        self.consoleOutput.clear()
+        self.setText(self.defaultText)
 
     def setText(self, text):
         self.consoleOutput.setText(text)
