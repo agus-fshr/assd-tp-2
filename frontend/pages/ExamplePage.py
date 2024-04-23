@@ -58,12 +58,14 @@ class ExamplePage(PageBaseClass):
 
 
     def refresh_midi_options(self):
-        options = []
+        options = {}
+        
         for name in self.model.midi_objects.keys():
-            opt = (name, lambda: self.on_midi_selected(name))
-            options.append(opt)
-            raise Exception("Error: siempre esta llamando la ultima opcion de la lista de opciones")
+            options[name] = lambda k: self.on_midi_selected(k)
+            # raise Exception("Error: siempre esta llamando la ultima opcion de la lista de opciones")
+        
         self.dropDown.set_options(options)
+        self.availableMIDIs.setText(f"Available MIDI files: {len(options)}")
 
     def on_midi_selected(self, name):
         midi_meta = str(self.model.midi_objects[name].__dict__)

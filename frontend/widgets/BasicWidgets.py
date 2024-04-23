@@ -118,11 +118,11 @@ class Slider(QWidget):
 
 
 class DropDownMenu(Button):
-    def __init__(self, title = "Select", showSelected = True, onChoose = lambda: None, options=[]):
+    def __init__(self, title = "Select", showSelected = True, onChoose = lambda: None, options={}):
         super(DropDownMenu, self).__init__(title)
-        self.options = options
         self.onChoose = onChoose
         self.showSelected = showSelected
+        self.options = options
         self.menu = QMenu(self)
         self.setMenu(self.menu)
         self.set_options(options)
@@ -138,23 +138,24 @@ class DropDownMenu(Button):
             }
         """)
 
-    def set_options(self, options=[('Select', lambda: None)]):
+    def set_options(self, options={}):
         # release previous connected actions
         for action in self.menu.actions():
             action.triggered.disconnect()
         self.menu.clear()
 
+        self.options = options
+
         # create new actions
-        for opt in options:
-            name, _ = opt
-            action = QAction(name, self)
-            action.triggered.connect(lambda _, option=opt: self.update_selected_option(option))
+        for key in options.keys():
+            action = QAction(key, self)
+            action.triggered.connect(lambda _, k=key: self.update_selected_option(k))
             self.menu.addAction(action)
 
-    def update_selected_option(self, option):
-        self.selected_option = option
-        name, callback = option
-        callback()  # call the option's callback function
+    def update_selected_option(self, key):
+        self.selected_option = self.options[key]
+        print(f"Selected option: {key}")
+        self.options[key](key)
         if self.showSelected:
-            self.setText(name)
+            self.setText(key)
         self.onChoose()
