@@ -74,7 +74,7 @@ class ExamplePage(BaseClassPage):
         for msg in midi:
             if hasattr(msg, 'time'):
                 cumTime += msg.time
-            internal += f"{cumTime:03.02f} {msg}\n"
+            internal += f"{cumTime:.02f}".ljust(8) + f" {msg}\n"
         self.consoleOutput.setText(internal)
 
 

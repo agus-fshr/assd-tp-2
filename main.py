@@ -7,8 +7,8 @@ from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
 from frontend.pages.TracksPage import *
 from frontend.pages.ExamplePage import *
+from frontend.pages.InstrumentPage import *
 from frontend.pages.TracksMetadataPage import *
-
 
     
 if __name__ == '__main__':
@@ -22,6 +22,7 @@ if __name__ == '__main__':
     pages = [
         FilesPage(),
         TracksPage(),
+        InstrumentPage(),
         TracksMetadataPage(),
         ExamplePage(),
     ]

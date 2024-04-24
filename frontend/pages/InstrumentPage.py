@@ -15,23 +15,39 @@ class InstrumentPage(BaseClassPage):
         # Class widgets (used externally with self.)
         self.dropDown = DropDownMenu("Select Instrument", onChoose=self.on_instrument_selected)
 
-        self.noteSlider = Slider(label="Note", range=(0, 127), step=1, minWidth=200)
-        self.velocitySlider = Slider(label="Velocity", range=(0, 127), step=1, minWidth=200)
+        self.noteSlider = Slider(label="Note", range=(0, 127), step=1, minWidth=250)
+        self.velocitySlider = Slider(label="Velocity", range=(0, 127), step=1, minWidth=250)
+
+        self.durationSlider = Slider(label="Duration (ms)", range=(10, 2000), step=10, minWidth=250)
+        self.velocityOffSlider = Slider(label="Off Velocity", range=(0, 127), step=1, minWidth=250)
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
+        onLayout = QHBoxLayout()
+        offLayout = QHBoxLayout()
 
         # Setup top layout
-        topHLayout.addWidget(self.noteSlider)
-        topHLayout.addSpacing(20)
-        topHLayout.addWidget(self.velocitySlider)
+        topHLayout.addWidget(self.dropDown)
         topHLayout.addStretch(1)
 
+        # Setup controls layout
+        onLayout.addWidget(self.noteSlider)
+        onLayout.addSpacing(20)
+        onLayout.addWidget(self.velocitySlider)
+        onLayout.addSpacing(20)
+        onLayout.addWidget(Button("Play Note", on_click=self.play_note))
+        onLayout.addStretch(1)
+        
+        offLayout.addWidget(self.durationSlider)
+        offLayout.addSpacing(20)
+        offLayout.addWidget(self.velocityOffSlider)
+        offLayout.addStretch(1)
+
         # Add widgets to page layout
-        layout.addLayout(self.dropDown)
-        layout.addSpacing(20)
         layout.addLayout(topHLayout)
-        layout.addWidget(Button("Play Note", on_click=self.play_note))
+        layout.addSpacing(20)
+        layout.addLayout(onLayout)
+        layout.addLayout(offLayout)
 
     # Play the selected note
     def play_note(self):
