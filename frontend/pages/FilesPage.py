@@ -32,7 +32,7 @@ class FilesPage(BaseClassPage):
         topHLayout.addWidget( Button("Add Files", on_click=self.popup_file_explorer_dialog) )
         topHLayout.addWidget( Button("Clear Files", on_click=self.clear_files_from_table) )
         topHLayout.addSpacing(20)
-        topHLayout.addWidget( Button("Import Files", on_click=self.import_midi_files) )
+        topHLayout.addWidget( Button("Import Files", on_click=self.import_files) )
         topHLayout.addStretch(1)
 
         # Add widgets to the page layout
@@ -46,9 +46,9 @@ class FilesPage(BaseClassPage):
         self.update_table()
 
 
-    # Import the MIDI files listed in the table
-    def import_midi_files(self):
-        self.model.import_midi_files()
+    # Import the files listed in the table
+    def import_files(self):
+        self.model.import_files()
         self.update_table()
 
 
@@ -56,7 +56,7 @@ class FilesPage(BaseClassPage):
     def popup_file_explorer_dialog(self):
         file_dialog = QFileDialog()                         # Search for files
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        file_dialog.setNameFilter(self.model.file_handler.fileTypes) 
+        file_dialog.setNameFilter(self.model.file_handler.types) 
         try:
             if file_dialog.exec_():
                 list_of_filepaths = file_dialog.selectedFiles()
@@ -72,39 +72,35 @@ class FilesPage(BaseClassPage):
             return
         
         # check if the proposed name already exists, if so, don't allow the change
-        for i, name in enumerate(self.model.file_handler.all_names):
-            if i == item.row():
-                continue
-            if name == item.text():
-                QMessageBox.critical(self, 'Error', f"File named '{name}' already exists in the list")
-                item.setText(name) # revert the change
-                self.update_table()
-                return
+        try:
+            newname = item.text()
+            index = item.row()
+            fmeta = self.model.file_handler.all_files()[index]
+            self.model.file_handler.rename(fmeta, newname)
+        except ValueError as e:
+            QMessageBox.critical(self, 'Error', str(e))
             
-        # also change the name in the model
-        self.model.file_handler.rename(item.row(), item.text())
+        self.update_table()
 
 
     # Update the table with the current file metadata
     def update_table(self):
         self.table.blockSignals(True)  # block signals to avoid triggering on_table_edit
-        key_names = self.model.file_handler.all_names
-        self.table.setRowCount(len(key_names))
+        
+        all_files = self.model.file_handler.all_files()
+        self.table.setRowCount(len(all_files))
     
-        for i, key in enumerate(key_names):
-            path = self.model.file_handler.path(key)
-            status = self.model.file_handler.status(key)
-
-            item0 = QTableWidgetItem(key)
+        for i, fmeta in enumerate(all_files):
+            item0 = QTableWidgetItem(fmeta.name)
             item0.setFlags(item0.flags() | Qt.ItemIsEditable)  # make item editable
             self.table.setItem(i, 0, item0)
     
-            item1 = QTableWidgetItem(status)
+            item1 = QTableWidgetItem(fmeta.status)
             item1.setFlags(item1.flags() & ~Qt.ItemIsEditable) # make item read-only
             item1.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(i, 1, item1)
     
-            item2 = QTableWidgetItem(path)
+            item2 = QTableWidgetItem(fmeta.path)
             item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)  # make item read-only
             self.table.setItem(i, 2, item2)
         self.table.blockSignals(False)
