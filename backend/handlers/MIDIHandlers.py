@@ -1,5 +1,3 @@
-
-# Y que estoy usando una lista en vez de un dict
 import mido
 import json
 

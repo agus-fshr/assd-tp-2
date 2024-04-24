@@ -57,6 +57,7 @@ class ExamplePage(BaseClassPage):
             QMessageBox.critical(self, 'Error', str(e)) # Show a dialog with the error
 
 
+    # Refresh dropdown options looking for newly imported MIDI files
     def refresh_midi_options(self):
         options = {}
         for name in self.model.file_handler.available_files():
@@ -65,6 +66,7 @@ class ExamplePage(BaseClassPage):
         self.dropDown.set_options(options)
 
 
+    # Callback for when a MIDI file is selected from the dropdown
     def on_midi_selected(self, name, path):
         midi = self.model.midi_handler.get(path)
         internal = "Internal MIDI data:\n"

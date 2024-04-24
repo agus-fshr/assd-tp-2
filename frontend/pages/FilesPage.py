@@ -46,11 +46,13 @@ class FilesPage(BaseClassPage):
         self.update_table()
 
 
+    # Import the MIDI files listed in the table
     def import_midi_files(self):
         self.model.import_midi_files()
         self.update_table()
 
 
+    # Open a file explorer dialog to select files
     def popup_file_explorer_dialog(self):
         file_dialog = QFileDialog()                         # Search for files
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
@@ -64,6 +66,7 @@ class FilesPage(BaseClassPage):
         self.update_table()                                 # Show them
 
 
+    # Callback for when a table item is edited
     def on_table_edit(self, item):
         if item.column() != 0:  # only allow editing the 'name' column
             return

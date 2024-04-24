@@ -31,6 +31,7 @@ class TracksMetadataPage(BaseClassPage):
         layout.addWidget(self.consoleOutput)
 
 
+    # Refresh dropdown options looking for newly imported MIDI files
     def refresh_midi_options(self):
         options = {}
         for name in self.model.file_handler.available_files():
@@ -40,6 +41,7 @@ class TracksMetadataPage(BaseClassPage):
         self.availableMIDIs.setText(f"Available MIDI files: {len(options)}")
 
 
+    # Callback for when a MIDI file is selected from the dropdown
     def on_midi_selected(self, name, path):
         midi_meta = self.model.midi_handler.get_pretty_midi_metadata_str(path)
         self.consoleOutput.setText(midi_meta)
