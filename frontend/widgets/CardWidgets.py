@@ -1,11 +1,13 @@
+# CardWidget, CardListWidget
+
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QGraphicsDropShadowEffect, QStyle, QHBoxLayout, QToolButton, QScrollArea, QFrame
 from PyQt5.QtGui import QPixmap, QFont, QColor
 from PyQt5.QtCore import Qt
 
 
-class CardViewWidget(QWidget):
-    def __init__(self, child, mainTitle="Card", width=None, height=None):
-        super(CardViewWidget, self).__init__()
+class CardWidget(QWidget):
+    def __init__(self, child, icon=QStyle.SP_DriveCDIcon, mainTitle="Card", width=None, height=None, iconSize=64):
+        super(CardWidget, self).__init__()
         
         # Container widget
         self.container = QWidget()
@@ -28,8 +30,8 @@ class CardViewWidget(QWidget):
         
         # Use a standard icon
         self.iconLabel = QLabel()
-        icon = self.style().standardIcon(QStyle.SP_DriveCDIcon)
-        pixmap = icon.pixmap(64, 64)
+        icon = self.style().standardIcon(icon)
+        pixmap = icon.pixmap(iconSize, iconSize)
         self.iconLabel.setPixmap(pixmap)
         self.iconLabel.setAlignment(Qt.AlignCenter)
         
@@ -122,7 +124,7 @@ class CardListWidget(QWidget):
             self.addCard(card)
 
     def addCard(self, cardWidget):
-        """Add a CardViewWidget to the list."""
+        """Add a CardWidget to the list."""
         self.containerLayout.addWidget(cardWidget)
         self.children.append(cardWidget)  # Keep track of the card
     

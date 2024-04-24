@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
-from frontend.views.CardViews import CardViewWidget, CardListWidget
+from frontend.widgets.CardWidgets import CardWidget, CardListWidget
 
 class TracksPage(BaseClassPage):
     def __init__(self):
@@ -49,7 +49,7 @@ class TracksPage(BaseClassPage):
             childTextData = f"Port: {trackMeta['port']}     " if "port" in trackMeta else ""
             childTextData += f"Channel: {trackMeta['channel_prefix']}\n" if 'channel_prefix' in trackMeta else ""
             childTextData += f"Ref. Channels: {trackMeta['refChannels']}        {trackMeta['ticks']}" if 'refChannels' in trackMeta else ""
-            card = CardViewWidget(child=QLabel(childTextData), mainTitle=trackMeta["name"])
+            card = CardWidget(child=QLabel(childTextData), mainTitle=trackMeta["name"])
             self.trackList.addCard(card)
 
 
