@@ -118,7 +118,19 @@ class Slider(QWidget):
 
 
 class DropDownMenu(Button):
-    def __init__(self, title = "Select", showSelected = True, onChoose = lambda: None, options={}):
+    """
+    A custom DropDown Menu class
+
+    Attributes:
+        - title (str): The default title of the dropdown menu.
+        - showSelected (bool): Flag to show the selected option as the button text.
+        - onChoose (function): Callback function to execute when an option is chosen, it receives the key of the chosen option.
+        - options (dict): A dictionary of options where keys are option labels and values are whatever you want.
+    
+    Structure of the options dictionary:
+    
+    """
+    def __init__(self, title = "Select", showSelected = True, onChoose = lambda k: None, options={}):
         super(DropDownMenu, self).__init__(title)
         self.onChoose = onChoose
         self.showSelected = showSelected
@@ -149,13 +161,13 @@ class DropDownMenu(Button):
         # create new actions
         for key in options.keys():
             action = QAction(key, self)
-            action.triggered.connect(lambda _, k=key: self.update_selected_option(k))
+            action.triggered.connect(lambda _, k=key: self.call_selected_option(k))
             self.menu.addAction(action)
 
-    def update_selected_option(self, key):
-        self.selected_option = self.options[key]
+    def call_selected_option(self, key):
+        self.selected_option = (key, self.options[key])
         print(f"Selected option: {key}")
-        self.options[key](key)
+
         if self.showSelected:
             self.setText(key)
-        self.onChoose()
+        self.onChoose(key, self.options[key])

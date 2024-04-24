@@ -2,10 +2,11 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout
 from PyQt5.QtCore import Qt
 
-class PageBaseClass(QWidget):
+# DO NOT MODIFY THIS CLASS
+class BaseClassPage(QWidget):
     def __init__(self):
         super().__init__()
-        self.title = "PageBaseClass"
+        self.title = "BaseClassPage"
         self.model = None
 
         # Create a QVBoxLayout to arrange the widgets vertically

@@ -2,11 +2,11 @@ from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScro
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
 
-from frontend.pages.PageBaseClass import *
+from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
 
-class TracksMetadataPage(PageBaseClass):
+class TracksMetadataPage(BaseClassPage):
     def __init__(self):
         super().__init__()
         self.title = "Tracks Metadata"
@@ -15,7 +15,7 @@ class TracksMetadataPage(PageBaseClass):
         # Class widgets (used externally with self.)
         self.consoleOutput = ConsoleWidget()
         self.availableMIDIs = QLabel("Available MIDI files: 0")
-        self.dropDown = DropDownMenu("Select MIDI File", showSelected=False)
+        self.dropDown = DropDownMenu("Select MIDI File", onChoose=self.on_midi_selected)
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
@@ -30,18 +30,18 @@ class TracksMetadataPage(PageBaseClass):
         layout.addLayout(topHLayout)
         layout.addWidget(self.consoleOutput)
 
+
     def refresh_midi_options(self):
         options = {}
-        
-        for name in self.model.midi_objects.keys():
-            options[name] = lambda k: self.on_midi_selected(k)
-            # raise Exception("Error: siempre esta llamando la ultima opcion de la lista de opciones")
+        for name in self.model.file_handler.available_files():
+            options[name] = self.model.file_handler.path(name)
         
         self.dropDown.set_options(options)
         self.availableMIDIs.setText(f"Available MIDI files: {len(options)}")
 
-    def on_midi_selected(self, name):
-        midi_meta = self.model.get_pretty_midi_metadata_str(name)
+
+    def on_midi_selected(self, name, path):
+        midi_meta = self.model.midi_handler.get_pretty_midi_metadata_str(path)
         self.consoleOutput.setText(midi_meta)
 
 

@@ -2,29 +2,21 @@ from PyQt5.QtWidgets import QLabel, QFileDialog, QTableWidget, QTableWidgetItem,
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
 
-from frontend.pages.PageBaseClass import *
+from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button
 
-class FilesPage(PageBaseClass):
+class FilesPage(BaseClassPage):
     def __init__(self):
         super().__init__()  # Init base class
         self.title = "Files"
 
     def initUI(self, layout):
         # Local widgets
-        self.table = QTableWidget(0, 3) # (rows, columns) table to display files
-        topHLayout = QHBoxLayout()      # Horizontal layout for top buttons
+        self.table = QTableWidget(0, 3)     # (rows, cols) table to display files
+        topHLayout = QHBoxLayout()          # Horizontal layout for top buttons
         
         # Connect signals
         self.table.itemChanged.connect(self.on_table_edit)
-
-        # Top layout
-        topHLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        topHLayout.addWidget(Button("Add Files", on_click=self.popup_file_dialog))
-        topHLayout.addWidget(Button("Clear Files", on_click=self.clear_files))
-        topHLayout.addSpacing(20)
-        topHLayout.addWidget(Button("Import Files", on_click=self.import_files))
-        topHLayout.addStretch(1)
 
         # Setup table widget
         self.table.setHorizontalHeaderLabels(["    Name    ", "    Status    ", "File Path"])
@@ -35,67 +27,84 @@ class FilesPage(PageBaseClass):
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # Column 1 will resize to its contents
         header.setSectionResizeMode(2, QHeaderView.Stretch)  # Column 2 will resize to its contents
 
-        # Add widgets to page layout
-        layout.addWidget(QLabel("Load MIDI Files"))
+        # Setup Top layout and add Buttons with their callbacks
+        topHLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        topHLayout.addWidget( Button("Add Files", on_click=self.popup_file_explorer_dialog) )
+        topHLayout.addWidget( Button("Clear Files", on_click=self.clear_files_from_table) )
+        topHLayout.addSpacing(20)
+        topHLayout.addWidget( Button("Import Files", on_click=self.import_midi_files) )
+        topHLayout.addStretch(1)
+
+        # Add widgets to the page layout
         layout.addLayout(topHLayout)
         layout.addWidget(self.table)
 
 
-    def clear_files(self):
-        self.model.file_metadata = []
+    def clear_files_from_table(self):
+        self.model.file_handler.clear()
+        self.model.midi_handler.clear()
         self.update_table()
 
 
-    def import_files(self):
-        self.model.import_files()
+    def import_midi_files(self):
+        self.model.import_midi_files()
         self.update_table()
 
 
-    def popup_file_dialog(self):
-        file_dialog = QFileDialog() # Search for files
+    def popup_file_explorer_dialog(self):
+        file_dialog = QFileDialog()                         # Search for files
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        file_dialog.setNameFilter("MIDI Files (*.mid);;All Files (*.*)")
+        file_dialog.setNameFilter(self.model.file_handler.fileTypes) 
         try:
             if file_dialog.exec_():
-                self.model.add_files(file_dialog.selectedFiles())
+                list_of_filepaths = file_dialog.selectedFiles()
+                self.model.file_handler.add(list_of_filepaths)
         except ValueError as e:
             QMessageBox.critical(self, 'Error', str(e))
+        self.update_table()                                 # Show them
 
-        self.update_table()
 
-
-    # Callback for when a cell in the table is edited
     def on_table_edit(self, item):
         if item.column() != 0:  # only allow editing the 'name' column
             return
-        # check if the proposed name already exists
-        for i, file_info in enumerate(self.model.file_metadata):
+        
+        # check if the proposed name already exists, if so, don't allow the change
+        for i, name in enumerate(self.model.file_handler.all_names):
             if i == item.row():
                 continue
-            if file_info["name"] == item.text():
-                QMessageBox.critical(self, 'Error', f"File named '{item.text()}' already exists in the list")
-                item.setText(self.model.file_metadata[i]["name"])
+            if name == item.text():
+                QMessageBox.critical(self, 'Error', f"File named '{name}' already exists in the list")
+                item.setText(name) # revert the change
                 self.update_table()
                 return
-        self.model.file_metadata[item.row()]["name"] = item.text()
+            
+        # also change the name in the model
+        self.model.file_handler.rename(item.row(), item.text())
+
 
     # Update the table with the current file metadata
     def update_table(self):
-        self.table.setRowCount(len(self.model.file_metadata))
+        self.table.blockSignals(True)  # block signals to avoid triggering on_table_edit
+        key_names = self.model.file_handler.all_names
+        self.table.setRowCount(len(key_names))
     
-        for i, file_info in enumerate(self.model.file_metadata):
-            item0 = QTableWidgetItem(file_info["name"])
+        for i, key in enumerate(key_names):
+            path = self.model.file_handler.path(key)
+            status = self.model.file_handler.status(key)
+
+            item0 = QTableWidgetItem(key)
             item0.setFlags(item0.flags() | Qt.ItemIsEditable)  # make item editable
             self.table.setItem(i, 0, item0)
     
-            item1 = QTableWidgetItem(file_info["status"])
+            item1 = QTableWidgetItem(status)
             item1.setFlags(item1.flags() & ~Qt.ItemIsEditable) # make item read-only
             item1.setTextAlignment(Qt.AlignCenter)
             self.table.setItem(i, 1, item1)
     
-            item2 = QTableWidgetItem(file_info["path"])
+            item2 = QTableWidgetItem(path)
             item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)  # make item read-only
             self.table.setItem(i, 2, item2)
+        self.table.blockSignals(False)
 
 
     def on_tab_focus(self):
