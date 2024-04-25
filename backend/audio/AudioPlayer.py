@@ -1,6 +1,8 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex, QMutexLocker, QWaitCondition
 import pyaudio
-
+import numpy as np
+import wave
+import io
 
 class AudioPlaybackThread(QThread):
     errorOccurred = pyqtSignal(str)
@@ -92,27 +94,52 @@ class AudioPlayer(QObject):
         super().__init__()
         self.playback_thread = None
 
+    def set_array(self, np_array, framerate=44100, channels=1):
+        # Scale the numpy array to the range of np.int16
+        np_array = np.clip(np_array, -1.0, 1.0)
+        np_array = np.int16(np_array * 32767)
+        
+        # Convert the numpy array to bytes
+        byte_data = np_array.tobytes()
+        
+        # Create a new wave file in memory
+        wave_obj = io.BytesIO()
+        with wave.open(wave_obj, 'wb') as wo:
+            wo.setnchannels(channels)
+            wo.setsampwidth(2)  # 2 bytes for np.int16
+            wo.setframerate(framerate)
+            wo.writeframes(byte_data)
+        
+        # Reset the buffer's file position to the beginning
+        wave_obj.seek(0)
+        
+        # Return the wave object
+        self.set_wave_obj( wave.open(wave_obj, 'rb') )
+
     def set_wave_obj(self, wave_obj):
         # Stop the current playback thread if it exists
         if self.playback_thread:
-            self.stop_audio()
+            self.stop()
         self.playback_thread = AudioPlaybackThread(wave_obj)
         self.playback_thread.errorOccurred.connect(self.handleError)
 
-    def play_audio(self):
-        if not self.playback_thread or not self.playback_thread.isRunning():
-            if self.playback_thread and not self.playback_thread.isRunning():
-                # If the thread has finished running, reinitialize it for replay
-                self.set_wave_obj(self.playback_thread.wo)
+    def play(self):
+        if self.playback_thread is None or not self.playback_thread.isRunning():
+            if self.playback_thread is None or not self.playback_thread.isRunning():
+                if self.playback_thread and self.playback_thread.wo:
+                    self.set_wave_obj(self.playback_thread.wo)
+                else:
+                    print("Wave object for playback thread is not set.")
+                    return
             self.playback_thread.start()
         elif self.playback_thread.isPaused():
             self.playback_thread.resume()
 
-    def pause_audio(self):
+    def pause(self):
         if self.playback_thread:
             self.playback_thread.pause()
 
-    def stop_audio(self):
+    def stop(self):
         if self.playback_thread:
             self.playback_thread.stop()
             self.playback_thread.wait()  # Wait for the thread to finish

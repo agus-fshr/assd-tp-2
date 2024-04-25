@@ -5,12 +5,12 @@ from PyQt5.QtCore import Qt
 from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
-from backend.audio.AudioPlayer import AudioPlayer
+
+from frontend.widgets.AudioPlayerWidget import AudioPlayerWidget
 
 class SoundPlayerPage(BaseClassPage):
     def __init__(self):
-        self.audioPlayer = AudioPlayer()
-        super().__init__()  # This initializes initUI, so it must be called after audioPlayer is created
+        super().__init__()
         self.title = "Sound Player"
 
     def initUI(self, layout):
@@ -19,22 +19,18 @@ class SoundPlayerPage(BaseClassPage):
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
-        controlsLayout = QHBoxLayout()
 
         # Setup top layout
         topHLayout.addWidget(self.dropDown)
         topHLayout.addStretch(1)
 
-        # Setup controls layout
-        controlsLayout.addWidget(Button("Play", on_click=self.audioPlayer.play_audio))
-        controlsLayout.addWidget(Button("Pause", on_click=self.audioPlayer.pause_audio))
-        controlsLayout.addWidget(Button("Stop", on_click=self.audioPlayer.stop_audio))
-        controlsLayout.addStretch(1)
+        # Setup audio player widget
+        self.player = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
         layout.addSpacing(20)
-        layout.addLayout(controlsLayout)
+        layout.addWidget(self.player)
 
 
     def refresh_sound_options(self):
@@ -44,11 +40,12 @@ class SoundPlayerPage(BaseClassPage):
         
         self.dropDown.set_options(options)
 
+    def on_error(self, error):
+        QMessageBox.critical(self, 'Error', str(error))
 
     def on_sound_selected(self, name, path):
         wave = self.model.wav_handler.get_wave(path)
-        
-        self.audioPlayer.set_wave_obj(wave)
+        self.model.audioPlayer.set_wave_obj(wave)
 
 
     def on_tab_focus(self):

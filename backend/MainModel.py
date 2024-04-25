@@ -1,13 +1,33 @@
 
-from backend.handlers.MIDIHandler import *
-from backend.handlers.FileHandler import *
-from backend.handlers.WavHandler import *
+from .handlers.MIDIHandler import *
+from .handlers.FileHandler import *
+from .handlers.WavHandler import *
+
+from .synths.Synthesizers import *
+from .effects.Effects import *
+
+from .audio.AudioPlayer import AudioPlayer
 
 class MainModel:
     def __init__(self):
         self.file_handler = FileImportHandler(fileTypes="All Files (*.*);;MIDI Files (*.mid);;WAV Files (*.wav)")
         self.midi_handler = MIDIFilesHandler()
         self.wav_handler = WavHandler()
+
+        self.audioPlayer = AudioPlayer()
+
+        # Add synthesizers here !
+        self.synthesizers = [
+            PureToneSynth(),
+        ]
+
+        # Add effects here !
+        self.effects = [
+            NoEffect(),
+            DelayEffect(),
+            # ReverbEffect(),
+        ]
+
 
     def import_files(self):
         self.import_wav_files()

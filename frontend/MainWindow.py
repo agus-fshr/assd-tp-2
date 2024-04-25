@@ -39,7 +39,11 @@ class MainWindow(QMainWindow):
             # Check if page is a BaseClassPage object
             if not isinstance(page, BaseClassPage):
                 raise Exception("All pages must be subclasses of BaseClassPage")
+            if not hasattr(page, 'title'):
+                raise Exception("All pages must have a title attribute")
             page.set_model(self.model)
+            page.initUI(page.layout)
+            page.setLayout(page.layout)
             tab_widget.addTab(page, page.title)
 
         # set tab change event

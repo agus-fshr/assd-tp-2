@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy, QLabel, QLineEdit, QWidget, QSlider, QPushButton, QMenu, QAction
 from PyQt5.QtGui import QColor, QRegExpValidator
 from PyQt5.QtCore import Qt, QRegExp
+import numpy as np
 
 # Button class
 class Button(QPushButton):
@@ -10,31 +11,12 @@ class Button(QPushButton):
                         shadow_color="grey", shadow_radius=9, hover_color="lightblue", 
                         click_color="grey", padding=6, on_click=lambda: print("Button Clicked")):
         super().__init__(text)
+        self.radius = radius
+        self.padding = padding
 
-        self.setStyleSheet(f"""
-            QPushButton {{ 
-                color: {color};
-                background-color: {background_color};
-                border-radius: {radius}px;                
-                padding: {padding}px;
-            }}""" +
-
-        f"""
-            QPushButton:hover {{
-                background-color: {hover_color};
-                border-radius: {radius}px;
-                padding: {padding}px;
-            }}
-
-            QPushButton:pressed {{
-                background-color: {click_color};
-                border-radius: {radius}px;
-                padding: {padding}px;
-            }}
-        """)
+        self.setColors(color, background_color, hover_color, click_color)
 
         self.clicked.connect(self.on_click_callback)
-
         self.on_click = on_click
 
         shadow = QGraphicsDropShadowEffect()
@@ -43,8 +25,63 @@ class Button(QPushButton):
         shadow.setBlurRadius(shadow_radius)
         self.setGraphicsEffect(shadow)
 
+    def setColors(self, color, background_color, hover_color, click_color):
+        self.setStyleSheet(f"""
+            QPushButton {{ 
+                color: {color};
+                background-color: {background_color};
+                border-radius: {self.radius}px;                
+                padding: {self.padding}px;
+            }}""" +
+
+        f"""
+            QPushButton:hover {{
+                background-color: {hover_color};
+                border-radius: {self.radius}px;
+                padding: {self.padding}px;
+            }}
+
+            QPushButton:pressed {{
+                background-color: {click_color};
+                border-radius: {self.radius}px;
+                padding: {self.padding}px;
+            }}
+        """)
+
     def on_click_callback(self):
         self.on_click()
+
+
+class SwitchButton(Button):
+    def __init__(self, text_on="On", text_off="Off", color_on="white", color_off="black",
+                 background_color_on="green", background_color_off="red",
+                 radius=10, shadow_color="grey", shadow_radius=9, hover_color="lightblue",
+                 click_color="grey", padding=6, on_click=lambda is_on: print("Button Toggled", is_on)):
+        # Initialize with the "off" state appearance
+        super().__init__(text=text_off, color=color_off, background_color=background_color_off,
+                         radius=radius, shadow_color=shadow_color, shadow_radius=shadow_radius,
+                         hover_color=hover_color, click_color=click_color, padding=padding, on_click=on_click)
+        self.text_on = text_on
+        self.text_off = text_off
+        self.color_on = color_on
+        self.color_off = color_off
+        self.hover_color = hover_color
+        self.click_color = click_color
+        self.background_color_on = background_color_on
+        self.background_color_off = background_color_off
+        self.value = False  # Start in the "off" state
+
+    def on_click_callback(self):
+        self.value = not self.value
+        # Update the button's appearance based on the new state
+        if self.value:
+            self.setText(self.text_on)
+            self.setColors(self.color_on, self.background_color_on, self.hover_color, self.click_color)
+        else:
+            self.setText(self.text_off)
+            self.setColors(self.color_off, self.background_color_off, self.hover_color, self.click_color)
+        # Call the on_click function with the new state
+        self.on_click(self.value)
 
 
 # Text Input class
@@ -67,20 +104,20 @@ class TextInput(QWidget):
 
         self.setLayout(layout)
 
-        self.textbox.textChanged.connect(self.on_change_callback)
+        self.textbox.returnPressed.connect(self.on_change_callback)
 
         self.on_change = on_change
 
     def text(self):
         return self.textbox.text()
 
-    def on_change_callback(self, text):
-        self.on_change(text)
+    def on_change_callback(self):
+        self.on_change(self.textbox.text())
 
 
 # Horizontal Slider Class
 class Slider(QWidget):
-    def __init__(self, label="Slider", range=(0, 100), step=1, on_change=lambda value: None, minWidth=200):
+    def __init__(self, label="Slider", interval=(0, 100), step=1, defaultVal=0, on_change=lambda value: None, minWidth=250):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -88,12 +125,33 @@ class Slider(QWidget):
         hlayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
+        # Set the slider values
+        self.interval = interval
+        self.delta = interval[1] - interval[0]
+        self.integer = isinstance(self.delta, int) and isinstance(defaultVal, int) and (step == 1)
+        self.start = interval[0]
+        if self.integer:
+            self.max_index = self.delta
+            self.decimals = 0
+        else:
+            self.max_index = int(np.ceil(self.delta / step))
+            self.decimals = int(np.ceil(np.log10(1.0 / step)))
+        self.current_value = defaultVal
+
+        # Set the label
         self.label = QLabel(label)
-        self.displayValue = QLabel(" = " + str(range[0]))
+        self.displayValue = QLabel(" = " + str(round(defaultVal, self.decimals)) )
+
+        # Create the slider
         self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(range[0])
-        self.slider.setMaximum(range[1])
-        self.slider.setSingleStep(step)
+        if self.integer:
+            self.slider.setMinimum(interval[0])
+            self.slider.setMaximum(interval[1])
+        else:
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.max_index)
+        self.slider.setValue(self.value_to_slider_pos(self.current_value))
+        self.slider.setSingleStep(1)
         self.slider.setMinimumWidth(minWidth)
 
         hlayout.addWidget(self.label)
@@ -109,12 +167,153 @@ class Slider(QWidget):
 
         self.on_change = on_change
 
-    def value(self):
-        return self.slider.value()
+    def value_to_slider_pos(self, value):
+        if self.integer:
+            return int(value)
+        pos = ((value - self.start) / self.delta) * self.max_index
+        return int(np.clip(pos, 0, self.max_index))
 
-    def on_change_callback(self, value):
-        self.displayValue.setText(" = " + str(value))
+    def slider_pos_to_value(self, pos):
+        if self.integer:
+            return int(pos)
+        return self.start + (pos / self.max_index) * self.delta
+
+    def value(self):
+        return self.slider_pos_to_value(self.slider.value())
+
+    def on_change_callback(self, pos):
+        value = self.slider_pos_to_value(pos)
+        self.displayValue.setText(" = " + self.value_to_text(value) )
         self.on_change(value)
+
+    def value_to_text(self, value):
+        if self.integer:
+            return str(value)
+        return str(round(value, self.decimals))
+
+
+
+
+# Number Input class
+class NumberInput(QWidget):
+    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=250):
+        super().__init__()
+        layout = QVBoxLayout()
+        hlayout = QHBoxLayout()
+        layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        hlayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+
+        # Set the value range
+        self.interval = interval
+        self.delta = interval[1] - interval[0]
+        self.integer = isinstance(self.delta, int) and isinstance(default, int) and (step == 1)
+        self.start = interval[0]
+        if self.integer:
+            self.max_index = self.delta
+            self.decimals = 0
+        else:
+            self.max_index = int(np.ceil(self.delta / step))
+            self.decimals = int(np.ceil(np.log10(1.0 / step)))
+        self.current_value = default
+
+        # Set the Label and TextBox
+        self.label = QLabel(label + " = ")
+        self.textbox = QLineEdit()
+        if self.integer:
+            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+")))
+        else:
+            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+(?:\.[0-9]+)?")))
+        self.textbox.setText(str(round(self.current_value, self.decimals)))
+
+        # Create the slider
+        self.slider = QSlider(Qt.Horizontal)
+        if self.integer:
+            self.slider.setMinimum(interval[0])
+            self.slider.setMaximum(interval[1])
+        else:
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(self.max_index)
+        self.slider.setValue(self.value_to_slider_pos(self.current_value))
+        self.slider.setSingleStep(1)
+        self.slider.setMinimumWidth(minWidth)
+
+
+        hlayout.addWidget(self.label)
+        hlayout.addWidget(self.textbox)
+        layout.addLayout(hlayout)
+        layout.addWidget(self.slider)
+        self.setLayout(layout)
+
+        self.textbox.returnPressed.connect(self.on_text_change)
+        self.slider.valueChanged.connect(self.on_slider_change)
+
+        self.on_change = on_change
+
+    def on_slider_change(self, pos):
+        self.current_value = self.slider_pos_to_value(pos)
+        self.textbox.blockSignals(True)
+        self.textbox.setText(self.value_to_text(self.current_value))
+        self.textbox.blockSignals(False)
+        self.on_change(self.current_value)
+
+    def on_text_change(self):
+        text = self.textbox.text()
+        if text == "":
+            self.textbox.setText(self.value_to_text(self.current_value))
+            return
+        
+        value = 0.0
+        try:
+            value = float(text) # try to convert the text to a float
+        except ValueError as e:
+            print(f"Error: {e}")
+            self.textbox.blockSignals(True)
+            self.textbox.setText(self.value_to_text(self.current_value))
+            self.textbox.blockSignals(False)
+            return
+        
+        resetTextValue = False
+        if value < self.interval[0]:
+            self.current_value = self.interval[0]
+            resetTextValue = True
+        if value > self.interval[1]:
+            self.current_value = self.interval[1]
+            resetTextValue = True
+
+        if resetTextValue:
+            self.textbox.blockSignals(True)
+            self.textbox.setText(self.value_to_text(self.current_value))
+            self.textbox.blockSignals(False)
+        else:
+            self.current_value = value
+
+        self.slider.blockSignals(True)
+        self.slider.setValue(self.value_to_slider_pos(self.current_value))
+        self.slider.blockSignals(False)
+        
+        self.on_change(self.current_value)
+
+    def value(self):
+        return self.current_value
+    
+    def value_to_slider_pos(self, value):
+        if self.integer:
+            return int(value)
+        pos = ((value - self.start) / self.delta) * self.max_index
+        return int(np.clip(pos, 0, self.max_index))
+
+    def slider_pos_to_value(self, pos):
+        if self.integer:
+            return int(pos)
+        return self.start + (pos / self.max_index) * self.delta
+    
+    def value_to_text(self, value):
+        if self.integer:
+            return str(value)
+        return str(round(value, self.decimals))
+
+
+
 
 
 class DropDownMenu(Button):
@@ -130,15 +329,16 @@ class DropDownMenu(Button):
     Structure of the options dictionary:
     
     """
-    def __init__(self, title = "Select", showSelected = True, onChoose = lambda k: None, options={}):
+    def __init__(self, title = "Select", showSelected = True, onChoose = lambda k,v: None, options={}):
         super(DropDownMenu, self).__init__(title)
         self.onChoose = onChoose
+        self.selected = None
+        self.selected_title = None
         self.showSelected = showSelected
         self.options = options
         self.menu = QMenu(self)
         self.setMenu(self.menu)
         self.set_options(options)
-        self.selected_option = (title, lambda: None)    # default option (label, callback)
         self.menu.setStyleSheet("""
             QMenu::item:selected {
                 background-color: lightblue;
@@ -150,13 +350,18 @@ class DropDownMenu(Button):
             }
         """)
 
-    def set_options(self, options={}):
+    def set_options(self, options={}, firstSelected=False):
         # release previous connected actions
         for action in self.menu.actions():
             action.triggered.disconnect()
         self.menu.clear()
 
         self.options = options
+
+        if len(options) > 0 and firstSelected:
+            self.selected_title = list(options.keys())[0]
+            self.selected = options[self.selected_title]
+            self.setText(self.selected_title)
 
         # create new actions
         for key in options.keys():
@@ -165,7 +370,8 @@ class DropDownMenu(Button):
             self.menu.addAction(action)
 
     def call_selected_option(self, key):
-        self.selected_option = (key, self.options[key])
+        self.selected = self.options[key]
+        self.selected_title = key
         print(f"Selected option: {key}")
 
         if self.showSelected:

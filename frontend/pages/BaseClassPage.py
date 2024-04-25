@@ -6,17 +6,14 @@ from PyQt5.QtCore import Qt
 class BaseClassPage(QWidget):
     def __init__(self):
         super().__init__()
-        self.title = "BaseClassPage"
         self.model = None
 
         # Create a QVBoxLayout to arrange the widgets vertically
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.initUI(layout)
-        self.setLayout(layout)
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
     
     def initUI(self, layout):
-        raise NotImplementedError("initUI(self, layout, model) must be implemented in Page subclass")
+        raise NotImplementedError("initUI(self, layout) must be implemented in Page subclass")
 
     def set_model(self, model):
         self.model = model
