@@ -2,6 +2,7 @@ import numpy as np
 import wave
 import io
 
+# DO NOT MODIFY THIS CLASS
 class EffectBaseClass():
     """ Base class for all sound effects"""
     def __init__(self):

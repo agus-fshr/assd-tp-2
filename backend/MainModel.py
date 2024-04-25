@@ -1,9 +1,12 @@
-
 from .handlers.MIDIHandler import *
 from .handlers.FileHandler import *
 from .handlers.WavHandler import *
 
-from .synths.Synthesizers import *
+from .synths.PhysicModelSynths import *
+from .synths.AdditiveSynths import *
+from .synths.SampleSynths import *
+from .synths.FMSynths import *
+
 from .effects.Effects import *
 
 from .audio.AudioPlayer import AudioPlayer

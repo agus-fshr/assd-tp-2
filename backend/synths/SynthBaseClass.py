@@ -2,6 +2,7 @@ import numpy as np
 import wave
 import io
 
+# DO NOT MODIFY THIS CLASS
 class SynthBaseClass():
     """ Base class for all sound synthesizers"""
     def __init__(self):
