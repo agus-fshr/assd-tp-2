@@ -10,7 +10,8 @@ from .audio.AudioPlayer import AudioPlayer
 
 class MainModel:
     def __init__(self):
-        self.file_handler = FileImportHandler(fileTypes="All Files (*.*);;MIDI Files (*.mid);;WAV Files (*.wav)")
+        self.file_handler = FileImportHandler(
+            fileTypes="All Files (*.*);;MIDI Files (*.mid);;WAV Files (*.wav)")
         self.midi_handler = MIDIFilesHandler()
         self.wav_handler = WavHandler()
 

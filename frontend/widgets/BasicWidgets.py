@@ -56,7 +56,7 @@ class SwitchButton(Button):
     def __init__(self, text_on="On", text_off="Off", color_on="white", color_off="black",
                  background_color_on="green", background_color_off="red",
                  radius=10, shadow_color="grey", shadow_radius=9, hover_color="lightblue",
-                 click_color="grey", padding=6, on_click=lambda is_on: print("Button Toggled", is_on)):
+                 click_color="grey", padding=6, on_click=lambda is_on: print("Button Toggled", is_on), value=False):
         # Initialize with the "off" state appearance
         super().__init__(text=text_off, color=color_off, background_color=background_color_off,
                          radius=radius, shadow_color=shadow_color, shadow_radius=shadow_radius,
@@ -69,10 +69,11 @@ class SwitchButton(Button):
         self.click_color = click_color
         self.background_color_on = background_color_on
         self.background_color_off = background_color_off
-        self.value = False  # Start in the "off" state
+        self.value = value
+        self.set_value(value)
 
-    def on_click_callback(self):
-        self.value = not self.value
+    def set_value(self, value):
+        self.value = value
         # Update the button's appearance based on the new state
         if self.value:
             self.setText(self.text_on)
@@ -80,7 +81,9 @@ class SwitchButton(Button):
         else:
             self.setText(self.text_off)
             self.setColors(self.color_off, self.background_color_off, self.hover_color, self.click_color)
-        # Call the on_click function with the new state
+
+    def on_click_callback(self):
+        self.set_value(not self.value)
         self.on_click(self.value)
 
 

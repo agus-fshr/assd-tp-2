@@ -53,7 +53,7 @@ class DynamicSettingsWidget(QWidget):
             widget = None
             if param.type == "Boolean":
                 widget = SwitchButton(param.text + " On", param.text + " Off", 
-                                      on_click=lambda v, k=key: self.on_param_set(k, v))
+                                      on_click=lambda v, k=key: self.on_param_set(k, v), value=param.value)
 
             elif param.type == "Number":
                 widget = NumberInput(param.text, interval=param.interval, step=param.step, default=param.value, 

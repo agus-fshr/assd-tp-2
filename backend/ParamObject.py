@@ -48,7 +48,7 @@ class ChoiceParam(ParameterBase):
 class BoolParam(ParameterBase):
     """ Boolean parameter"""
     def __init__(self, name="z", value=False, text="boolean parameter"):
-        super().__init__(name)
+        super().__init__(name, text)
         self.type = "Boolean"
         self.value = value
 
