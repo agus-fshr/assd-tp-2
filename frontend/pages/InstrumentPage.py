@@ -10,9 +10,8 @@ from frontend.widgets.AudioPlayerWidget import AudioPlayerWidget
 from frontend.widgets.DynamicSettingsWidget import DynamicSettingsWidget
 
 class InstrumentPage(BaseClassPage):
-    def __init__(self):
-        super().__init__()
-        self.title = "Instrument Testbench"
+    
+    title = "Instrument Testbench"
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -29,7 +28,7 @@ class InstrumentPage(BaseClassPage):
 
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
-        fadHLayout = QHBoxLayout()
+        controlsHLayout = QHBoxLayout()
 
         # Setup top layout
         topHLayout.addWidget(self.instrumentSelector)
@@ -38,19 +37,19 @@ class InstrumentPage(BaseClassPage):
         topHLayout.addStretch(1)
 
         # Setup controls layout
-        fadHLayout.addWidget(self.freqSelector)
-        fadHLayout.addSpacing(20)
-        fadHLayout.addWidget(self.ampSelector)
-        fadHLayout.addSpacing(20)
-        fadHLayout.addWidget(self.durationSelector)
-        fadHLayout.addSpacing(20)
-        fadHLayout.addWidget(Button("Play Note", on_click=self.play_note))
-        fadHLayout.addStretch(1)
+        controlsHLayout.addWidget(self.freqSelector)
+        controlsHLayout.addSpacing(20)
+        controlsHLayout.addWidget(self.ampSelector)
+        controlsHLayout.addSpacing(20)
+        controlsHLayout.addWidget(self.durationSelector)
+        controlsHLayout.addSpacing(20)
+        controlsHLayout.addWidget(Button("Play Note", on_click=self.play_note))
+        controlsHLayout.addStretch(1)
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
         layout.addSpacing(20)
-        layout.addLayout(fadHLayout)
+        layout.addLayout(controlsHLayout)
         layout.addWidget(self.player)
         layout.addSpacing(20)
         layout.addWidget(self.dynamicSettings)
@@ -62,11 +61,12 @@ class InstrumentPage(BaseClassPage):
         amp = self.ampSelector.value()
         duration = self.durationSelector.value()
 
-        # for param in self.instrumentSelector.selected.params:
-        #     print(f"'{param.name}': {param.value}")
-        array = self.instrumentSelector.selected(freq, amp, duration)
-        array = self.effectSelector.selected(array)
-        self.model.audioPlayer.set_array(array)
+        instrument = self.instrumentSelector.selected
+        effect = self.effectSelector.selected
+
+        wave_array = instrument(freq, amp, duration)
+        wave_array = effect(wave_array)
+        self.model.audioPlayer.set_array(wave_array)
         self.model.audioPlayer.play()
 
 
@@ -82,18 +82,18 @@ class InstrumentPage(BaseClassPage):
             options[effect.name] = effect
         self.effectSelector.set_options(options, firstSelected=True)
 
+
+    # Display the parameters of the selected effect
     def on_effect_selected(self, name, effect):
         self.dynamicSettings.updateUI(effect.params, title=f"{name} Settings")
 
+
+    # Display the parameters of the selected instrument
     def on_instrument_selected(self, name, instrument):
         self.dynamicSettings.updateUI(instrument.params, title=f"{name} Settings")
 
 
+    # Refresh dropdown options looking for new Instruments and Effects
     def on_tab_focus(self):
-        # Refresh dropdown options looking for new MIDI files
         self.refresh_instrument_options()
         self.refresh_effect_options()
-        print(f"Page '{self.title}' focused")
-
-    def on_tab_unfocus(self):
-        print(f"Page '{self.title}' unfocused")

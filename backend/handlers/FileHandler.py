@@ -1,5 +1,8 @@
 
 
+from typing import Any
+
+
 class FileMetadataObject:
     def __init__(self, path):
         self.complete_filepath = path
@@ -42,14 +45,19 @@ class FileMetadataObject:
 
 
 class FileImportHandler:
-    def __init__(self, fileTypes="All Files (*.*)"):
+    def __init__(self, name_filter="All Files (*.*)"):
         self.file_meta_list = []                 # list of FileMetadataObject objects
         self.fileIndexesByType = {}             # dict of lists of indexes of files by type
-        self.fileTypes = fileTypes
+        self.filename_filter_string = name_filter
+
+    def file_at(self, index: int):
+        if index < 0 or index >= len(self.file_meta_list):
+            raise ValueError(f"Index out of range: {index}")
+        return self.file_meta_list[index]
 
     @property
-    def types(self):
-        return self.fileTypes
+    def name_filter(self):
+        return self.filename_filter_string
 
     def pending_files(self, ext=""):
         filesMeta = []

@@ -7,8 +7,9 @@ from frontend.widgets.BasicWidgets import Button
 
 class FilesPage(BaseClassPage):
     def __init__(self):
-        super().__init__()  # Init base class
-        self.title = "Files"
+        super().__init__()
+
+    title = "Files"
 
     def initUI(self, layout):
         # Local widgets
@@ -41,8 +42,7 @@ class FilesPage(BaseClassPage):
 
 
     def clear_files_from_table(self):
-        self.model.file_handler.clear()
-        self.model.midi_handler.clear()
+        self.model.clear_files()
         self.update_table()
 
 
@@ -54,28 +54,28 @@ class FilesPage(BaseClassPage):
 
     # Open a file explorer dialog to select files
     def popup_file_explorer_dialog(self):
-        file_dialog = QFileDialog()                         # Search for files
+        file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.ExistingFiles)
-        file_dialog.setNameFilter(self.model.file_handler.types) 
+        file_dialog.setNameFilter(self.model.file_handler.name_filter) 
         try:
-            if file_dialog.exec_():
+            if file_dialog.exec_():                                 # Search for files
                 list_of_filepaths = file_dialog.selectedFiles()
                 self.model.file_handler.add(list_of_filepaths)
         except ValueError as e:
             QMessageBox.critical(self, 'Error', str(e))
-        self.update_table()                                 # Show them
+        self.update_table()                                         # Show them
 
 
     # Callback for when a table item is edited
     def on_table_edit(self, item):
         if item.column() != 0:  # only allow editing the 'name' column
             return
-        
+
         # check if the proposed name already exists, if so, don't allow the change
         try:
             newname = item.text()
             index = item.row()
-            fmeta = self.model.file_handler.all_files()[index]
+            fmeta = self.model.file_handler.file_at(index)
             self.model.file_handler.rename(fmeta, newname)
         except ValueError as e:
             QMessageBox.critical(self, 'Error', str(e))
@@ -103,6 +103,7 @@ class FilesPage(BaseClassPage):
             item2 = QTableWidgetItem(fmeta.path)
             item2.setFlags(item2.flags() & ~Qt.ItemIsEditable)  # make item read-only
             self.table.setItem(i, 2, item2)
+        
         self.table.blockSignals(False)
 
 

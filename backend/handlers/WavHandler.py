@@ -25,13 +25,16 @@ class WavHandler:
     def __init__(self):
         self.metadata = {}  # dict of metadata indexed by path
 
+    def clear(self):
+        self.metadata = {}
+
     def get_meta(self, path):
         return self.metadata.get(path, None)
 
     def get_wave(self, path):
         return wave.open(path, 'rb')
 
-    def import_wav_file(self, path):
+    def import_file(self, path):
         """Attempt to import a WAV file, validating it implicitly by trying to read its metadata."""
         try:
             wavMeta = self.read_wav_metadata(path)

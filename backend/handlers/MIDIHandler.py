@@ -15,7 +15,7 @@ class MIDIFilesHandler:
         self.midi_objects = {}
 
     # Import the MIDI file and store in midi_objects
-    def import_midi_file(self, path) -> bool:
+    def import_file(self, path) -> bool:
         try:
             self.midi_objects[path] = mido.MidiFile(path)
         except Exception as e:

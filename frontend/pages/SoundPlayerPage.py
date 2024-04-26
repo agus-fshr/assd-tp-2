@@ -9,9 +9,8 @@ from frontend.widgets.ConsoleWidget import ConsoleWidget
 from frontend.widgets.AudioPlayerWidget import AudioPlayerWidget
 
 class SoundPlayerPage(BaseClassPage):
-    def __init__(self):
-        super().__init__()
-        self.title = "Sound Player"
+
+    title = "Sound Player"    
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -32,7 +31,7 @@ class SoundPlayerPage(BaseClassPage):
         layout.addSpacing(20)
         layout.addWidget(self.player)
 
-
+    # Refresh dropdown options looking for newly imported .WAV files
     def refresh_sound_options(self):
         options = {}
         for fmeta in self.model.file_handler.available_files("wav"):
@@ -40,18 +39,13 @@ class SoundPlayerPage(BaseClassPage):
         
         self.dropDown.set_options(options)
 
-    def on_error(self, error):
-        QMessageBox.critical(self, 'Error', str(error))
 
+    # Callback to set the selected sound to play
     def on_sound_selected(self, name, path):
         wave = self.model.wav_handler.get_wave(path)
         self.model.audioPlayer.set_wave_obj(wave)
 
 
+    # Refresh dropdown options looking for new sound files
     def on_tab_focus(self):
-        # Refresh dropdown options looking for new MIDI files
         self.refresh_sound_options()
-        print(f"Page '{self.title}' focused")
-
-    def on_tab_unfocus(self):
-        print(f"Page '{self.title}' unfocused")

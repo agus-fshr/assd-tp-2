@@ -125,12 +125,11 @@ class AudioPlayer(QObject):
 
     def play(self):
         if self.playback_thread is None or not self.playback_thread.isRunning():
-            if self.playback_thread is None or not self.playback_thread.isRunning():
-                if self.playback_thread and self.playback_thread.wo:
-                    self.set_wave_obj(self.playback_thread.wo)
-                else:
-                    print("Wave object for playback thread is not set.")
-                    return
+            if self.playback_thread and self.playback_thread.wo:
+                self.set_wave_obj(self.playback_thread.wo)
+            else:
+                print("Wave object for playback thread is not set.")
+                return
             self.playback_thread.start()
         elif self.playback_thread.isPaused():
             self.playback_thread.resume()

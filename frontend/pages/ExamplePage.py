@@ -7,9 +7,8 @@ from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMen
 from frontend.widgets.ConsoleWidget import ConsoleWidget
 
 class ExamplePage(BaseClassPage):
-    def __init__(self):
-        super().__init__()
-        self.title = "Example Page"
+    
+    title = "Example Page"
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -93,7 +92,3 @@ class ExamplePage(BaseClassPage):
     def on_tab_focus(self):
         # Refresh dropdown options looking for new MIDI files
         self.refresh_midi_options()
-        print(f"Page '{self.title}' focused")
-
-    def on_tab_unfocus(self):
-        print(f"Page '{self.title}' unfocused")

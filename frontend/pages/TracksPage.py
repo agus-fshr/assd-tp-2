@@ -8,9 +8,8 @@ from frontend.widgets.ConsoleWidget import ConsoleWidget
 from frontend.widgets.CardWidgets import CardWidget, CardListWidget
 
 class TracksPage(BaseClassPage):
-    def __init__(self):
-        super().__init__()
-        self.title = "Tracks"
+
+    title = "Tracks"    
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -53,10 +52,6 @@ class TracksPage(BaseClassPage):
             self.trackList.addCard(card)
 
 
+    # Refresh dropdown options looking for new MIDI files
     def on_tab_focus(self):
-        # Refresh dropdown options looking for new MIDI files
         self.refresh_midi_options()
-        print(f"Page '{self.title}' focused")
-
-    def on_tab_unfocus(self):
-        print(f"Page '{self.title}' unfocused")

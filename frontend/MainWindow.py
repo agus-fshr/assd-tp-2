@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         - a method on_tab_focus() that is called when the page is focused
         - a method on_tab_unfocus() that is called when the page is unfocused
     """ 
-    def __init__(self, pages=[], model=None):
+    def __init__(self, pages, model):
         super().__init__()
         self.last_page_index = 0
         self.model = model
@@ -32,6 +32,11 @@ class MainWindow(QMainWindow):
         rw, rh, sw, sh = rect.width(), rect.height(), 2*self.width(), self.height()
         self.setGeometry(rw // 2 - sw // 2, rh // 2 - sh // 2, sw, sh)
 
+        # Check we don't have repeated titles
+        titles = [page.title for page in pages]
+        if len(titles) != len(set(titles)):
+            raise Exception("All pages must have unique titles")
+
         # create tab widget (Page Navigator) and add pages
         tab_widget = QTabWidget()
         self.setCentralWidget(tab_widget)
@@ -39,8 +44,6 @@ class MainWindow(QMainWindow):
             # Check if page is a BaseClassPage object
             if not isinstance(page, BaseClassPage):
                 raise Exception("All pages must be subclasses of BaseClassPage")
-            if not hasattr(page, 'title'):
-                raise Exception("All pages must have a title attribute")
             page.set_model(self.model)
             page.initUI(page.layout)
             page.setLayout(page.layout)
@@ -59,6 +62,7 @@ class MainWindow(QMainWindow):
         # unfocus last active tab
         last_page = tab_widget.widget(self.last_page_index)
         if hasattr(last_page, 'on_tab_unfocus'): 
+            print(f"Page '{last_page.title}' unfocused")
             last_page.on_tab_unfocus()
 
         # get newly active tab
@@ -67,4 +71,5 @@ class MainWindow(QMainWindow):
 
         # check if method exists
         if hasattr(current_page, 'on_tab_focus'): 
+            print(f"Page '{current_page.title}' focused")
             current_page.on_tab_focus()
