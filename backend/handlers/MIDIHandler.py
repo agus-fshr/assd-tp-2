@@ -4,7 +4,8 @@ import json
 class MIDIFilesHandler:
     def __init__(self):
         self.midi_objects = {}      # dict of mido.MidiFile objects indexed by path
-        
+        self.midi_metadata = {}     # dict of metadata indexed by path
+
     def get(self, path):
         return self.midi_objects[path]
 
@@ -17,7 +18,9 @@ class MIDIFilesHandler:
     # Import the MIDI file and store in midi_objects
     def import_file(self, path) -> bool:
         try:
-            self.midi_objects[path] = mido.MidiFile(path)
+            midi = mido.MidiFile(path)
+            self.midi_objects[path] = midi
+            self.midi_metadata[path] = self.parseMidiMeta(path)
         except Exception as e:
             print(f"Error importing {path}: {e}")
             return False
@@ -26,12 +29,17 @@ class MIDIFilesHandler:
 
     # Returns a dict with information about the requested MIDI file
     def get_midi_metadata(self, path):
+        if path not in self.midi_metadata:
+            self.midi_metadata[path] = self.parseMidiMeta(path)
+        return self.midi_metadata[path]
+        
+
+    def parseMidiMeta(self, path):
         if path in self.midi_objects:
             midi_obj = self.midi_objects[path]
-            
+
             track_meta = []
             for i, track in enumerate(midi_obj.tracks):
-                # get MetaMessages from the track
                 track_meta.append(self.metaMessageParser(track))
 
             midi_meta = {
@@ -45,8 +53,7 @@ class MIDIFilesHandler:
             return midi_meta
         else:
             raise ValueError(f"MIDI Object from '{path}' not found in the midi_objects dict")
-        
-        
+
     # Returns a pretty json string with information about the requested MIDI file
     def get_pretty_midi_metadata_str(self, path):
         midi_meta = self.get_midi_metadata(path)

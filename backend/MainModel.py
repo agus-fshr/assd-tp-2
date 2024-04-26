@@ -37,10 +37,12 @@ class MainModel:
         # ReverbEffect(),
     ]
 
+
     def clear_files(self):
         self.file_handler.clear()
         self.midi_handler.clear()
         self.wav_handler.clear()
+
 
     def import_files(self):
         self.import_with_handler(self.wav_handler, "wav")
