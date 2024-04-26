@@ -55,7 +55,7 @@ class Button(QPushButton):
 class SwitchButton(Button):
     def __init__(self, text_on="On", text_off="Off", color_on="white", color_off="black",
                  background_color_on="green", background_color_off="red",
-                 radius=10, shadow_color="grey", shadow_radius=9, hover_color="lightblue",
+                 radius=10, shadow_color="grey", shadow_radius=9, hover_color="lightgrey",
                  click_color="grey", padding=6, on_click=lambda is_on: print("Button Toggled", is_on), value=False):
         # Initialize with the "off" state appearance
         super().__init__(text=text_off, color=color_off, background_color=background_color_off,
