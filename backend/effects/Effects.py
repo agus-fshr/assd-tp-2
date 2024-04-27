@@ -24,8 +24,8 @@ class DelayEffect(EffectBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             BoolParam("active", value=True, text="Active"),
-            NumParam("delay", interval=(0, 1), value=0.18, step=0.01, text="Delay time [s]"),
-            NumParam("feedback", interval=(0, 1), value=0.7, step=0.01, text="Feedback [0, 1]"),
+            NumParam("delay", interval=(0, 1), value=0.012, step=0.001, text="Delay time [s]"),
+            NumParam("feedback", interval=(0, 1), value=0.99, step=0.01, text="Feedback [0, 1]"),
         )
 
     def process(self, sound):

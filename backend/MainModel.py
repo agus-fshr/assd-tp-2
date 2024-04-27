@@ -32,7 +32,7 @@ class MainModel:
 
     # Add effects here !
     effects = [
-        NoEffect(),
+        # NoEffect(),
         DelayEffect(),
         # ReverbEffect(),
     ]

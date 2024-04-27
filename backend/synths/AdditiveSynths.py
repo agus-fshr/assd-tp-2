@@ -14,10 +14,10 @@ class PureToneSynth(SynthBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             ChoiceParam("waveform", options=["Sine", "Square", "Sawtooth", "Triangle"], value="Sine", text="Waveform"),
-            NumParam("k", interval=(1, 4), value=4, step=0.01, text="k value"),
-            NumParam("A", interval=(0, 1), value=0.0, step=0.01, text="Attack [s]"),
-            NumParam("D", interval=(0, 1), value=0.15, step=0.01, text="Decay [s]"),
-            NumParam("R", interval=(0, 10), value=0.45, step=0.01, text="Release [s]"),
+            NumParam("k", interval=(1, 10), value=10, step=0.1, text="k value"),
+            NumParam("A", interval=(0, 0.5), value=0.001, step=0.0001, text="Attack [s]"),
+            NumParam("D", interval=(0, 0.5), value=0.001, step=0.0001, text="Decay [s]"),
+            NumParam("R", interval=(0, 5), value=0.0, step=0.1, text="Release [s]"),
         )
 
     def generate(self, freq, amp, duration):

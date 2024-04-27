@@ -23,13 +23,14 @@ class InstrumentPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.freqSelector = NumberInput("Frequency", default=740, interval=(20, 2000), step=1)
-        self.ampSelector = NumberInput("Amplitude", default=0.25, interval=(0, 1), step=0.01)
+        self.freqSelector = NumberInput("Frequency", default=495, interval=(20, 2000), step=1)
+        self.ampSelector = NumberInput("Amplitude", default=0.38, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.0, interval=(0, 3), step=0.1)
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
 
         self.dynamicSettings = DynamicSettingsWidget()
+        self.on_instrument_selected(self.model.synthesizers[0].name, self.model.synthesizers[0])
 
         # Setup audio player widget
         self.player = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
@@ -103,12 +104,14 @@ class InstrumentPage(BaseClassPage):
         framerate = self.model.audioPlayer.framerate
         time = np.arange(len(wave_array)) / framerate
 
+        wave_array = np.clip(wave_array, -1.0, 1.0)
+
         self.waveformPlot1.clear()
         self.waveformPlot2.clear()
         self.waveformPlot2.addItem(self.region, ignoreBounds=True)
         self.waveformPlot1.plot(time, wave_array)
         self.waveformPlot2.plot(time, wave_array)
-        self.waveformPlot1.setXRange(0, len(wave_array)/framerate, padding=0)
+        # self.waveformPlot1.setXRange(0, len(wave_array)/framerate, padding=0)
         self.waveformPlot2.autoRange()
 
         self.updateRegion(self.waveformPlot1.getViewBox(), self.waveformPlot1.getViewBox().viewRange())
