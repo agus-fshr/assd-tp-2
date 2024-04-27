@@ -24,12 +24,12 @@ class SoundPlayerPage(BaseClassPage):
         topHLayout.addStretch(1)
 
         # Setup audio player widget
-        self.player = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
+        self.playerWidget = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
         layout.addSpacing(20)
-        layout.addWidget(self.player)
+        layout.addWidget(self.playerWidget)
 
     # Refresh dropdown options looking for newly imported .WAV files
     def refresh_sound_options(self):
@@ -42,8 +42,7 @@ class SoundPlayerPage(BaseClassPage):
 
     # Callback to set the selected sound to play
     def on_sound_selected(self, name, path):
-        wave = self.model.wav_handler.get_wave(path)
-        self.model.audioPlayer.set_wave_obj(wave)
+        self.model.audioPlayer.set_from_file(path)
 
 
     # Refresh dropdown options looking for new sound files

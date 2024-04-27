@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         # unfocus last active tab
         last_page = tab_widget.widget(self.last_page_index)
         if hasattr(last_page, 'on_tab_unfocus'): 
-            print(f"Page '{last_page.title}' unfocused")
+            print(f"Page {self.last_page_index} '{last_page.title}' unfocused")
             last_page.on_tab_unfocus()
 
         # get newly active tab
@@ -71,5 +71,5 @@ class MainWindow(QMainWindow):
 
         # check if method exists
         if hasattr(current_page, 'on_tab_focus'): 
-            print(f"Page '{current_page.title}' focused")
+            print(f"Page {index} '{current_page.title}' focused")
             current_page.on_tab_focus()

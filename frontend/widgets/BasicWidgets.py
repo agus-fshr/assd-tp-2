@@ -75,7 +75,7 @@ class SwitchButton(Button):
     def set_value(self, value):
         self.value = value
         # Update the button's appearance based on the new state
-        if self.value:
+        if value:
             self.setText(self.text_on)
             self.setColors(self.color_on, self.background_color_on, self.hover_color, self.click_color)
         else:
