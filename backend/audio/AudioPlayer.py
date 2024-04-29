@@ -22,11 +22,14 @@ class AudioPlaybackThread(QThread):
         p = pyaudio.PyAudio()
         stream = None
         try:
+            # chunk_size = 1024
+            chunk_size = 2048
+
             stream = p.open(format=p.get_format_from_width(self.wo.getsampwidth()),
                             channels=self.wo.getnchannels(),
                             rate=self.wo.getframerate(),
-                            output=True)
-            chunk_size = 1024
+                            output=True,
+                            frames_per_buffer=chunk_size)
             self.wo.setpos(self.total_frames_read)
 
             data = self.wo.readframes(chunk_size)
