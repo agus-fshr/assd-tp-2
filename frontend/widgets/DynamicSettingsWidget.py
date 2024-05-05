@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QWidg
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
-from .BasicWidgets import SwitchButton, NumberInput, DropDownMenu
+from .BasicWidgets import SwitchButton, NumberInput, DropDownMenu, TextInput
 
 class DynamicSettingsWidget(QWidget):
     def __init__(self, paramList=None, title="Dynamic Settings", on_edit=lambda: None):
@@ -90,6 +90,14 @@ class DynamicSettingsWidget(QWidget):
                 dropLayout.addWidget(DropDownMenu(self.paramList[key], options=opt_dict, 
                                       onChoose=lambda v, _, k=key: self.on_param_set(k, v)))
                 settingWidget.setLayout(dropLayout)
+
+            elif param.type == "text":
+                settingWidget = TextInput(param.text, 
+                                          on_change=lambda v, k=key: self.on_param_set(k, v),
+                                          default=param.value,
+                                          regex="^$|^[a-zA-Z0-9\\*\\+\\-\\^\\/\\(\\)\\s\\.]*")
+            else:
+                raise ValueError(f"Parameter type '{param.type}' not recognized")
             
             current_width = settingWidget.sizeHint().width()
             if hasattr(settingWidget, "frameWidth"):

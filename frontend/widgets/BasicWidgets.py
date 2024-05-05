@@ -89,7 +89,7 @@ class SwitchButton(Button):
 
 # Text Input class
 class TextInput(QWidget):
-    def __init__(self, label="Input", placeholder="Type Here", on_change=lambda text: (), regex="[a-zA-Z0-9\\-\\.]*"):
+    def __init__(self, label="Input", placeholder="Type Here", default="", on_change=lambda text: (), regex="^$|[a-zA-Z0-9\\-\\.]*"):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -98,6 +98,7 @@ class TextInput(QWidget):
         self.label = QLabel(label)
         self.textbox = QLineEdit(self)
         self.textbox.setPlaceholderText(placeholder)
+        self.textbox.setText(default)
         if regex:
             validator = QRegExpValidator(QRegExp(regex))
             self.textbox.setValidator(validator)
@@ -107,7 +108,7 @@ class TextInput(QWidget):
 
         self.setLayout(layout)
 
-        self.textbox.returnPressed.connect(self.on_change_callback)
+        self.textbox.textEdited.connect(self.on_change_callback)
 
         self.on_change = on_change
 
@@ -223,9 +224,9 @@ class NumberInput(QWidget):
         self.label = QLabel(label + " = ")
         self.textbox = QLineEdit()
         if self.integer:
-            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+")))
+            self.textbox.setValidator(QRegExpValidator(QRegExp("^$|[+-]?[0-9]+")))
         else:
-            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+(?:\\.[0-9]+)?")))
+            self.textbox.setValidator(QRegExpValidator(QRegExp("^$|[+-]?[0-9]+(?:\\.[0-9]+)?")))
         self.textbox.setText(str(round(self.current_value, self.decimals)))
 
         # Create the slider
@@ -247,7 +248,7 @@ class NumberInput(QWidget):
         layout.addWidget(self.slider)
         self.setLayout(layout)
 
-        self.textbox.returnPressed.connect(self.on_text_change)
+        self.textbox.textEdited.connect(self.on_text_change)
         self.slider.valueChanged.connect(self.on_slider_change)
 
         self.on_change = on_change

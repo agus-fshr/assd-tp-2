@@ -3,6 +3,7 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 from frontend.MainWindow import *
+from frontend.pages.TestPage import *
 from frontend.pages.FilesPage import *
 from frontend.pages.TracksPage import *
 from frontend.pages.ExamplePage import *
@@ -27,6 +28,7 @@ if __name__ == '__main__':
         SoundPlayerPage(),
         TracksMetadataPage(),
         ExamplePage(),
+        TestPage(),
     ]
     ex = MainWindow(pages=pages, model=mainModel)
 

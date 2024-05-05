@@ -18,7 +18,7 @@ class InstrumentPage(BaseClassPage):
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
-        self.instrumentSelector = DropDownMenu("Select Instrument", onChoose=self.on_instrument_selected)
+        self.synthSelector = DropDownMenu("Select Instrument", onChoose=self.on_instrument_selected)
         self.effectSelector = DropDownMenu("Select Effect", onChoose=self.on_effect_selected)
         self.load_instrument_options()
         self.load_effect_options()
@@ -26,6 +26,7 @@ class InstrumentPage(BaseClassPage):
         self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
         self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
+        
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
 
@@ -44,7 +45,7 @@ class InstrumentPage(BaseClassPage):
         settingsHLayout = QHBoxLayout()
 
         # Setup top layout
-        topHLayout.addWidget(self.instrumentSelector)
+        topHLayout.addWidget(self.synthSelector)
         topHLayout.addSpacing(20)
         topHLayout.addWidget(self.effectSelector)
         topHLayout.addStretch(1)
@@ -78,7 +79,7 @@ class InstrumentPage(BaseClassPage):
         amp = self.ampSelector.value()
         duration = self.durationSelector.value()
 
-        instrument = self.instrumentSelector.selected
+        instrument = self.synthSelector.selected
         effect = self.effectSelector.selected
 
         wave_array = instrument(freq, amp, duration)
@@ -100,7 +101,7 @@ class InstrumentPage(BaseClassPage):
         options = {}
         for synth in self.model.synthesizers:
             options[synth.name] = synth
-        self.instrumentSelector.set_options(options, firstSelected=True)
+        self.synthSelector.set_options(options, firstSelected=True)
 
     def load_effect_options(self):
         options = {}
