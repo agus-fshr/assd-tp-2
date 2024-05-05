@@ -11,6 +11,8 @@ from frontend.widgets.DynamicSettingsWidget import DynamicSettingsWidget
 from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
 
 import numpy as np
+import os
+import webbrowser
 
 class InstrumentPage(BaseClassPage):
     
@@ -30,6 +32,7 @@ class InstrumentPage(BaseClassPage):
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
+        openFileExplorerButton = Button("Open Folder", on_click=self.openFileExplorer)
 
         self.dynamicSettings = DynamicSettingsWidget()
         self.on_instrument_selected(self.model.synthesizers[0].name, self.model.synthesizers[0])
@@ -61,6 +64,7 @@ class InstrumentPage(BaseClassPage):
         controlsHLayout.addWidget(synthButton)
         controlsHLayout.addSpacing(10)
         controlsHLayout.addWidget(saveWAVButton)
+        controlsHLayout.addWidget(openFileExplorerButton)
         
         # Setup settings layout
         settingsHLayout.addWidget(self.dynamicSettings)
@@ -74,14 +78,18 @@ class InstrumentPage(BaseClassPage):
         layout.addLayout(controlsHLayout)
         layout.addLayout(settingsHLayout)
 
+    def openFileExplorer(self):
+        current_directory = os.getcwd()
+        webbrowser.open(current_directory)
 
     def saveWAV(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filename, _ = QFileDialog.getSaveFileName(self, "Save as WAV", "", "WAV Files (*.wav)", options=options)
+        default_filename = self.synthSelector.selected.name + "_out.wav"
+        filename, _ = QFileDialog.getSaveFileName(self, "Save as WAV", default_filename, "WAV Files (*.wav)", options=options)
         if filename:
             self.model.audioPlayer.save_to_file(filename)
-            self.console.log(f"Saved to {filename}")
+
 
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
