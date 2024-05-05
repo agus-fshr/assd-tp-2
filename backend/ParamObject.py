@@ -15,8 +15,12 @@ Each parameter will be displayed as:
 - NumParam      ->  NumberInput (Slider + TextInput)
 - ChoiceParam   ->  DropDownMenu
 - BoolParam     ->  SwitchButton
+- TextParam     ->  TextInput
 
  """
+
+import sympy as sp
+import numpy as np
 
 class ParameterBase():
     def __init__(self, name="parameter", text=""):
@@ -26,6 +30,14 @@ class ParameterBase():
     @property
     def name(self):
         return self.internal_name
+
+
+class TextParam(ParameterBase):
+    """ Text parameter with a string"""
+    def __init__(self, name="txt", value="", text="text parameter"):
+        super().__init__(name, text)
+        self.type = "text"
+        self.value = value
 
 
 class NumParam(ParameterBase):
@@ -75,8 +87,8 @@ class ParameterList():
         return self.internal_parameter_list.keys()
     
     def __iter__(self):
-        values = self.internal_parameter_list.values()
-        return iter(values)
+        params = self.internal_parameter_list.values()
+        return iter(params)
 
     def __getitem__(self, key):
         if key not in self.internal_parameter_list:
@@ -89,3 +101,38 @@ class ParameterList():
         # if not isinstance(value, type(self.internal_parameter_list[key].v)):
         #     raise ValueError(f"Parameter {key} type mismatch. Expected {type(self.internal_parameter_list[key].step)}, got {type(value)}")
         self.internal_parameter_list[key].value = value
+
+
+
+    def getFunction(self, eq, var, const = {}):
+        eqstr = self[eq]
+        try:
+            eq = sp.sympify(eqstr)
+        except Exception as e:
+            raise ValueError(f"Error parsing equation: {eqstr}")            
+        
+        if var in const.keys():
+            raise ValueError(f"Variable {var} is also a constant")
+        if var in self.keys():
+            raise ValueError(f"Variable {var} is also a parameter")
+
+        # Substitute constants and parameters
+        for symbol in eq.free_symbols:
+            if symbol.name in self.keys():
+                eq = eq.subs(symbol, self[symbol.name])
+            elif symbol.name in const.keys():
+                eq = eq.subs(symbol, const[symbol.name])
+
+        if len(eq.free_symbols) > 1:
+            raise ValueError(f"Equation '{eqstr}' has more than one free symbols: {eq.free_symbols}")
+
+        if len(eq.free_symbols) == 0:
+            return lambda x: complex(eq.evalf())
+        
+
+        eq = eq.simplify()
+        x = eq.free_symbols.pop()
+
+        # Lambdify the equation
+        func = sp.lambdify(x, eq, "numpy")
+        return func
