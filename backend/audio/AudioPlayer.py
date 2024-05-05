@@ -142,6 +142,16 @@ class AudioPlayer(QObject):
     def set_from_file(self, file_path):
         self.set_wave_object(wave.open(file_path, 'rb'))
 
+    def save_to_file(self, file_path):
+        if self.playback_thread is None:
+            return False
+
+        with wave.open(file_path, 'wb') as wo:
+            wo.setnchannels(self.playback_thread.wo.getnchannels())
+            wo.setsampwidth(self.playback_thread.wo.getsampwidth())
+            wo.setframerate(self.playback_thread.wo.getframerate())
+            wo.writeframes(self.playback_thread.wo.readframes(self.nframes))
+
     def get_numpy_data(self):
         if self.playback_thread is None:
             return None

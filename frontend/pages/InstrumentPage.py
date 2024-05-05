@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea, QFileDialog
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
 
@@ -29,6 +29,7 @@ class InstrumentPage(BaseClassPage):
         
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
+        saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
 
         self.dynamicSettings = DynamicSettingsWidget()
         self.on_instrument_selected(self.model.synthesizers[0].name, self.model.synthesizers[0])
@@ -58,7 +59,8 @@ class InstrumentPage(BaseClassPage):
         controlsHLayout.addWidget(self.durationSelector)
         controlsHLayout.addSpacing(20)
         controlsHLayout.addWidget(synthButton)
-        controlsHLayout.addStretch(1)
+        controlsHLayout.addSpacing(10)
+        controlsHLayout.addWidget(saveWAVButton)
         
         # Setup settings layout
         settingsHLayout.addWidget(self.dynamicSettings)
@@ -72,6 +74,14 @@ class InstrumentPage(BaseClassPage):
         layout.addLayout(controlsHLayout)
         layout.addLayout(settingsHLayout)
 
+
+    def saveWAV(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename, _ = QFileDialog.getSaveFileName(self, "Save as WAV", "", "WAV Files (*.wav)", options=options)
+        if filename:
+            self.model.audioPlayer.save_to_file(filename)
+            self.console.log(f"Saved to {filename}")
 
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
