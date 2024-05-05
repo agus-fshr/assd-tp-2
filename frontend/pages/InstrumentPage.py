@@ -23,9 +23,9 @@ class InstrumentPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.freqSelector = NumberInput("Frequency", default=495, interval=(20, 2000), step=1)
-        self.ampSelector = NumberInput("Amplitude", default=0.38, interval=(0, 1), step=0.01)
-        self.durationSelector = NumberInput("Duration", default=0.0, interval=(0, 3), step=0.1)
+        self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
+        self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
+        self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
 

@@ -28,6 +28,7 @@ class MainModel:
     # Add synthesizers here !
     synthesizers = [
         PureToneSynth(),
+        YourSynth(),
     ]
 
     # Add effects here !
