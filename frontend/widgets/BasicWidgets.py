@@ -89,7 +89,7 @@ class SwitchButton(Button):
 
 # Text Input class
 class TextInput(QWidget):
-    def __init__(self, label="Input", placeholder="Type Here", on_change=lambda text: (), regex="[a-zA-Z0-9\-\.]*"):
+    def __init__(self, label="Input", placeholder="Type Here", on_change=lambda text: (), regex="[a-zA-Z0-9\\-\\.]*"):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -225,7 +225,7 @@ class NumberInput(QWidget):
         if self.integer:
             self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+")))
         else:
-            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+(?:\.[0-9]+)?")))
+            self.textbox.setValidator(QRegExpValidator(QRegExp("[+-]?[0-9]+(?:\\.[0-9]+)?")))
         self.textbox.setText(str(round(self.current_value, self.decimals)))
 
         # Create the slider

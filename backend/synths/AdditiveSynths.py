@@ -9,16 +9,19 @@ class PureToneSynth(SynthBaseClass):
     """ Simple pure tone synthesizer"""
     def __init__(self):
         super().__init__()
+
         self.name = "Pure Tone Synthesizer" # Este nombre es el que se muestra en la interfaz
+
 
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             ChoiceParam("waveform", options=["Sine", "Square", "Sawtooth", "Triangle"], value="Sine", text="Waveform"),
-            NumParam("k", interval=(1, 10), value=10, step=0.1, text="k value"),
-            NumParam("A", interval=(0, 0.5), value=0.001, step=0.0001, text="Attack [s]"),
-            NumParam("D", interval=(0, 0.5), value=0.001, step=0.0001, text="Decay [s]"),
-            NumParam("R", interval=(0, 5), value=0.0, step=0.1, text="Release [s]"),
+            NumParam("k", interval=(1, 10), value=2, step=0.1, text="k value"),
+            NumParam("A", interval=(0, 0.5), value=0.03, step=0.0001, text="Attack [s]"),
+            NumParam("D", interval=(0, 0.5), value=0.1, step=0.0001, text="Decay [s]"),
+            NumParam("R", interval=(0, 5), value=0.6, step=0.1, text="Release [s]"),
         )
+
 
     def generate(self, freq, amp, duration):
         """ 
@@ -50,25 +53,46 @@ class PureToneSynth(SynthBaseClass):
         total_time = duration + R                       # Total time is the note duration + Release time
 
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
-        wave = amp * wave(2 * np.pi * freq * t)
+        out = amp * wave(2 * np.pi * freq * t)
 
-        return wave * envelope(t, duration)
+        return out * envelope(t, duration)
     
     
 
-# class YourSynth(SynthBaseClass):
-#     """ Your synthesizer here"""
-#     def __init__(self):
-#         super().__init__()
-#         self.name = "Your Synthesizer"
 
-#         self.params = ParameterList(
-#             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
-#         )
 
-#     def generate(self, freq, amp, duration):
 
-#         # Add your synthesizer code here
 
-#         # Return the sound array
-#         return np.zeros(int(duration * self.sample_rate))
+
+class YourSynth(SynthBaseClass):
+    """ Your synthesizer here"""
+    def __init__(self):
+        super().__init__()
+
+        self.name = "Your Synthesizer"
+
+        self.params = ParameterList(
+            # Add your parameters here, using NumParam, ChoiceParam or BoolParam
+            NumParam("x", interval=(0, 100), value=50, step=1, text="X value"),
+            BoolParam("y", value=True, text="Y option"),
+            ChoiceParam("z", options=["A", "B", "C"], value="A", text="Z option"),
+        )
+
+    def generate(self, freq, amp, duration):
+        print()
+        # Add your synthesizer code here
+
+        x = float(self.params["x"])
+        y = self.params["y"]
+        z = self.params["z"]
+
+        print(f"Your synth. x = {x}, type: {type(x)}")
+        print(f"Your synth. y = {y}, type: {type(y)}")
+        print(f"Your synth. z = {z}, type: {type(z)}")
+
+        # Return the sound array
+        print()
+        return np.zeros(int(duration * self.sample_rate))
+
+
+
