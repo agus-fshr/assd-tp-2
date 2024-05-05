@@ -52,8 +52,8 @@ class TestPage(BaseClassPage):
             "R": 0.9,
         }
 
-        Num = self.params.getFunction("N", "Z", const)
-        Den = self.params.getFunction("D", "Z", const)
+        Num = self.params.getFunction(eq="N", var="Z", const=const)
+        Den = self.params.getFunction(eq="D", var="Z", const=const)
 
         x = np.linspace(0, 2, 1000)
 
