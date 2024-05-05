@@ -20,10 +20,13 @@ class TestPage(BaseClassPage):
         leftVLayout = QVBoxLayout()
 
         self.params = ParameterList(
-            TextParam("N", value="1", text="Numerator"),
-            TextParam("D", value="1 - 2*R*cos(w0)*Z**(-1) + R**2*Z**(-2)", text="Denominator"),
-
-            NumParam("w0", interval=(0, np.pi), step=0.01, value=0.5, text="w0 = Frequency [rad]"),
+            TextParam("eq", value="a*cos(wa*x)+b*cos(wb*x)+c*cos(wc*x)", text="Equation"),
+            NumParam("a", interval=(0, 5), value=2, step=0.01, text="a = Amplitude"),
+            NumParam("b", interval=(0, 5), value=0.8, step=0.01, text="b = Amplitude"),
+            NumParam("c", interval=(0, 5), value=0.2, step=0.01, text="c = Amplitude"),
+            NumParam("wa", interval=(0, 500), value=9, step=0.01, text="wa = Frequency [rad/s]"),
+            NumParam("wb", interval=(0, 500), value=2, step=0.01, text="wb = Frequency [rad/s]"),
+            NumParam("wc", interval=(0, 500), value=440, step=0.01, text="wc = Frequency [rad/s]"),
         )
 
         # Widgets
@@ -48,17 +51,9 @@ class TestPage(BaseClassPage):
     def test(self):
         print("Test")
 
-        const = {
-            "R": 0.9,
-        }
+        func = self.params.getFunction(eq="eq", var="x")
 
-        Num = self.params.getFunction(eq="N", var="Z", const=const)
-        Den = self.params.getFunction(eq="D", var="Z", const=const)
+        x = np.linspace(0, 1, 1000) * 2 * np.pi
 
-        x = np.linspace(0, 2, 1000)
-
-        Z = np.exp(1j * np.pi * x)
-
-        H_abs = np.abs(Num(Z) / Den(Z))
-
-        self.plotWidget.plot(x, H_abs)
+        y = func(x)
+        self.plotWidget.plot(x, y)

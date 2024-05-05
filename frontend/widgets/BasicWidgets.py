@@ -89,10 +89,15 @@ class SwitchButton(Button):
 
 # Text Input class
 class TextInput(QWidget):
-    def __init__(self, label="Input", placeholder="Type Here", default="", on_change=lambda text: (), regex="^$|[a-zA-Z0-9\\-\\.]*"):
+    def __init__(self, label="Input", placeholder="Type Here", default="", on_change=lambda text: (), regex="^$|[a-zA-Z0-9\\-\\.]*", layout='v'):
         super().__init__()
 
-        layout = QVBoxLayout()
+        if layout == 'h':
+            layout = QHBoxLayout()
+        elif layout == 'v':
+            layout = QVBoxLayout()
+        else:
+            raise ValueError("Invalid layout parameter. Use 'h' for horizontal or 'v' for vertical layout.")
         layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
 
         self.label = QLabel(label)
@@ -333,16 +338,17 @@ class DropDownMenu(Button):
     Structure of the options dictionary:
     
     """
-    def __init__(self, title = "Select", showSelected = True, onChoose = lambda k,v: None, options={}):
+    def __init__(self, title = "Select", showSelected = True, onChoose = lambda x: None, options={}, firstSelected=False):
         super(DropDownMenu, self).__init__(title)
         self.onChoose = onChoose
         self.selected = None
         self.selected_title = None
         self.showSelected = showSelected
+        self.is_list = False
         self.options = options
         self.menu = QMenu(self)
         self.setMenu(self.menu)
-        self.set_options(options)
+        self.set_options(options, firstSelected)
         self.menu.setStyleSheet("""
             QMenu::item:selected {
                 background-color: lightblue;
@@ -360,24 +366,39 @@ class DropDownMenu(Button):
             action.triggered.disconnect()
         self.menu.clear()
 
+        self.is_list = True if isinstance(options, list) else False
         self.options = options
 
         if len(options) > 0 and firstSelected:
-            self.selected_title = list(options.keys())[0]
-            self.selected = options[self.selected_title]
-            self.setText(self.selected_title)
+            if self.is_list:
+                self.selected = options[0]
+                self.selected_title = options[0]
+                self.setText(options[0])
+            else:
+                self.selected_title = list(options.keys())[0]
+                self.selected = options[self.selected_title]
+                self.setText(self.selected_title)
 
         # create new actions
-        for key in options.keys():
+        if self.is_list:
+            iterator = options
+        else:
+            iterator = options.keys()
+        for key in iterator:
             action = QAction(key, self)
             action.triggered.connect(lambda _, k=key: self.call_selected_option(k))
             self.menu.addAction(action)
 
     def call_selected_option(self, key):
-        self.selected = self.options[key]
-        self.selected_title = key
         print(f"Selected option: {key}")
-
         if self.showSelected:
             self.setText(key)
-        self.onChoose(key, self.options[key])
+
+        if self.is_list:
+            self.selected = key
+            self.selected_title = key
+            self.onChoose(key)
+        else:
+            self.selected = self.options[key]
+            self.selected_title = key
+            self.onChoose(key, self.options[key])
