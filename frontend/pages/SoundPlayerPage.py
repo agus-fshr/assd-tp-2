@@ -8,6 +8,10 @@ from frontend.widgets.ConsoleWidget import ConsoleWidget
 
 from frontend.widgets.AudioPlayerWidget import AudioPlayerWidget
 
+from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
+
+import numpy as np
+
 class SoundPlayerPage(BaseClassPage):
 
     title = "Sound Player"    
@@ -25,11 +29,16 @@ class SoundPlayerPage(BaseClassPage):
 
         # Setup audio player widget
         self.playerWidget = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
+
+        # Setup waveform viewer widget
+        self.plotWidget = WaveformViewerWidget()
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
         layout.addSpacing(20)
         layout.addWidget(self.playerWidget)
+        layout.addSpacing(20)
+        layout.addWidget(self.plotWidget)
 
     # Refresh dropdown options looking for newly imported .WAV files
     def refresh_sound_options(self):
@@ -43,6 +52,10 @@ class SoundPlayerPage(BaseClassPage):
     # Callback to set the selected sound to play
     def on_sound_selected(self, name, path):
         self.model.audioPlayer.set_from_file(path)
+
+        time, array = self.model.audioPlayer.get_numpy_data()
+
+        self.plotWidget.plot(time, array)
 
 
     # Refresh dropdown options looking for new sound files

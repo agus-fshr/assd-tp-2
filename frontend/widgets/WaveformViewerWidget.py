@@ -18,6 +18,7 @@ class WaveformViewerWidget(QWidget):
         self.yAxisScale = DropDownMenu(options=["Linear Y", "Log Y"], 
                                        onChoose=self.changeView, firstSelected=True)
         self.paddingInput = TextInput("Padding", default="0", regex="^[0-9]*$", on_change=self.changeView, layout='h')
+
         self.plotLayout = pg.GraphicsLayoutWidget(show=True)
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
@@ -60,6 +61,9 @@ class WaveformViewerWidget(QWidget):
     def changeView(self, view):
         self.redraw()
         self.waveformPlot1.autoRange()
+        self.waveformPlot1.setAutoVisible(y=True)
+        self.waveformPlot1.enableAutoRange(axis='y')
+        self.waveformPlot1.setMouseEnabled(x=True, y=False)
 
     def redraw(self, _=None):
         self.plot(self.x, self.y)
