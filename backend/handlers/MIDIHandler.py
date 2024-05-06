@@ -6,6 +6,8 @@ class MIDIFilesHandler:
         self.midi_objects = {}      # dict of mido.MidiFile objects indexed by path
         self.midi_metadata = {}     # dict of metadata indexed by path
 
+        self.current_midi = None    # current midi object
+
     def get(self, path):
         return self.midi_objects[path]
 
