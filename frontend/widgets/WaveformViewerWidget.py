@@ -72,9 +72,11 @@ class WaveformViewerWidget(QWidget):
         if self.plotTypeMenu.selected != "Spectrogram":
             self.waveformPlot1.autoRange()
             self.waveformPlot1.enableAutoRange(axis='y')
+            self.waveformPlot1.setAutoVisible(y=True)
             self.waveformPlot1.setMouseEnabled(x=True, y=False)
         else:
             self.waveformPlot1.disableAutoRange()
+            self.waveformPlot1.setAutoVisible(y=False)
             self.waveformPlot1.setMouseEnabled(x=True, y=True)
 
     def redraw(self, _=None):
