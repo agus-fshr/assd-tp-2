@@ -13,7 +13,7 @@ class KSGuitar(SynthBaseClass):
         self.name = "Karplus-Strong Guitar"
 
         self.params = ParameterList(
-            NumParam("Stretch Factor", interval=(0.01, 3), value=2.1, step=0.01, text="Stretch Factor"),
+            NumParam("Stretch Factor", interval=(0.01, 3000), value=2.1, step=0.01, text="Stretch Factor"),
             ChoiceParam("Initial Noise", options=["Normal", "Uniform", "2-Level"], value="Normal", text="Initial Noise"),
         )
 
