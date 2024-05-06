@@ -30,6 +30,7 @@ class MainModel:
         PureToneSynth(),
         YourSynth(),
         FMSynth(),
+        KSGuitar(),
     ]
 
     # Add effects here !
