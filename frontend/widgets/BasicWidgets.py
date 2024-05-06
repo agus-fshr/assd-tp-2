@@ -89,7 +89,7 @@ class SwitchButton(Button):
 
 # Text Input class
 class TextInput(QWidget):
-    def __init__(self, label="Input", placeholder="Type Here", default="", on_change=lambda text: (), regex="^$|[a-zA-Z0-9\\-\\.]*", layout='v'):
+    def __init__(self, label="Input", placeholder="Type Here", default="", on_change=lambda text: (), regex="^$|[a-zA-Z0-9\\-\\.]*", layout='v', callOnEnter=True):
         super().__init__()
 
         if layout == 'h':
@@ -113,7 +113,10 @@ class TextInput(QWidget):
 
         self.setLayout(layout)
 
-        self.textbox.textEdited.connect(self.on_change_callback)
+        if callOnEnter:
+            self.textbox.returnPressed.connect(self.on_change_callback)
+        else:
+            self.textbox.textEdited.connect(self.on_change_callback)
 
         self.on_change = on_change
 
@@ -205,7 +208,7 @@ class Slider(QWidget):
 
 # Number Input class
 class NumberInput(QWidget):
-    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=250):
+    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=250, callOnEnter=True):
         super().__init__()
         layout = QVBoxLayout()
         hlayout = QHBoxLayout()
@@ -253,7 +256,11 @@ class NumberInput(QWidget):
         layout.addWidget(self.slider)
         self.setLayout(layout)
 
-        self.textbox.textEdited.connect(self.on_text_change)
+        if callOnEnter:
+            self.textbox.returnPressed.connect(self.on_text_change)
+        else:
+            self.textbox.textEdited.connect(self.on_text_change)
+
         self.slider.valueChanged.connect(self.on_slider_change)
 
         self.on_change = on_change
