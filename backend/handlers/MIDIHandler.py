@@ -103,17 +103,17 @@ class MidiMusicData:
 
                         if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
                             note_on_dict[pitch].append(n)
-                            print(f"Warning: note_on event without corresponding note_off event for note {pitch} in channel {channel} at time {n.time()}. Total notes: {len(note_on_dict[pitch])}")
+                            print(f"Warning: ON without OFF for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
                         else:
                             note_on_dict[pitch] = [n]
 
-                    else:  # note_off event
+                    else:  # note_off
                         if pitch in note_on_dict and note_on_dict[pitch]:
                             prevNote = note_on_dict[pitch].pop(0)
                             prevNote.set_duration(n.time_off)
                             channel_notes.append(prevNote)
                         else:
-                            print(f"Warning: note_off event without corresponding note_on event for note {pitch} in channel {channel}")
+                            print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
 
             self.chanel_notes_with_duration[channel] = channel_notes
 

@@ -63,7 +63,9 @@ class ExamplePage(BaseClassPage):
             for msg in midi:
                 if hasattr(msg, 'time'):
                     cumTime += msg.time
-                outText += f"{cumTime:.02f}".ljust(8) + f" {msg.__dict__}\n"
+
+                if msg.type == 'note_on' or msg.type == 'note_off':
+                    outText += f"{cumTime:.03f}".ljust(8) + f" {msg.__dict__}\n"
 
         elif self.midiDataMenu.selected == "Notes":
 
