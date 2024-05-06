@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication
 from frontend.MainWindow import *
 from frontend.pages.TestPage import *
 from frontend.pages.FilesPage import *
+from frontend.pages.ChordPage import *
 from frontend.pages.TracksPage import *
 from frontend.pages.ExamplePage import *
 from frontend.pages.InstrumentPage import *
@@ -25,6 +26,7 @@ if __name__ == '__main__':
         FilesPage(),
         TracksPage(),
         InstrumentPage(),
+        ChordPage(),
         SoundPlayerPage(),
         TracksMetadataPage(),
         ExamplePage(),
