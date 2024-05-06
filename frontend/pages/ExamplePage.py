@@ -67,6 +67,7 @@ class ExamplePage(BaseClassPage):
                 if msg.type == 'note_on' or msg.type == 'note_off':
                     outText += f"{cumTime:.03f}".ljust(8) + f" {msg.__dict__}\n"
 
+
         elif self.midiDataMenu.selected == "Notes":
 
             midi_data = self.model.midi_handler.parseMidiNotes(path)
@@ -77,6 +78,7 @@ class ExamplePage(BaseClassPage):
                 
                 for note in channel_notes:
                     outText += "\t" + str(note) + "\n"
+
 
         elif self.midiDataMenu.selected == "NotesPerPitch":
 
