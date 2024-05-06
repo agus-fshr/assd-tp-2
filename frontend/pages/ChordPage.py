@@ -104,11 +104,12 @@ class ChordPage(BaseClassPage):
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
 
-        song = np.array([])
         song_length = 0
         for note in self.noteArr:
             song_length += note["Delay"]
-        song_length += self.noteArr[-1]["Duration"]
+        song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
+
+        print(f"Song Length (Samples): {song_length}")
         
         curr = 0
         song = np.zeros(song_length)
@@ -119,14 +120,14 @@ class ChordPage(BaseClassPage):
             duration = note["Duration"]
             delay = note["Delay"]
 
-            curr += delay
-
             instrument = self.synthSelector.selected
             effect = self.effectSelector.selected
             wave_array = instrument(freq, amp, duration)
             wave_array = effect(wave_array)
 
-            song[curr:curr + len(wave_array)] += wave_array
+            song[curr:curr + wave_array.size] += wave_array
+
+            curr += delay
 
             
 
@@ -147,7 +148,7 @@ class ChordPage(BaseClassPage):
         note = {}
         note["Frequency"] = self.freqSelector.value()
         note["Amplitude"] = self.ampSelector.value()
-        note["Duration"] = int(self.durationSelector.value() * self.model.audioPlayer.framerate)
+        note["Duration"] = int(self.durationSelector.value())
         note["Delay"] = int(self.delaySelector.value() * self.model.audioPlayer.framerate)
 
         self.noteArr.append(note)
