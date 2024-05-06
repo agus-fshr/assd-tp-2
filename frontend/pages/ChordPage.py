@@ -112,7 +112,7 @@ class ChordPage(BaseClassPage):
         print(f"Song Length (Samples): {song_length}")
         
         curr = 0
-        song = np.zeros(song_length)
+        song = np.zeros(song_length + self.model.audioPlayer.framerate * 2)
 
         for note in self.noteArr:
             freq = note["Frequency"]
@@ -125,7 +125,9 @@ class ChordPage(BaseClassPage):
             wave_array = instrument(freq, amp, duration)
             wave_array = effect(wave_array)
 
-            song[curr:curr + wave_array.size] += wave_array
+            print("song size: ", song.size)
+            print("wave_array size: ", wave_array.size)
+            song[curr : curr + wave_array.size] += wave_array
 
             curr += delay
 
@@ -148,7 +150,7 @@ class ChordPage(BaseClassPage):
         note = {}
         note["Frequency"] = self.freqSelector.value()
         note["Amplitude"] = self.ampSelector.value()
-        note["Duration"] = int(self.durationSelector.value())
+        note["Duration"] = self.durationSelector.value()
         note["Delay"] = int(self.delaySelector.value() * self.model.audioPlayer.framerate)
 
         self.noteArr.append(note)
