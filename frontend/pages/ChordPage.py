@@ -20,6 +20,8 @@ class ChordPage(BaseClassPage):
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
+        self.noteArr = []
+
         self.synthSelector = DropDownMenu("Select Instrument", onChoose=self.on_instrument_selected)
         self.effectSelector = DropDownMenu("Select Effect", onChoose=self.on_effect_selected)
         self.load_instrument_options()
@@ -28,7 +30,11 @@ class ChordPage(BaseClassPage):
         self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
         self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
-        
+        self.delaySelector = NumberInput("Delay", default=0.0, interval=(0, 5), step=0.01)
+
+        self.noteViewerConsole = ConsoleWidget()
+
+        addButton = Button("Add Note", on_click=self.addNote, background_color="lightgreen", hover_color="white")
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
         synthButton.setFixedWidth(150)
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
@@ -61,7 +67,11 @@ class ChordPage(BaseClassPage):
         controlsHLayout.addSpacing(20)
         controlsHLayout.addWidget(self.durationSelector)
         controlsHLayout.addSpacing(20)
+        controlsHLayout.addWidget(self.delaySelector)
+        controlsHLayout.addSpacing(20)
         controlsHLayout.addWidget(synthButton)
+        controlsHLayout.addSpacing(10)
+        controlsHLayout.addWidget(addButton)
         controlsHLayout.addSpacing(10)
         controlsHLayout.addWidget(saveWAVButton)
         controlsHLayout.addWidget(openFileExplorerButton)
@@ -93,15 +103,32 @@ class ChordPage(BaseClassPage):
 
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
-        freq = self.freqSelector.value()
-        amp = self.ampSelector.value()
-        duration = self.durationSelector.value()
 
-        instrument = self.synthSelector.selected
-        effect = self.effectSelector.selected
+        song = np.array([])
+        song_length = 0
+        for note in self.noteArr:
+            song_length += note["Delay"]
+        song_length += self.noteArr[-1]["Duration"]
+        
+        curr = 0
+        song = np.zeros(song_length)
 
-        wave_array = instrument(freq, amp, duration)
-        wave_array = effect(wave_array)
+        for note in self.noteArr:
+            freq = note["Frequency"]
+            amp = note["Amplitude"]
+            duration = note["Duration"]
+            delay = note["Delay"]
+
+            curr += delay
+
+            instrument = self.synthSelector.selected
+            effect = self.effectSelector.selected
+            wave_array = instrument(freq, amp, duration)
+            wave_array = effect(wave_array)
+
+            song[curr:curr + len(wave_array)] += wave_array
+
+            
 
         # set time axis
         framerate = self.model.audioPlayer.framerate
@@ -114,6 +141,18 @@ class ChordPage(BaseClassPage):
         self.model.audioPlayer.set_array(wave_array)
         self.player.play()
 
+    def addNote(self):
+        print("Note added!")
+
+        note = {}
+        note["Frequency"] = self.freqSelector.value()
+        note["Amplitude"] = self.ampSelector.value()
+        note["Duration"] = int(self.durationSelector.value() * self.model.audioPlayer.framerate)
+        note["Delay"] = int(self.delaySelector.value() * self.model.audioPlayer.framerate)
+
+        self.noteArr.append(note)
+
+        self.noteViewerConsole.appendText("asd")
 
     def load_instrument_options(self):
         options = {}
