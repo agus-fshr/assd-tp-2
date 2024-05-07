@@ -62,5 +62,5 @@ class TestPage(BaseClassPage):
         freq = freq.astype(int)
 
         y = sample_rate / freq - 1/(2*stretch)
-        y = y.astype(int)
+        # y = y.astype(int)
         self.plotWidget.plot(freq, y)

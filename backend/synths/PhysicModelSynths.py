@@ -19,14 +19,16 @@ class KSGuitar(SynthBaseClass):
 
     def init_wavetable(self, amp, stretch, noise_type, freq):
         """ Initialize the wavetable """
-        size = int(np.floor(self.sample_rate / int(freq) - 1/2/stretch))
+        size = int( self.sample_rate / freq - 1/(2*stretch))
         match noise_type:
             case "Normal":
-                return (amp * np.random.normal(0,1,size)).astype(np.float32)
+                dist = (amp * np.random.normal(0,1,size)).astype(np.float32)
             case "Uniform":
-                return (amp * np.random.uniform(-1, 1, size)).astype(np.float32)
+                dist = (amp * np.random.uniform(-1, 1, size)).astype(np.float32)
             case "2-Level":
-                return (amp * 2 * np.random.randint(0, 2, size) - 1).astype(np.float32)
+                dist = (amp * 2 * np.random.randint(0, 2, size) - 1).astype(np.float32)
+        
+        return dist - np.mean(dist)
         
     def karplus_strong(self, wavetable, n_samples, stretch_factor):
 
@@ -40,6 +42,7 @@ class KSGuitar(SynthBaseClass):
             stretch = np.random.binomial(1, 1 - 1/stretch_factor)
             if stretch == 0:
                 wavetable[curr_sample] = 0.5 * (wavetable[curr_sample] + prev_value)
+            
             samples.append(wavetable[curr_sample])
             prev_value = samples[-1]
             curr_sample = (curr_sample + 1) % wavetable.size
