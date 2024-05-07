@@ -52,7 +52,8 @@ class ChordPage(BaseClassPage):
         # Local widgets (used only in the initUI method)
         topHLayout = QHBoxLayout()
         controlsHLayout = QHBoxLayout()
-        settingsHLayout = QHBoxLayout()
+        bottomHLayout = QHBoxLayout()
+        leftVLayout = QVBoxLayout()
 
         # Setup top layout
         topHLayout.addWidget(self.synthSelector)
@@ -77,16 +78,18 @@ class ChordPage(BaseClassPage):
         controlsHLayout.addWidget(openFileExplorerButton)
         
         # Setup settings layout
-        settingsHLayout.addWidget(self.dynamicSettings)
+        leftVLayout.addWidget(self.noteViewerConsole)
+        leftVLayout.addWidget(self.dynamicSettings)
         vplotlay = QVBoxLayout()
         vplotlay.addWidget(self.player)
         vplotlay.addWidget(self.waveformViewer)
-        settingsHLayout.addLayout(vplotlay)
+        bottomHLayout.addLayout(leftVLayout)
+        bottomHLayout.addLayout(vplotlay)
 
         # Add widgets to page layout
         layout.addLayout(topHLayout)
         layout.addLayout(controlsHLayout)
-        layout.addLayout(settingsHLayout)
+        layout.addLayout(bottomHLayout)
 
     def openFileExplorer(self):
         current_directory = os.getcwd()
@@ -106,14 +109,15 @@ class ChordPage(BaseClassPage):
 
         song_length = 0
         for note in self.noteArr:
-            song_length += note["Delay"]
+            song_length += int(note["Delay"] * self.model.audioPlayer.framerate)
+        
         song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
 
         print(f"Song Length (Samples): {song_length}")
         
-        curr = 0
-        song = np.zeros(song_length + self.model.audioPlayer.framerate * 2)
+        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 2)
 
+        curr = 0
         for note in self.noteArr:
             freq = note["Frequency"]
             amp = note["Amplitude"]
@@ -125,23 +129,27 @@ class ChordPage(BaseClassPage):
             wave_array = instrument(freq, amp, duration)
             wave_array = effect(wave_array)
 
-            print("song size: ", song.size)
-            print("wave_array size: ", wave_array.size)
-            song[curr : curr + wave_array.size] += wave_array
 
-            curr += delay
+            if curr + wave_array.size >= song_array.size:
+                song_array[curr:] += wave_array[:song_array.size - curr]
+                print("ERROR: Song too short or note too long. Breaking loop.")
+                print("song_array size: ", song_array.size)
+                print("wave_array size: ", wave_array.size)
+                break
 
-            
+            song_array[curr : curr + wave_array.size] += wave_array
+
+            curr += int(delay * self.model.audioPlayer.framerate)
+
 
         # set time axis
-        framerate = self.model.audioPlayer.framerate
-        time = np.arange(len(wave_array)) / framerate
+        time = np.arange(len(song_array)) / self.model.audioPlayer.framerate
 
-        wave_array = np.clip(wave_array, -1.0, 1.0)
+        song_array = np.clip(song_array, -1.0, 1.0)
 
-        self.waveformViewer.plot(time, wave_array)
+        self.waveformViewer.plot(time, song_array)
 
-        self.model.audioPlayer.set_array(wave_array)
+        self.model.audioPlayer.set_array(song_array)
         self.player.play()
 
     def addNote(self):
@@ -151,11 +159,17 @@ class ChordPage(BaseClassPage):
         note["Frequency"] = self.freqSelector.value()
         note["Amplitude"] = self.ampSelector.value()
         note["Duration"] = self.durationSelector.value()
-        note["Delay"] = int(self.delaySelector.value() * self.model.audioPlayer.framerate)
+        note["Delay"] = self.delaySelector.value()
 
         self.noteArr.append(note)
 
-        self.noteViewerConsole.appendText("asd")
+        text = "Time     Freq\tAmp \tDur\n"
+        absTime = 0
+        for note in self.noteArr:
+            absTime += note["Delay"]
+            timestr = f"{absTime:.03f}".ljust(8)
+            text += f"{timestr} {note['Frequency']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
+        self.noteViewerConsole.setText(text)
 
     def load_instrument_options(self):
         options = {}

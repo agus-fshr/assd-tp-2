@@ -11,7 +11,7 @@ class MidiNoteData:
 
     def set_duration(self, time_off):
         self.time_off = time_off
-        self.duration = self.time_off - self.time_on
+        self.duration = time_off - self.time_on
 
     def time(self):
         if self.time_off >= 0.0 and self.time_on == 0.0:
@@ -29,29 +29,37 @@ class MidiNoteData:
         elif self.time_off > 0.0 or self.vel == 0:
             return False
         
-        elif self.time_on >= 0.0 and self.time_off == 0.0:
+        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.vel > 0:
             return True
         
         else:
-            raise ValueError("Note has no time_on or time_off")
+            raise ValueError("Note has no time_on or time_off. Bad format")
 
     def __str__(self):
         if self.duration != 0.0:
-            timestr = f"{self.time_on:.03f}".ljust(8)
-            durstr = f"{self.duration:.03f}".ljust(5)
+            timestr = f"{self.time_on:.03f}".ljust(9)
+            durstr = f"{self.duration:.03f}".ljust(7)
             return f"{timestr} + {durstr} N:{self.note} V:{self.vel}"
         
         elif self.time_off > 0.0 or self.vel == 0:
+            if self.time_off > 0.0 and self.time_on > 0.0:
+                self.duration = self.time_off - self.time_on
+                return f"N:{self.note:03} V:{self.vel:03}\t\t t={self.time_on:.03f} ON\t\t t={self.time_off:.03f} OFF"
             return f"N:{self.note:03} V:{self.vel:03}\t\t t={self.time_off:.03f} OFF"
         
-        elif self.time_on >= 0.0 and self.time_off == 0.0:
+        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.vel > 0:
             return f"N:{self.note:03} V:{self.vel:03} t={self.time_on:.03f} ON"
         
         else:
-            return str(self.__dict__)
+            return str(self.__dict__) + " ERROR"
 
 class MidiMusicData:
-    def __init__(self, path, title):
+    def __init__(self, path, title, handleOverlap="ignore"):
+        handleOverlap_options = ["ignore", "FIFO"]
+        if handleOverlap not in handleOverlap_options:
+            raise ValueError(f"handleOverlap must be one of {handleOverlap_options}")
+
+        self.handleOverlap = handleOverlap
         self.path = path
         self.title = title
         self.channel_raw_notes = {}     # dict of notes indexed by channel
@@ -102,18 +110,29 @@ class MidiMusicData:
                     if n.on_off():  # note_on event
 
                         if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
-                            note_on_dict[pitch].append(n)
+                            if self.handleOverlap == "ignore":
+                                continue
+                            elif self.handleOverlap == "FIFO":
+                                note_on_dict[pitch].append(n)
+
                             print(f"Warning: ON without OFF for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
                         else:
                             note_on_dict[pitch] = [n]
 
                     else:  # note_off
-                        if pitch in note_on_dict and note_on_dict[pitch]:
-                            prevNote = note_on_dict[pitch].pop(0)
+                        if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
+                            if self.handleOverlap == "ignore" or self.handleOverlap == "FIFO":
+                                prevNote = note_on_dict[pitch].pop(0)
+
                             prevNote.set_duration(n.time_off)
-                            channel_notes.append(prevNote)
+                            if prevNote.duration > 0:
+                                channel_notes.append(prevNote)
+                            elif self.handleOverlap != "ignore":
+                                print(f"Warning: Note with duration=0 for n={pitch} in ch={channel} at t={n.time():.03f}")
                         else:
-                            print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
+                            if self.handleOverlap == "ignore":
+                                continue
+                            print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}")
 
             self.chanel_notes_with_duration[channel] = channel_notes
 
