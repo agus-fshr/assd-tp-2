@@ -31,9 +31,8 @@ class FilesPage(BaseClassPage):
         # Setup Top layout and add Buttons with their callbacks
         topHLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         topHLayout.addWidget( Button("Add Files", on_click=self.popup_file_explorer_dialog) )
-        topHLayout.addWidget( Button("Clear Files", on_click=self.clear_files_from_table) )
         topHLayout.addSpacing(20)
-        topHLayout.addWidget( Button("Import Files", on_click=self.import_files) )
+        topHLayout.addWidget( Button("Clear Files", on_click=self.clear_files_from_table) )
         topHLayout.addStretch(1)
 
         # Add widgets to the page layout
@@ -63,7 +62,12 @@ class FilesPage(BaseClassPage):
                 self.model.file_handler.add(list_of_filepaths)
         except ValueError as e:
             QMessageBox.critical(self, 'Error', str(e))
+            self.update_table()
+            return
+        file_dialog.close()
         self.update_table()                                         # Show them
+        self.import_files()                                         # Import them
+        self.update_table()                                         # Show them again
 
 
     # Callback for when a table item is edited

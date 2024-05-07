@@ -65,7 +65,7 @@ class GuitarAdditive(SynthBaseClass):
 
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
-
+            NumParam("k", interval=(1, 10), value=2, step=0.1, text="k value"),
         )
 
 
@@ -77,16 +77,18 @@ class GuitarAdditive(SynthBaseClass):
         - duration: on-off note duration [s]  
         """        
         partials = [   # [freq, amp]
-            (130.66, 0.01811),
-            (261.09, 0.01278),
-            (783.73, 0.00695),
-            (391.75, 0.00648),
-            (914.39, 0.00272),
-            (1045.27, 0.00211),
-            (522.41, 0.00180),
+            (130.66, 0.1811),
+            (261.09, 0.1278),
+            (783.73, 0.0695),
+            (391.75, 0.0648),
+            (914.39, 0.0272),
+            (1045.27, 0.0211),
+            (522.41, 0.0180),
         ]
 
-        adsr = LinearADSR(1.0, 0.01, 0.05, 2.0, duration)     # Sustain time is calculated internally
+        k = self.params["k"]
+
+        adsr = LinearADSR(k, 0.01, 0.05, 2.0, duration)     # Sustain time is calculated internally
         t = adsr.time()
 
         out = np.zeros(len(t))
@@ -94,7 +96,7 @@ class GuitarAdditive(SynthBaseClass):
         for f, a in partials:
             out += a * np.sin(2 * np.pi * f * t)
 
-        return out * adsr.envelope()
+        return amp * out * adsr.envelope()
 
 
 

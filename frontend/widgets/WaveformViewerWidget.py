@@ -23,7 +23,7 @@ class WaveformViewerWidget(QWidget):
 
         self.onFFT = onFFT
 
-        self.plotLayout = pg.GraphicsLayoutWidget(show=True)
+        self.plotLayout = pg.GraphicsLayoutWidget()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
         

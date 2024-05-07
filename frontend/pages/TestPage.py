@@ -8,7 +8,6 @@ from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
 from backend.ParamObject import *
 
 
-
 class TestPage(BaseClassPage):
 
     title = "TestPage"    

@@ -1,9 +1,11 @@
 # main.py
 import sys
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QMessageBox
+
+print("Running main.py")
 
 from frontend.MainWindow import *
-from frontend.pages.TestPage import *
+# from frontend.pages.TestPage import *
 from frontend.pages.FilesPage import *
 from frontend.pages.ChordPage import *
 from frontend.pages.TracksPage import *
@@ -31,9 +33,10 @@ if __name__ == '__main__':
         SoundPlayerPage(),
         TracksMetadataPage(),
         ExamplePage(),
-        TestPage(),
+        # TestPage(),
         ReadMidiPage(),
     ]
+    print("Pages created, creating main window")
     ex = MainWindow(pages=pages, model=mainModel)
 
     sys.exit(app.exec_())

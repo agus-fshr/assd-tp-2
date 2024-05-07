@@ -1,8 +1,11 @@
-from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex, QMutexLocker, QWaitCondition
+from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex, QMutexLocker
+from PyQt5 import QtCore
+from PyQt5 import Qt
 import pyaudio
 import numpy as np
 import wave
 import io
+import time
 
 import platform
 from ctypes import *
@@ -37,45 +40,48 @@ class AudioPlaybackThread(QThread):
     currentTimeUpdated = pyqtSignal(int)  # Emit the current play time in frames
     finished = pyqtSignal()
 
-    def __init__(self, wave_obj):
+    def __init__(self, wave_obj, chunk_size=2048):
         super().__init__()
         self.wo = wave_obj
         self.is_paused = False
         self.is_stopped = False
         self.mutex = QMutex()
-        self.pause_condition = QWaitCondition()
         self.total_frames_read = 0
+        self.paused_at_frame = 0
+        self.chunk_size = chunk_size
 
     def run(self):
         with noalsaerr():
             p = pyaudio.PyAudio()
     
         stream = None
+        data = None
         try:
-            # chunk_size = 1024
-            chunk_size = 2048
-
             stream = p.open(format=p.get_format_from_width(self.wo.getsampwidth()),
                             channels=self.wo.getnchannels(),
                             rate=self.wo.getframerate(),
                             output=True,
-                            frames_per_buffer=chunk_size)
+                            frames_per_buffer=self.chunk_size)
+            
             self.wo.setpos(self.total_frames_read)
 
-            data = self.wo.readframes(chunk_size)
+            bytes_per_frame = self.wo.getsampwidth() * self.wo.getnchannels()
+            
+            data = self.wo.readframes(self.chunk_size)
             while data and not self.is_stopped:
                 stream.write(data)
-                
-                # Calculate the current TIME in seconds
-                self.total_frames_read += len(data) // self.wo.getsampwidth() // self.wo.getnchannels()
-                self.currentTimeUpdated.emit(self.total_frames_read)
 
-                data = self.wo.readframes(chunk_size)
+                # Calculate the current TIME in frames
+                self.total_frames_read += len(data) // bytes_per_frame
+                
+                data = self.wo.readframes(self.chunk_size)
+
+                self.currentTimeUpdated.emit(self.total_frames_read)
                 with QMutexLocker(self.mutex):
-                    if self.is_paused:
-                        self.pause_condition.wait(self.mutex)  # Wait until resume is called
-                    if self.is_stopped:
+                    if self.is_paused or self.is_stopped:
+                        # print("BREAK")
                         break
+
         except Exception as e:
             self.errorOccurred.emit(str(e))
         finally:
@@ -83,67 +89,157 @@ class AudioPlaybackThread(QThread):
                 stream.stop_stream()
                 stream.close()
             p.terminate()
-            self.wo.rewind()
-            self.finished.emit()
-            self.total_frames_read = 0
+
+            if self.is_stopped or data is None or len(data) == 0:
+                # print("FINISHED")
+                self.wo.rewind()
+                self.finished.emit()
+                self.total_frames_read = 0
+                self.currentTimeUpdated.emit(self.total_frames_read)
+
 
     def seek(self, frame_index):
         with QMutexLocker(self.mutex):
-            # Use setpos() to seek to the desired frame
             try:
                 self.wo.setpos(frame_index)
                 self.total_frames_read = frame_index
+                self.currentTimeUpdated.emit(self.total_frames_read)
                 # Force pause after seeking
                 self.is_paused = True
+                self.paused_at_frame = frame_index
             except Exception as e:
                 self.errorOccurred.emit(f"AudioPlayback seek error: {str(e)}")
+
 
     def isPaused(self):
         return self.is_paused
 
     def pause(self):
+        print(f"\tPausing {self.total_frames_read}")
+        # with QMutexLocker(self.mutex):
+        #     self.is_paused = True
+        self.paused_at_frame = self.total_frames_read
         with QMutexLocker(self.mutex):
             self.is_paused = True
 
-    def resume(self):
-        with QMutexLocker(self.mutex):
-            self.is_paused = False
-            self.pause_condition.wakeAll()
 
     def start(self):
+        if self.is_paused:
+            self.total_frames_read = self.paused_at_frame
+        print(f"\tStarting {self.total_frames_read}")
         with QMutexLocker(self.mutex):
             self.is_stopped = False
             self.is_paused = False
-            self.pause_condition.wakeAll()
         super().start()
 
     def stop(self):
+        print(f"\tStopping {self.total_frames_read}")
         with QMutexLocker(self.mutex):
             self.is_stopped = True
             self.is_paused = False  # Ensure the thread exits if it was paused
-            self.pause_condition.wakeAll()  # Wake the thread if it's waiting
-        self.wo.rewind()
-        self.total_frames_read = 0
 
+
+
+class TimeUpdatingThread(QThread):
+    timeUpdated = pyqtSignal(int)  # Emit the current play time in frames
+
+    def __init__(self, audio_player):
+        super().__init__()
+        self.audio_player = audio_player
+        self.last_frame = 0
+        self.is_stopped = False
+
+    def run(self):
+        self.is_stopped = False
+        print(f"\trun TimeUpdatingThread: {self.audio_player.current_frame}")
+        while not self.is_stopped:
+            # Read from current_frame
+            if self.last_frame != self.audio_player.current_frame:
+                self.last_frame = self.audio_player.current_frame
+                self.timeUpdated.emit(self.last_frame)
+
+            time.sleep(0.05)  # Sleep for a short time to reduce CPU usage
+
+    def stop(self):
+        print(f"\tstop TimeUpdatingThread: {self.audio_player.current_frame}")
+        self.is_stopped = True
 
 
 
 class AudioPlayer(QObject):
-    finished = pyqtSignal()
-    errorOccurred = pyqtSignal(str)
-    currentTimeUpdated = pyqtSignal(int)  # Emit the current play time in frames
     
+    finished = pyqtSignal()
+    errorOccurred = pyqtSignal(str)    
+    currentTimeUpdated = pyqtSignal(int)  # Emit the current play time in frames
+
+    current_frame = 0
+
     playback_thread = None
     nframes = 0
     framerate = 44100
+
+    def __init__(self):
+        super().__init__()
+        self.emit_time_thread = TimeUpdatingThread(self)
+        self.emit_time_thread.timeUpdated.connect(self.currentTimeUpdated)
+
+    def isPlaying(self):
+        if self.playback_thread is None:
+            return False
+        return self.playback_thread.isRunning() and not self.playback_thread.isPaused()
+
+    def willPlay(self):
+        if self.playback_thread is None:
+            return False
+        return (not self.playback_thread.isRunning()) or self.playback_thread.isPaused()
+
+
+    def play(self):
+        if self.playback_thread is None:
+            return
+
+        if not self.playback_thread.isRunning():
+            self.playback_thread.start()
+            self.emit_time_thread.start()
+        elif self.playback_thread.isPaused():
+            self.playback_thread.resume()
+            self.emit_time_thread.start()
+
+
+    def pause(self):
+        if self.playback_thread:
+            self.emit_time_thread.stop()
+            self.playback_thread.pause()
+            self.emit_time_thread.wait()  # Wait for the thread to finish
+            self.playback_thread.wait()  # Wait for the thread to finish
+
+
+    def stop(self):
+        if self.playback_thread:
+            self.emit_time_thread.stop()
+            self.playback_thread.stop()
+            self.emit_time_thread.wait()  # Wait for the thread to finish
+            self.playback_thread.wait()  # Wait for the thread to finish
+    
+
+    def seek(self, frame_index):
+        if self.playback_thread:
+            self.emit_time_thread.stop()
+            self.playback_thread.seek(frame_index)
+
+
+    def update_current_playback_time(self, frame_index):
+        self.current_frame = frame_index
+
 
     def frames_to_pretty_time_str(self, frames):
         total_seconds = frames // self.framerate
         minutes = total_seconds // 60
         seconds = total_seconds % 60
-        second_fraction = (frames % self.framerate) // (self.framerate // 100)
+        second_fraction = (frames % self.framerate) // (self.framerate // 1000)
 
-        return f"{minutes}:{seconds:02d}.{second_fraction:02d}"
+        return f"{minutes:02d}:{seconds:02d}.{second_fraction:03d}"
+
 
     # NO TOCAR ESTO !!!     DO NOT TOUCH THIS !!!
     def set_array(self, np_array, framerate=44100, channels=1):
@@ -170,17 +266,22 @@ class AudioPlayer(QObject):
 
 
     def set_from_file(self, file_path):
-        self.set_wave_object(wave.open(file_path, 'rb'))
+        try:
+            self.set_wave_object(wave.open(file_path, 'rb'))
+        except Exception as e:
+            self.errorOccurred.emit(str(e))
+
 
     def save_to_file(self, file_path):
         if self.playback_thread is None:
-            return False
+            return
 
         with wave.open(file_path, 'wb') as wo:
             wo.setnchannels(self.playback_thread.wo.getnchannels())
             wo.setsampwidth(self.playback_thread.wo.getsampwidth())
             wo.setframerate(self.playback_thread.wo.getframerate())
             wo.writeframes(self.playback_thread.wo.readframes(self.nframes))
+
 
     def get_numpy_data(self):
         if self.playback_thread is None:
@@ -192,45 +293,14 @@ class AudioPlayer(QObject):
         time = np.linspace(0, len(arr) / self.framerate, len(arr))
         return time, np.clip(arr / 32767.0, -1.0, 1.0)
 
+
     def set_wave_object(self, wave_obj):
         self.stop()
-
+        
         self.playback_thread = AudioPlaybackThread(wave_obj)
         self.playback_thread.errorOccurred.connect(self.errorOccurred)
-        self.playback_thread.currentTimeUpdated.connect(self.currentTimeUpdated)
+        self.playback_thread.currentTimeUpdated.connect(self.update_current_playback_time)
         self.playback_thread.finished.connect(self.finished)
 
         self.framerate = wave_obj.getframerate()
         self.nframes = wave_obj.getnframes()
-
-    def isRunning(self):
-        if self.playback_thread is None:
-            return False
-        return self.playback_thread.isRunning() and not self.playback_thread.isPaused()
-
-    def play(self):
-        if self.playback_thread is None:
-            return False
-
-        if not self.playback_thread.isRunning():
-            self.playback_thread.start()
-            return True
-        elif self.playback_thread.isPaused():
-            self.playback_thread.resume()
-            return True
-        return True # Already playing
-
-    def pause(self):
-        if self.playback_thread:
-            self.playback_thread.pause()
-            return True
-        return False
-
-    def stop(self):
-        if self.playback_thread:
-            self.playback_thread.stop()
-            self.playback_thread.wait()  # Wait for the thread to finish
-    
-    def seek(self, frame_index):
-        if self.playback_thread:
-            self.playback_thread.seek(frame_index)
