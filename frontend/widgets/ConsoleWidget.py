@@ -1,14 +1,16 @@
 from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QScrollArea, QHBoxLayout, QTextEdit
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QTextCursor
 from frontend.widgets.BasicWidgets import TextInput, Button
 
 class ConsoleWidget(QWidget):
-    def __init__(self, textSelectable=True, wordWrap=True, defaultText="Console output will appear here...", parent=None):
-        super(ConsoleWidget, self).__init__(parent)
+    def __init__(self, textSelectable=True, wordWrap=True, defaultText="Console output will appear here...", fixedWidth=None):
+        super(ConsoleWidget, self).__init__()
         
         self.defaultText = defaultText
 
+        self.setFixedWidth(fixedWidth) if fixedWidth else None
+        
         # Create the QLabel that will display the console output
         self.consoleOutput = QTextEdit()
         self.consoleOutput.setReadOnly(True)
@@ -36,6 +38,9 @@ class ConsoleWidget(QWidget):
         
         # Additional styling or functionality can be added here as needed
 
+    def clear(self):
+        self.clearConsole()
+
     def clearConsole(self):
         self.consoleOutput.clear()
         self.setText(self.defaultText)
@@ -47,7 +52,7 @@ class ConsoleWidget(QWidget):
 
     def appendText(self, text):
         # Method to append text to the console, improving performance for large updates
-        self.consoleOutput.moveCursor(Qt.QTextCursor.End)
+        self.consoleOutput.moveCursor(QTextCursor.End)
         self.consoleOutput.insertPlainText(text)
         # Update line count
         newlines = self.consoleOutput.toPlainText().count('\n') + 1
