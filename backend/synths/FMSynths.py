@@ -111,8 +111,8 @@ class FMSynthSax(SynthBaseClass):
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
             NumParam("I1", interval=(0, 10), value=4, step=0.1, text="Min mod index"),
             NumParam("I2", interval=(0, 10), value=2, step=0.1, text="Max mod index"),
-            NumParam("N1", interval=(0, 10), value=1.365, step=0.1, text="Carrier multiplier"), #Ajustado por Sully y Agus
-            NumParam("N2", interval=(0, 10), value=0.91, step=0.1, text="Modulator multiplier"), #Ajustado por Sully y Agus
+            NumParam("N1", interval=(0, 10), value=1.365, step=0.001, text="Carrier multiplier"), #Ajustado por Sully y Agus
+            NumParam("N2", interval=(0, 10), value=0.91, step=0.01, text="Modulator multiplier"), #Ajustado por Sully y Agus
             BoolParam("Testing", value= True, text="Testing Sawtooth"),
             
             NumParam("a1", interval=(0, 1), value=0.1, step=0.01, text="Attack time, modulator "),
