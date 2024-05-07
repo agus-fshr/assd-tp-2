@@ -173,6 +173,11 @@ class WaveformViewerWidget(QWidget):
         self.waveformPlot2.autoRange()
         self.updateRegion(self.waveformPlot1.getViewBox(), self.waveformPlot1.getViewBox().viewRange())
 
+        if plotType != "Spectrogram":
+            self.waveformPlot1.setAutoVisible(y=True)
+        else:
+            self.waveformPlot1.setAutoVisible(y=False)
+
 
     def setPadding(self, x, y, Ts):
         if self.paddingInput.text() == "":

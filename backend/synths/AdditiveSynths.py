@@ -45,17 +45,14 @@ class PureToneSynth(SynthBaseClass):
         A = self.params["A"]
         D = self.params["D"]
         R = self.params["R"]
+        
 
-        if duration < A + D:
-            duration = A + D
+        adsr = LinearADSR(k, A, D, R, duration)     # Sustain time is calculated internally
+        t = adsr.time()
 
-        envelope = LinearADSR(amp, k, A, D, R)          # Sustain time is calculated internally
-        total_time = duration + R                       # Total time is the note duration + Release time
-
-        t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         out = amp * wave(2 * np.pi * freq * t)
 
-        return out * envelope(t, duration)
+        return out * adsr.envelope()
     
     
 
