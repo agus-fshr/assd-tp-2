@@ -11,6 +11,7 @@ from frontend.widgets.AudioPlayerWidget import AudioPlayerWidget
 from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
 
 import numpy as np
+from scipy import signal
 
 class SoundPlayerPage(BaseClassPage):
 
@@ -31,7 +32,7 @@ class SoundPlayerPage(BaseClassPage):
         self.playerWidget = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
 
         # Setup waveform viewer widget
-        self.plotWidget = WaveformViewerWidget()
+        self.plotWidget = WaveformViewerWidget(onFFT=self.onFFT)
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
@@ -48,6 +49,24 @@ class SoundPlayerPage(BaseClassPage):
         
         self.dropDown.set_options(options)
 
+
+    def onFFT(self, f, x):
+        # search for peaks
+        f_50_hz_distance = int(80 / (f[1] - f[0]))
+        peaks = signal.find_peaks(x, height=0.0001, distance=f_50_hz_distance)
+        peaks_f = f[peaks[0]]
+        peaks_x = x[peaks[0]]
+        print(f"size: {len(x)}, max: {max(x)}, min: {min(x)} 50_Hz_dist: {f_50_hz_distance} peaks: {len(peaks_f)}")
+        
+        # Order peaks by amplitude (from highest to lowest amplitude)
+        peaks_f = peaks_f[np.argsort(peaks_x)[::-1]]
+        peaks_x = peaks_x[np.argsort(peaks_x)[::-1]]
+
+        print("Peaks:")
+        for pf, px in zip(peaks_f, peaks_x):
+            print(f"\t{pf:.2f} Hz: {px:.5f}")
+
+        self.plotWidget.scatter(peaks_f, peaks_x)
 
     # Callback to set the selected sound to play
     def on_sound_selected(self, name, path):

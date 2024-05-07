@@ -54,8 +54,47 @@ class PureToneSynth(SynthBaseClass):
 
         return out * adsr.envelope()
     
-    
 
+class GuitarAdditive(SynthBaseClass):
+    """ Simple pure tone synthesizer"""
+    def __init__(self):
+        super().__init__()
+
+        self.name = "Guitar Additive" # Este nombre es el que se muestra en la interfaz
+
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+
+        )
+
+
+    def generate(self, freq, amp, duration):
+        """ 
+        Generate a pure tone with the given frequency, amplitude and duration
+        - freq: tone frequency [Hz]
+        - amp: tone amplitude [0, 1]
+        - duration: on-off note duration [s]  
+        """        
+        partials = [   # [freq, amp]
+            (130.66, 0.01811),
+            (261.09, 0.01278),
+            (783.73, 0.00695),
+            (391.75, 0.00648),
+            (914.39, 0.00272),
+            (1045.27, 0.00211),
+            (522.41, 0.00180),
+        ]
+
+        adsr = LinearADSR(1.0, 0.01, 0.05, 2.0, duration)     # Sustain time is calculated internally
+        t = adsr.time()
+
+        out = np.zeros(len(t))
+
+        for f, a in partials:
+            out += a * np.sin(2 * np.pi * f * t)
+
+        return out * adsr.envelope()
 
 
 

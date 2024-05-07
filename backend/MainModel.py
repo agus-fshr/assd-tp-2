@@ -28,7 +28,7 @@ class MainModel:
     # Add synthesizers here !
     synthesizers = [
         PureToneSynth(),
-        YourSynth(),
+        GuitarAdditive(),
         FMSynth(),
         KSGuitar(),
     ]
