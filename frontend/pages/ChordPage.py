@@ -28,14 +28,16 @@ class ChordPage(BaseClassPage):
         self.load_effect_options()
 
         self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
-        self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
+        self.ampSelector = NumberInput("Amplitude", default=0.4, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
-        self.delaySelector = NumberInput("Delay", default=0.0, interval=(0, 5), step=0.01)
+        self.delaySelector = NumberInput("Delay", default=0.2, interval=(0, 5), step=0.01)
 
-        self.noteViewerConsole = ConsoleWidget()
+        self.noteViewerConsole = ConsoleWidget(fixedWidth=350)
 
         addButton = Button("Add Note", on_click=self.addNote, background_color="lightgreen", hover_color="white")
-        synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightgreen", hover_color="white")
+        penScaleButton = Button("Pen Scale", on_click=self.penScale, background_color="yellow", hover_color="white")
+        popButton = Button("Pop Note", on_click=self.popNote, background_color="lightcoral", hover_color="white")
+        synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightblue", hover_color="white")
         synthButton.setFixedWidth(150)
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
         openFileExplorerButton = Button("Open Folder", on_click=self.openFileExplorer)
@@ -73,6 +75,8 @@ class ChordPage(BaseClassPage):
         controlsHLayout.addWidget(synthButton)
         controlsHLayout.addSpacing(10)
         controlsHLayout.addWidget(addButton)
+        controlsHLayout.addWidget(popButton)
+        controlsHLayout.addWidget(penScaleButton)
         controlsHLayout.addSpacing(10)
         controlsHLayout.addWidget(saveWAVButton)
         controlsHLayout.addWidget(openFileExplorerButton)
@@ -152,6 +156,47 @@ class ChordPage(BaseClassPage):
         self.model.audioPlayer.set_array(song_array)
         self.player.play()
 
+    def updateConsole(self):
+        text = "Time     Freq\tAmp \tDur\n"
+        absTime = 0
+        for note in self.noteArr:
+            absTime += note["Delay"]
+            timestr = f"{absTime:.03f}".ljust(8)
+            text += f"{timestr} {note['Frequency']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
+        self.noteViewerConsole.setText(text)
+
+    def popNote(self):
+        self.noteArr.pop()
+        self.updateConsole()
+
+    def penScale(self):
+    #   A minor pentatonic     A4,     C4,     D4,     E4,     G4,    A5
+        A_minor_pentatonic = [440, 523.25, 587.33, 659.25, 783.99, 880]
+
+        self.noteArr = []
+
+        for f in A_minor_pentatonic:
+            note = {}
+            note["Frequency"] = f
+            note["Amplitude"] = self.ampSelector.value()
+            note["Duration"] = self.durationSelector.value()
+            note["Delay"] = self.delaySelector.value()
+
+            self.noteArr.append(note)
+        
+        self.noteArr[-1]["Delay"] = 1.5
+
+        for f in A_minor_pentatonic:
+            note = {}
+            note["Frequency"] = f
+            note["Amplitude"] = self.ampSelector.value()
+            note["Duration"] = 2
+            note["Delay"] = 0
+
+            self.noteArr.append(note)
+
+        self.updateConsole()
+
     def addNote(self):
         print("Note added!")
 
@@ -162,14 +207,8 @@ class ChordPage(BaseClassPage):
         note["Delay"] = self.delaySelector.value()
 
         self.noteArr.append(note)
-
-        text = "Time     Freq\tAmp \tDur\n"
-        absTime = 0
-        for note in self.noteArr:
-            absTime += note["Delay"]
-            timestr = f"{absTime:.03f}".ljust(8)
-            text += f"{timestr} {note['Frequency']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
-        self.noteViewerConsole.setText(text)
+        self.updateConsole()
+        
 
     def load_instrument_options(self):
         options = {}

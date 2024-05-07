@@ -4,11 +4,13 @@ from PyQt5.QtGui import QFont, QTextCursor
 from frontend.widgets.BasicWidgets import TextInput, Button
 
 class ConsoleWidget(QWidget):
-    def __init__(self, textSelectable=True, wordWrap=True, defaultText="Console output will appear here...", parent=None):
-        super(ConsoleWidget, self).__init__(parent)
+    def __init__(self, textSelectable=True, wordWrap=True, defaultText="Console output will appear here...", fixedWidth=None):
+        super(ConsoleWidget, self).__init__()
         
         self.defaultText = defaultText
 
+        self.setFixedWidth(fixedWidth) if fixedWidth else None
+        
         # Create the QLabel that will display the console output
         self.consoleOutput = QTextEdit()
         self.consoleOutput.setReadOnly(True)
