@@ -63,4 +63,6 @@ class KSGuitar(SynthBaseClass):
 
         n_samples = int(duration * self.sample_rate)
 
-        return self.karplus_strong(wavetable, n_samples, stretch)
+        out = self.karplus_strong(wavetable, n_samples, stretch)
+
+        return out
