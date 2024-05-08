@@ -9,8 +9,8 @@ from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
 from frontend.pages.ChordPage import *
 from frontend.pages.TracksPage import *
-from frontend.pages.MidiViewer import *
-from frontend.pages.TrackPlayer import *
+from frontend.pages.MidiViewerPage import *
+from frontend.pages.MidiPlayerPage import *
 from frontend.pages.InstrumentPage import *
 from frontend.pages.SoundPlayerPage import *
 from frontend.pages.TracksMetadataPage import *
@@ -29,12 +29,12 @@ if __name__ == '__main__':
         FilesPage(),
         TracksPage(),
         TracksMetadataPage(),
-        MidiViewer(),
+        MidiViewerPage(),
         
         InstrumentPage(),
         ChordPage(),
         SoundPlayerPage(),
-        TrackPlayer(),
+        MIDIPlayerPage(),
         # TestPage(),
         # ReadMidiPage(),
     ]

@@ -6,7 +6,7 @@ from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu, SwitchButton, NumberInput
 from frontend.widgets.ConsoleWidget import ConsoleWidget
 
-class MidiViewer(BaseClassPage):
+class MidiViewerPage(BaseClassPage):
     
     title = "MIDI Viewer"
 

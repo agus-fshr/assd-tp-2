@@ -14,9 +14,9 @@ import numpy as np
 import os
 import webbrowser
 
-class TrackPlayer(BaseClassPage):
+class MIDIPlayerPage(BaseClassPage):
     
-    title = "Track Player"
+    title = "MIDI Player"
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
