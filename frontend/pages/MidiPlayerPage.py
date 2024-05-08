@@ -111,7 +111,7 @@ class MIDIPlayerPage(BaseClassPage):
 
         print(f"Song Length (Samples): {song_length}")
         
-        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 4)
+        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 1)
 
         curr = 0
         for i, note in enumerate(self.noteArr):
