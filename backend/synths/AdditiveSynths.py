@@ -2,7 +2,7 @@ from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 import numpy as np
 from scipy import signal
 
-from .EnvelopeModulators import LinearADSR
+from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass
 
 class PureToneSynth(SynthBaseClass):
@@ -49,7 +49,7 @@ class PureToneSynth(SynthBaseClass):
 
         adsr = LinearADSR(k, A, D, R)
         adsr.set_tone_duration(duration, self.sample_rate)
-        
+
         t = adsr.time()
 
         out = amp * wave(2 * np.pi * freq * t)
@@ -68,6 +68,9 @@ class GuitarAdditive(SynthBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             NumParam("k", interval=(1, 10), value=2, step=0.1, text="k value"),
+            NumParam("A", interval=(0, 0.5), value=0.03, step=0.0001, text="Attack [s]"),
+            NumParam("D", interval=(0, 0.5), value=0.1, step=0.0001, text="Decay [s]"),
+            NumParam("R", interval=(0, 5), value=0.6, step=0.1, text="Release [s]"),
         )
 
 
@@ -89,9 +92,17 @@ class GuitarAdditive(SynthBaseClass):
         ]
 
         k = self.params["k"]
+        A = self.params["A"]
+        D = self.params["D"]
+        R = self.params["R"]
 
-        adsr = LinearADSR(k, A=0.01, D=0.05, R=2.0)
+        adsr = LinearADSR(k, A, D, R)
+        adsr.attackFunction = ModFunction("exp", n=9.2)
+        adsr.decayFunction = ModFunction("cos", n=3.0)
+        adsr.releaseFunction = ModFunction("log", n=20.0)
+
         adsr.set_tone_duration(duration, self.sample_rate)
+        
         t = adsr.time()
 
         out = np.zeros(len(t))

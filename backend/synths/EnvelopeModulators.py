@@ -88,10 +88,8 @@ class LinearADSR():
         R = self.release
         t = self.t
         
-
         # Create an output array of the same shape as t
         output = np.zeros_like(t)
-        
 
         # Attack phase
         if A > 0.0:

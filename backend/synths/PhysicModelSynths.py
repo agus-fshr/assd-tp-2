@@ -13,7 +13,7 @@ class KSGuitar(SynthBaseClass):
         self.name = "Karplus-Strong Guitar"
 
         self.params = ParameterList(
-            NumParam("Stretch Factor", interval=(1.0, 5.0), value=1.1, step=0.01, text="Stretch Factor"),
+            NumParam("Stretch Factor", interval=(1.0, 5.0), value=1.03, step=0.01, text="Stretch Factor"),
             ChoiceParam("Initial Noise", options=["Normal", "Uniform", "2-Level"], value="Normal", text="Initial Noise"),
         )
 
@@ -66,9 +66,10 @@ class KSGuitar(SynthBaseClass):
         out = self.karplus_strong(wavetable, n_samples, stretch)
 
         t = duration
-        r_coef = 0.3
+        r_coef = 0.5
 
-        adsr = LinearADSR(1, 0, 0, t*r_coef)
+        adsr = LinearADSR(1, 0, 0, t*r_coef, modType="sin", n=2)
+
         adsr.set_total_time(t, self.sample_rate)
 
         return out * adsr.envelope()
