@@ -4,7 +4,7 @@ import scipy.signal as signal
 
 from .EffectBaseClass import EffectBaseClass
 
-from .RIR_data import RIR_2
+from .RIR_data import *
 
 class NoEffect(EffectBaseClass):
     def __init__(self):
@@ -124,17 +124,38 @@ class ReberbRIR(EffectBaseClass):
     def __init__(self):
         super().__init__()
         self.name = "RIR Reberb" # Este nombre es el que se muestra en la interfaz
+        self.pre_loaded_rir = RIR_2
+        self.rir_len = len(self.pre_loaded_rir)
 
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
+            BoolParam("active", value=True, text="Active"),
             ChoiceParam("lib", options=["scipy", "numpy"], value="scipy", text="Library"),
             ChoiceParam("mode", options=["full", "same", "valid"], value="full", text="Mode"),
-            ChoiceParam("method", options=["auto", "direct", "fft"], value="direct", text="Method"),
+            ChoiceParam("method", options=["auto", "direct", "fft"], value="fft", text="Method"),
+            NumParam("gain", interval=(0, 1), value=0.5, step=0.01, text="RIR gain"),
+            NumParam("t0", interval=(0, 5), value=0.0, step=0.001, text="Cut RIR init [s]"),
+            NumParam("t1", interval=(0, 5), value=0.0, step=0.001, text="Cut RIR end [s]"),
         )   
         
 
     def process(self, sound):
         """ Apply no effect to the sound"""
+
+        if not self.params["active"]:
+            return sound
+        
+        k = self.params["gain"]
+        t0 = self.params["t0"]
+        t1 = self.params["t1"]
+
+        n0 = int(t0 * self.sample_rate)
+        n1 = self.rir_len - int(t1 * self.sample_rate) - 1
+
+        if n1 <= n0 + 4410:
+            raise Exception("t0 should be less than t1")
+
+        rir = k * self.pre_loaded_rir[n0:n1]
 
         lib = self.params["lib"]
         mode = self.params["mode"]
@@ -142,8 +163,8 @@ class ReberbRIR(EffectBaseClass):
 
         # convolve Room Impulse Response (RIR) with the sound
         if lib == "scipy":
-            sound = signal.convolve(sound, RIR_2, mode=mode, method=method)
+            sound = signal.convolve(sound, rir, mode=mode, method=method)
         elif lib == "numpy":
-            sound = np.convolve(sound, RIR_2, mode=mode)
+            sound = np.convolve(sound, rir, mode=mode)
 
         return sound
