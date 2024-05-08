@@ -1,12 +1,13 @@
 
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QWidget, QSlider, QFrame
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QWidget, QSlider, QFrame, QTimeEdit
+from PyQt5.QtCore import Qt, pyqtSignal, QTime
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtGui import QColor, QPalette, QFont
 
 from .BasicWidgets import Button, SwitchButton
 
 class ClickableSlider(QSlider):
+    # pass
     clicked = pyqtSignal(int)
 
     def mousePressEvent(self, event):
@@ -22,35 +23,41 @@ class ClickableSlider(QSlider):
 
 
 class AudioPlayerWidget(QFrame):
+    # _instance = None
+
+    # def __new__(cls, *args, **kwargs):
+    #     if cls._instance is None:
+    #         cls._instance = super(AudioPlayerWidget, cls).__new__(cls)
+    #     return cls._instance
+
     def __init__(self, audioPlayer):
         super().__init__()
-        self.audioPlayer = audioPlayer
-        self.audioPlayer.errorOccurred.connect(self.on_error)
-        self.audioPlayer.finished.connect(self.on_finished)
-        self.audioPlayer.currentTimeUpdated.connect(self.audio_player_frame_changed)
+        # if not hasattr(self, 'initialized') or not self.initialized:
+        if True:
+            self.audioPlayer = audioPlayer
 
-        # Add border to the widget
-        self.setFrameStyle(QFrame.Panel | QFrame.Raised)
+            # Add border to the widget
+            self.setFrameStyle(QFrame.Panel | QFrame.Raised)
 
-        # Create a QHBoxLayout to arrange the widgets horizontally
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        layout.setSizeConstraint(QVBoxLayout.SetMinimumSize)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.initUI(layout)
-        self.setLayout(layout)
+            # Create a QHBoxLayout to arrange the widgets horizontally
+            layout = QVBoxLayout()
+            layout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+            layout.setSizeConstraint(QVBoxLayout.SetMinimumSize)
+            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+            self.initUI(layout)
+            self.setLayout(layout)
+
+        #     self.initialized = True
+        # else:
+        #     self.audioPlayer = audioPlayer
+        #     self.audioPlayer.errorOccurred.connect(self.audio_player_error)
+        #     self.audioPlayer.finished.connect(self.audio_player_finished)
+        #     self.audioPlayer.currentTimeUpdated.connect(self.audio_player_frame_changed) 
     
     def initUI(self, layout):
-        self.playPauseButton = Button("Play", on_click=self.toggle_button_callback)
-        # self.playPauseButton = SwitchButton("Pause", "Play", on_click=self.toggle_button_callback, background_color_on="white", background_color_off="white", color_on="black", color_off="black")
-        # self.playPauseButton.set_value(False)
-        
-        # self.playButton = Button("Play", on_click=self.play)
-        # self.pauseButton = Button("Pause", on_click=self.pause)
-        self.stopButton = Button("Stop", on_click=self.audioPlayer.stop)
+        self.playPauseButton = Button("Play ", on_click=self.toggle_button_callback)
 
-        self.timeLabel = QLabel("0:00.00 / 0:00.00")
-        self.timeLabel.setFont(QFont("Arial", 12))
+        self.stopButton = Button("Stop", on_click=self.stop)
 
         self.slider = ClickableSlider(Qt.Horizontal)
 
@@ -65,66 +72,115 @@ class AudioPlayerWidget(QFrame):
         self.slider.clicked.connect(self.mouse_press_event)
         
 
+        self.timeLabel = QTimeEdit()
+        self.timeLabel.setDisplayFormat("mm:ss.zzz")
+        self.timeLabel.setReadOnly(True)
+        self.timeLabel.setButtonSymbols(QTimeEdit.NoButtons)
+        self.timeLabel.setFont(QFont("Arial", 12))
+        self.totalTimeLabel = QLabel("/ 00:00.000")
+        self.totalTimeLabel.setFont(QFont("Arial", 12))
+
         btnLayout = QHBoxLayout()
         btnLayout.addWidget(self.playPauseButton)
-        # btnLayout.addWidget(self.pauseButton)
         btnLayout.addWidget(self.stopButton)
+        btnLayout.addSpacing(20)
         btnLayout.addWidget(self.timeLabel)
+        btnLayout.addWidget(self.totalTimeLabel)
         btnLayout.addStretch(1)
         btnLayout.setSizeConstraint(QHBoxLayout.SetMinimumSize)
         
         layout.addWidget(self.slider)
         layout.addLayout(btnLayout)
-        # layout.addStretch(1)
+
+
+    def slider_value_changed(self, value):
+        # if value == 0:
+            # print("slider = 0")
+        self.set_time_label(value)
+
+    def set_time_label(self, frame):
+        current = self.audioPlayer.frames_to_pretty_time_str(frame)
+        time = QTime.fromString(current, "mm:ss.zzz")
+        self.timeLabel.setTime(time)
+        self.timeLabel.update()
 
     def audio_player_frame_changed(self, frame):
         self.slider.setValue(frame)
 
-    def slider_value_changed(self, value):
-        self.set_time_label(value)
-
     def mouse_press_event(self, sliderPos):
-        self.audioPlayer.seek(sliderPos)
         self.slider.setValue(sliderPos)
 
     def slider_pressed(self):
+        # print("slider pressed")
+        self.disconnectEvents()
         self.slider.setRange(0, self.audioPlayer.nframes)
         self.audioPlayer.pause()
+        self.playPauseButton.setText("Play ")
 
     def slider_released(self):
+        # print("slider released")
         frame = self.slider.value()
         self.audioPlayer.seek(frame)
+        self.connectEvents()
 
-    def set_time_label(self, frame):
-        current = self.audioPlayer.frames_to_pretty_time_str(frame)
-        total = self.audioPlayer.frames_to_pretty_time_str(self.audioPlayer.nframes)
-        self.timeLabel.setText(f"{current} / {total}")
 
     def toggle_button_callback(self):
-        if self.audioPlayer.isRunning():
-            if self.pause():
-                self.playPauseButton.setText("Play")
+        if self.audioPlayer.isPlaying():
+            self.pause()
+            self.playPauseButton.setText("Play ")
         else:
-            if self.play():
+            if self.audioPlayer.willPlay():
                 self.playPauseButton.setText("Pause")
+                self.play()
 
     def play(self):
+        # print("play")
         self.slider.setRange(0, self.audioPlayer.nframes)
         self.slider.setEnabled(True)
-        return self.audioPlayer.play()
+        self.connectEvents()
+
+        totalTime_str = self.audioPlayer.frames_to_pretty_time_str(self.audioPlayer.nframes)
+        self.totalTimeLabel.setText(f"/ {totalTime_str}")
+        self.audioPlayer.play()
+
 
     def pause(self):
-        return self.audioPlayer.pause()
+        # print("pause")
+        self.audioPlayer.pause()
+        self.disconnectEvents()
+
 
     def stop(self):
+        # print("stop")
         self.audioPlayer.stop()
-    
-    def on_error(self, error):
-        QMessageBox.critical(self, 'Error', str(error))
-    
-    def on_finished(self):
+        self.disconnectEvents()
+        self.playPauseButton.setText("Play ")
         self.slider.setValue(0)
-        self.playPauseButton.setText("Play")
+
+    
+    def audio_player_error(self, error):
+        QMessageBox.critical(self, 'Error', str(error))
+        
+    
+    def audio_player_finished(self):
+        # print("audio player finished")
+        self.disconnectEvents()
+        self.playPauseButton.setText("Play ")
+        self.slider.setValue(0)
+
+
+    def connectEvents(self):
+        self.audioPlayer.errorOccurred.connect(self.audio_player_error)
+        self.audioPlayer.finished.connect(self.audio_player_finished)
+        self.audioPlayer.currentTimeUpdated.connect(self.audio_player_frame_changed)
+
+    def disconnectEvents(self):
+        try:
+            self.audioPlayer.errorOccurred.disconnect(self.audio_player_error)
+            self.audioPlayer.finished.disconnect(self.audio_player_finished)
+            self.audioPlayer.currentTimeUpdated.disconnect(self.audio_player_frame_changed)
+        except TypeError:
+            pass
 
 
     def set_slider_style(self):

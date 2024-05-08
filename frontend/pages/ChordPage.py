@@ -149,7 +149,6 @@ class ChordPage(BaseClassPage):
         # set time axis
         time = np.arange(len(song_array)) / self.model.audioPlayer.framerate
 
-        song_array = np.clip(song_array, -1.0, 1.0)
 
         self.waveformViewer.plot(time, song_array)
 

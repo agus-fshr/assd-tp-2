@@ -129,7 +129,7 @@ class TextInput(QWidget):
 
 # Horizontal Slider Class
 class Slider(QWidget):
-    def __init__(self, label="Slider", interval=(0, 100), step=1, defaultVal=0, on_change=lambda value: None, minWidth=250):
+    def __init__(self, label="Slider", interval=(0, 100), step=1, defaultVal=0, on_change=lambda value: None, minWidth=100):
         super().__init__()
 
         layout = QVBoxLayout()
@@ -208,7 +208,7 @@ class Slider(QWidget):
 
 # Number Input class
 class NumberInput(QWidget):
-    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=250, callOnEnter=True):
+    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=100, callOnEnter=True):
         super().__init__()
         layout = QVBoxLayout()
         hlayout = QHBoxLayout()

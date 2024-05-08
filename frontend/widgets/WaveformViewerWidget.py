@@ -9,7 +9,7 @@ from scipy import signal
 from .BasicWidgets import DropDownMenu, Button, TextInput
 
 class WaveformViewerWidget(QWidget):
-    def __init__(self, navHeight=100):
+    def __init__(self, navHeight=100, onFFT = lambda f, x: None):
         super().__init__()
         pg.setConfigOptions(imageAxisOrder='row-major')
 
@@ -21,8 +21,9 @@ class WaveformViewerWidget(QWidget):
                                        onChoose=self.changeView, firstSelected=True)
         self.paddingInput = TextInput("Padding", default="0", regex="^[0-9]*$", on_change=self.changeView, layout='h')
 
+        self.onFFT = onFFT
 
-        self.plotLayout = pg.GraphicsLayoutWidget(show=True)
+        self.plotLayout = pg.GraphicsLayoutWidget()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
         
@@ -82,6 +83,10 @@ class WaveformViewerWidget(QWidget):
     def redraw(self, _=None):
         self.plot(self.x, self.y)
 
+    def scatter(self, x, y):
+        self.waveformPlot1.plot(x, y, pen=None, symbol='x', symbolSize=20, symbolBrush=(255, 0, 0))
+        self.waveformPlot2.plot(x, y, pen=None, symbol='x', symbolSize=20, symbolBrush=(255, 0, 0))
+
     def plot(self, x, y):
         self.x = x
         self.y = y
@@ -104,6 +109,8 @@ class WaveformViewerWidget(QWidget):
             # compute the FFT
             y = np.abs(np.fft.rfft(y)) / len(y)
             x = np.fft.rfftfreq(len(x), d=Ts)
+            if self.onFFT is not None:
+                self.onFFT(x, y)
             self.waveformPlot1.setLabel('bottom', "Frequency", units='Hz')
             self.waveformPlot2.setLabel('bottom', "Frequency", units='Hz')
         elif plotType == "Waveform":
@@ -172,6 +179,11 @@ class WaveformViewerWidget(QWidget):
 
         self.waveformPlot2.autoRange()
         self.updateRegion(self.waveformPlot1.getViewBox(), self.waveformPlot1.getViewBox().viewRange())
+
+        if plotType != "Spectrogram":
+            self.waveformPlot1.setAutoVisible(y=True)
+        else:
+            self.waveformPlot1.setAutoVisible(y=False)
 
 
     def setPadding(self, x, y, Ts):

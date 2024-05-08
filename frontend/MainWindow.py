@@ -25,11 +25,12 @@ class MainWindow(QMainWindow):
     def initUI(self, pages):
         self.setWindowTitle('Sintetizador MIDI')
         self.setWindowIcon(QIcon('frontend/assets/icon.png'))
-        
+
         # center window on screen
         screen = QApplication.primaryScreen()
         rect = screen.availableGeometry()
         rw, rh, sw, sh = rect.width(), rect.height(), 2*self.width(), int(1.5*self.height())
+        self.setMinimumSize(400, 300)
         self.setGeometry(rw // 2 - sw // 2, rh // 2 - sh // 2, sw, sh)
 
         # Check we don't have repeated titles
@@ -39,7 +40,6 @@ class MainWindow(QMainWindow):
 
         # create tab widget (Page Navigator) and add pages
         tab_widget = QTabWidget()
-        self.setCentralWidget(tab_widget)
         for page in pages:
             # Check if page is a BaseClassPage object
             if not isinstance(page, BaseClassPage):
@@ -53,6 +53,7 @@ class MainWindow(QMainWindow):
         tab_widget.currentChanged.connect(self.tab_changed)
         tab_widget.setStyleSheet("QWidget { background-color: #f5f5f5 }")
 
+        self.setCentralWidget(tab_widget)
         self.show()
 
 
