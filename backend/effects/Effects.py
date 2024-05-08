@@ -77,9 +77,13 @@ class SimpleEchoEffect(EffectBaseClass):
         
         
         sound_out = np.zeros(len(new_sound)+delay_samples)
+        
+        
         for i in range(delay_samples, len(sound_out)):
             sound_out[i] = new_sound[i-delay_samples] + sound_out[i - delay_samples]*atenuation
         echo_effect = sound_out[(2*delay_samples):]
+        
+        
         return echo_effect
     
 class FlangerEffect(EffectBaseClass):
