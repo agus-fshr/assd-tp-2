@@ -196,6 +196,7 @@ class MIDIFilesHandler:
 
         midi_data.computeNoteDurations()
 
+        channelCount = 0
         for channel in midi_data.channels():
             names = self.get_channel_names(path, channel)
             if len(names) == 0:
@@ -204,7 +205,9 @@ class MIDIFilesHandler:
                 pass
             else:
                 print(f"Warning: Channel {channel} has more than one name: {names}")
-            midi_data.setChannelTitle(channel, names[0])
+            name = f"#{channelCount}  {names[0]}"
+            midi_data.setChannelTitle(channel, name)
+            channelCount += 1
         
         self.current_midi_data = midi_data
         return midi_data

@@ -15,7 +15,7 @@ class MidiViewerPage(BaseClassPage):
         self.consoleOutput = ConsoleWidget()
         
         self.midiSelector = DropDownMenu("Select MIDI File", onChoose=self.on_midi_selected)
-        self.midiDataMenu = DropDownMenu(options=["RAW", "Notes", "NotesPerPitch"], firstSelected=True, onChoose=self.on_midi_selected)
+        self.midiDataMenu = DropDownMenu(options=["RAW", "Notes"], firstSelected=True, onChoose=self.on_midi_selected)
         
         self.filterByOptions = ["All Types"]
         self.filterBySelector = DropDownMenu(onChoose=self.on_midi_selected, options=self.filterByOptions, firstSelected=True)
@@ -111,31 +111,6 @@ class MidiViewerPage(BaseClassPage):
             self.filterByOptions.sort(key=lambda x: x.split(" ")[1])
             self.filterBySelector.set_options(self.filterByOptions)
 
-
-        elif self.midiDataMenu.selected == "NotesPerPitch":
-
-            midi_data = self.model.midi_handler.parseMidiNotes(path)
-
-            self.filterByOptions = ["All Types"]
-            self.filterBySelector.show()
-
-            for channel in midi_data.channels():
-                outText += f"CHANNEL {channel}\n"
-                channel_notes = midi_data.getChannelRawNotes(channel)
-                
-                for nkey in channel_notes:
-                    note_str = f"NOTE {nkey}"
-                    if note_str not in self.filterByOptions:
-                        self.filterByOptions.append(note_str)
-
-                    if self.filterBySelector.selected == "All Types" or self.filterBySelector.selected == note_str:
-                        outText += "\t " + note_str + " \n"
-
-                        for note in channel_notes[nkey]:
-                            outText += "\t\t" + str(note) + "\n"
-            # order options
-            self.filterByOptions.sort(key=lambda x: x.split(" ")[1])
-            self.filterBySelector.set_options(self.filterByOptions)
 
         self.consoleOutput.setText(outText)
 

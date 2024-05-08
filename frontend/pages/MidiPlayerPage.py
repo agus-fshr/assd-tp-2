@@ -27,8 +27,8 @@ class MIDIPlayerPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.timeLimiter = NumberInput("Time Limit [s]", interval=(0, 100), step=1, default=10)
-        self.volume = NumberInput("Volume", interval=(0, 1), step=0.01, default=0.5)
+        self.timeLimiter = NumberInput("Time Limit [s]", interval=(0, 100), step=1, default=20)
+        self.volume = NumberInput("Volume", interval=(0, 1), step=0.01, default=0.2)
 
         self.midiSelector = DropDownMenu("Select MIDI File", onChoose=self.on_midi_selected)
         self.trackSelector = DropDownMenu("Select Track", onChoose=self.on_track_selected)

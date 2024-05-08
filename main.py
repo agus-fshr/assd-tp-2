@@ -13,7 +13,7 @@ from frontend.pages.MidiViewerPage import *
 from frontend.pages.MidiPlayerPage import *
 from frontend.pages.InstrumentPage import *
 from frontend.pages.SoundPlayerPage import *
-from frontend.pages.TracksMetadataPage import *
+# from frontend.pages.TracksMetadataPage import *
     
 from backend.MainModel import *
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     pages = [
         FilesPage(),
         TracksPage(),
-        TracksMetadataPage(),
+        # TracksMetadataPage(),
         MidiViewerPage(),
         
         InstrumentPage(),
