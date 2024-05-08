@@ -9,7 +9,7 @@ from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
 from frontend.pages.ChordPage import *
 # from frontend.pages.TracksPage import *
-from frontend.pages.ExamplePage import *
+from frontend.pages.MidiViewer import *
 # from frontend.pages.ReadMidiPage import *
 from frontend.pages.InstrumentPage import *
 from frontend.pages.SoundPlayerPage import *
@@ -32,7 +32,7 @@ if __name__ == '__main__':
         ChordPage(),
         SoundPlayerPage(),
         # TracksMetadataPage(),
-        ExamplePage(),
+        MidiViewer(),
         # TestPage(),
         # ReadMidiPage(),
     ]
