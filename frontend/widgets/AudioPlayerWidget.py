@@ -57,7 +57,7 @@ class AudioPlayerWidget(QFrame):
     def initUI(self, layout):
         self.playPauseButton = Button("Play", on_click=self.toggle_button_callback)
 
-        self.stopButton = Button("Stop", on_click=self.audioPlayer.stop)
+        self.stopButton = Button("Stop", on_click=self.stop)
 
         self.slider = ClickableSlider(Qt.Horizontal)
 
@@ -94,8 +94,8 @@ class AudioPlayerWidget(QFrame):
 
 
     def slider_value_changed(self, value):
-        if value == 0:
-            print("slider = 0")
+        # if value == 0:
+            # print("slider = 0")
         self.set_time_label(value)
 
     def set_time_label(self, frame):
@@ -111,14 +111,14 @@ class AudioPlayerWidget(QFrame):
         self.slider.setValue(sliderPos)
 
     def slider_pressed(self):
-        print("slider pressed")
+        # print("slider pressed")
         self.disconnectEvents()
         self.slider.setRange(0, self.audioPlayer.nframes)
         self.audioPlayer.pause()
         self.playPauseButton.setText("Play")
 
     def slider_released(self):
-        print("slider released")
+        # print("slider released")
         frame = self.slider.value()
         self.audioPlayer.seek(frame)
         self.connectEvents()
@@ -134,7 +134,7 @@ class AudioPlayerWidget(QFrame):
                 self.play()
 
     def play(self):
-        print("play")
+        # print("play")
         self.slider.setRange(0, self.audioPlayer.nframes)
         self.slider.setEnabled(True)
         self.connectEvents()
@@ -145,13 +145,13 @@ class AudioPlayerWidget(QFrame):
 
 
     def pause(self):
-        print("pause")
+        # print("pause")
         self.audioPlayer.pause()
         self.disconnectEvents()
 
 
     def stop(self):
-        print("stop")
+        # print("stop")
         self.audioPlayer.stop()
         self.disconnectEvents()
         self.playPauseButton.setText("Play")
@@ -163,7 +163,7 @@ class AudioPlayerWidget(QFrame):
         
     
     def audio_player_finished(self):
-        print("audio player finished")
+        # print("audio player finished")
         self.disconnectEvents()
         self.playPauseButton.setText("Play")
         self.slider.setValue(0)
