@@ -37,7 +37,8 @@ class MainModel:
     effects = [
         # NoEffect(),
         DelayEffect(),
-        # ReverbEffect(),
+        SimpleEchoEffect(),
+        FlangerEffect()
     ]
 
 
