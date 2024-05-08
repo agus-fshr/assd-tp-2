@@ -38,7 +38,8 @@ class MainModel:
         # NoEffect(),
         DelayEffect(),
         SimpleEchoEffect(),
-        FlangerEffect()
+        FlangerEffect(),
+        ReberbRIR()
     ]
 
 

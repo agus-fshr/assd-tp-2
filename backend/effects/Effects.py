@@ -4,6 +4,8 @@ import scipy.signal as signal
 
 from .EffectBaseClass import EffectBaseClass
 
+from .RIR_data import RIR_2
+
 class NoEffect(EffectBaseClass):
     def __init__(self):
         super().__init__()
@@ -115,3 +117,33 @@ class FlangerEffect(EffectBaseClass):
         for j in range(length):
             flanger_effect[j] = np.float(sound[j]) + np.float(sound[int(index[j])])
         return flanger_effect
+    
+
+
+class ReberbRIR(EffectBaseClass):
+    def __init__(self):
+        super().__init__()
+        self.name = "RIR Reberb" # Este nombre es el que se muestra en la interfaz
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            ChoiceParam("lib", options=["scipy", "numpy"], value="scipy", text="Library"),
+            ChoiceParam("mode", options=["full", "same", "valid"], value="full", text="Mode"),
+            ChoiceParam("method", options=["auto", "direct", "fft"], value="direct", text="Method"),
+        )   
+        
+
+    def process(self, sound):
+        """ Apply no effect to the sound"""
+
+        lib = self.params["lib"]
+        mode = self.params["mode"]
+        method = self.params["method"]
+
+        # convolve Room Impulse Response (RIR) with the sound
+        if lib == "scipy":
+            sound = signal.convolve(sound, RIR_2, mode=mode, method=method)
+        elif lib == "numpy":
+            sound = np.convolve(sound, RIR_2, mode=mode)
+
+        return sound

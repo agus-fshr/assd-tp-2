@@ -53,6 +53,7 @@ class MidiNoteData:
         else:
             return str(self.__dict__) + " ERROR"
 
+
 class MidiMusicData:
     def __init__(self, path, title, handleOverlap="ignore"):
         handleOverlap_options = ["ignore", "FIFO"]
@@ -62,8 +63,10 @@ class MidiMusicData:
         self.handleOverlap = handleOverlap
         self.path = path
         self.title = title
+        self.channel_names = []
+        self.channel_list = []
         self.channel_raw_notes = {}     # dict of notes indexed by channel
-        self.chanel_notes_with_duration = {}
+        self.channel_notes_with_duration = {}
 
 
     def appendNote(self, channel=0, absTime=0.0, ntype="", note=0, vel=0):
@@ -73,7 +76,9 @@ class MidiMusicData:
         # if channel not in dict, add it
         if channel not in self.channel_raw_notes:
             self.channel_raw_notes[channel] = {}
-            self.chanel_notes_with_duration[channel] = {}
+
+        if channel not in self.channel_list:
+            self.channel_list.append(channel)
 
         if note not in self.channel_raw_notes[channel]:
             self.channel_raw_notes[channel][note] = []
@@ -94,7 +99,7 @@ class MidiMusicData:
 
 
     def computeNoteDurations(self):
-        self.chanel_notes_with_duration = {}
+        self.channel_notes_with_duration = {}
 
         for channel in self.channel_raw_notes.keys():
             note_on_dict = {}
@@ -134,18 +139,20 @@ class MidiMusicData:
                                 continue
                             print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}")
 
-            self.chanel_notes_with_duration[channel] = channel_notes
+            self.channel_notes_with_duration[channel] = channel_notes
 
     def channels(self):
-        return self.chanel_notes_with_duration.keys()
+        return self.channel_list
 
     def getChannelRawNotes(self, channel):
         return self.channel_raw_notes[channel]
 
     def getChannelNotes(self, channel):
-        if self.chanel_notes_with_duration[channel] == {}:
+        if channel not in self.channel_list:
+            raise ValueError(f"Channel {channel} not found in {self.channel_list}")
+        if channel not in self.channel_notes_with_duration:
             self.computeNoteDurations()
-        return self.chanel_notes_with_duration[channel]
+        return self.channel_notes_with_duration[channel]
         
 
 
@@ -234,6 +241,8 @@ class MIDIFilesHandler:
         
         ticks = 0
         refChannels = []
+        notesRefChannels = []
+        playedNotes = 0
         for msg in track:
             ticks += msg.time
 
@@ -242,18 +251,31 @@ class MIDIFilesHandler:
                 if msg.channel not in refChannels:
                     refChannels.append(msg.channel)
 
-            if isinstance(msg, mido.MetaMessage):
-                msg = msg.dict()
-                t = msg["type"]
+            msg = msg.dict()
 
-                if t == "track_name":
+            t = msg["type"]
+            match t:
+                case "track_name":
                     track_data["name"] = msg["name"]
-                            
-                elif t == "midi_port":
+                
+                case "midi_port":
                     track_data["port"] = msg["port"]
 
-                elif t == "channel_prefix":
-                    track_data["channel_prefix"] = msg["channel"]
+                case "channel_prefix":
+                    track_data["channel"] = msg["channel"]
+
+                case "note_on":
+                    if msg["channel"] not in notesRefChannels:
+                        notesRefChannels.append(msg["channel"])
+                    if msg["velocity"] > 0:
+                        playedNotes += 1
+
+                case "note_off":
+                    if msg["channel"] not in notesRefChannels:
+                        notesRefChannels.append(msg["channel"])
+
+        track_data["playedNotes"] = playedNotes
+        track_data["notesRefChannels"] = notesRefChannels
         track_data["ticks"] = ticks
         track_data["refChannels"] = refChannels
         return track_data

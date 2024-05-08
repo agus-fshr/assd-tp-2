@@ -45,10 +45,20 @@ class TracksPage(BaseClassPage):
         midi_meta = self.model.midi_handler.get_midi_metadata(path)
         self.trackList.clear()
         for trackMeta in midi_meta["trackMeta"]:
-            childTextData = f"Port: {trackMeta['port']}     " if "port" in trackMeta else ""
-            childTextData += f"Channel: {trackMeta['channel_prefix']}\n" if 'channel_prefix' in trackMeta else ""
-            childTextData += f"Ref. Channels: {trackMeta['refChannels']}        {trackMeta['ticks']}" if 'refChannels' in trackMeta else ""
-            card = CardWidget(child=QLabel(childTextData), mainTitle=trackMeta["name"])
+            trackName = trackMeta["name"]
+            prefix = f"#{trackMeta['channel']} " if "channel" in trackMeta else ""
+            notesRefChannels = trackMeta["notesRefChannels"]
+            playedNotes = trackMeta["playedNotes"]
+
+            if playedNotes == 0:
+                continue
+
+            title = prefix + trackName
+
+            childTextData = f"Notes: {playedNotes}\n"
+            childTextData += f"Ref. Channels: {notesRefChannels}"
+
+            card = CardWidget(child=QLabel(childTextData), mainTitle=title)
             self.trackList.addCard(card)
 
 

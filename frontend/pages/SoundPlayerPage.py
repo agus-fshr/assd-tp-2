@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea, QSlider
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea, QSlider, QFileDialog
 from PyQt5.Qt import QSizePolicy
 from PyQt5.QtCore import Qt
 
@@ -12,6 +12,7 @@ from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
 
 import numpy as np
 from scipy import signal
+
 
 class SoundPlayerPage(BaseClassPage):
 
@@ -32,7 +33,7 @@ class SoundPlayerPage(BaseClassPage):
         self.playerWidget = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
 
         # Setup waveform viewer widget
-        self.plotWidget = WaveformViewerWidget(onFFT=self.onFFT)
+        self.plotWidget = WaveformViewerWidget(onFFT=self.onFFT, onEvent=self.waveformViewerEvent)
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
@@ -40,6 +41,33 @@ class SoundPlayerPage(BaseClassPage):
         layout.addWidget(self.playerWidget)
         layout.addSpacing(20)
         layout.addWidget(self.plotWidget)
+
+
+    def waveformViewerEvent(self, event):
+        if event["type"] == "captureVisibleData":
+            x = event["x"]
+            y = event["y"]
+
+            dx_mean = 0
+            c = 0
+            for i in range(1, len(x)):
+                dx_mean += x[i] - x[i-1]
+                c += 1
+            dx_mean /= c
+
+            print(f"f_mean: {1/dx_mean}")
+
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            default_filename = "data_out.csv"
+            filename, _ = QFileDialog.getSaveFileName(self, "Save as TXT", default_filename, "Text Files (*.txt)", options=options)
+            if filename:
+                # save as TXT
+                with open(filename, mode='w') as file:
+                    file.write("RIR_2 = np.array([\n")
+                    for i in range(len(y)):
+                        file.write(f"{y[i]:.4f},")
+                    file.write("])\n")
 
     # Refresh dropdown options looking for newly imported .WAV files
     def refresh_sound_options(self):
