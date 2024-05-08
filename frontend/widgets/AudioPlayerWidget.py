@@ -55,7 +55,7 @@ class AudioPlayerWidget(QFrame):
         #     self.audioPlayer.currentTimeUpdated.connect(self.audio_player_frame_changed) 
     
     def initUI(self, layout):
-        self.playPauseButton = Button("Play", on_click=self.toggle_button_callback)
+        self.playPauseButton = Button("Play ", on_click=self.toggle_button_callback)
 
         self.stopButton = Button("Stop", on_click=self.stop)
 
@@ -115,7 +115,7 @@ class AudioPlayerWidget(QFrame):
         self.disconnectEvents()
         self.slider.setRange(0, self.audioPlayer.nframes)
         self.audioPlayer.pause()
-        self.playPauseButton.setText("Play")
+        self.playPauseButton.setText("Play ")
 
     def slider_released(self):
         # print("slider released")
@@ -127,7 +127,7 @@ class AudioPlayerWidget(QFrame):
     def toggle_button_callback(self):
         if self.audioPlayer.isPlaying():
             self.pause()
-            self.playPauseButton.setText("Play")
+            self.playPauseButton.setText("Play ")
         else:
             if self.audioPlayer.willPlay():
                 self.playPauseButton.setText("Pause")
@@ -154,7 +154,7 @@ class AudioPlayerWidget(QFrame):
         # print("stop")
         self.audioPlayer.stop()
         self.disconnectEvents()
-        self.playPauseButton.setText("Play")
+        self.playPauseButton.setText("Play ")
         self.slider.setValue(0)
 
     
@@ -165,7 +165,7 @@ class AudioPlayerWidget(QFrame):
     def audio_player_finished(self):
         # print("audio player finished")
         self.disconnectEvents()
-        self.playPauseButton.setText("Play")
+        self.playPauseButton.setText("Play ")
         self.slider.setValue(0)
 
 

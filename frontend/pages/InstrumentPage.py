@@ -107,8 +107,6 @@ class InstrumentPage(BaseClassPage):
         framerate = self.model.audioPlayer.framerate
         time = np.arange(len(wave_array)) / framerate
 
-        wave_array = np.clip(wave_array, -1.0, 1.0)
-
         self.waveformViewer.plot(time, wave_array)
 
         self.model.audioPlayer.set_array(wave_array)

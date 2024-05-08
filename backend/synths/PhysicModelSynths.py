@@ -2,7 +2,7 @@ import numpy as np
 from scipy import signal
 from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 
-from .EnvelopeModulators import LinearADSR
+from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass
 
 class KSGuitar(SynthBaseClass):
@@ -13,7 +13,7 @@ class KSGuitar(SynthBaseClass):
         self.name = "Karplus-Strong Guitar"
 
         self.params = ParameterList(
-            NumParam("Stretch Factor", interval=(0.01, 3000), value=2.1, step=0.01, text="Stretch Factor"),
+            NumParam("Stretch Factor", interval=(1.0, 5.0), value=1.1, step=0.01, text="Stretch Factor"),
             ChoiceParam("Initial Noise", options=["Normal", "Uniform", "2-Level"], value="Normal", text="Initial Noise"),
         )
 
@@ -65,4 +65,10 @@ class KSGuitar(SynthBaseClass):
 
         out = self.karplus_strong(wavetable, n_samples, stretch)
 
-        return out
+        t = duration
+        r_coef = 0.3
+
+        adsr = LinearADSR(1, 0, 0, t*r_coef)
+        adsr.set_total_time(t, self.sample_rate)
+
+        return out * adsr.envelope()

@@ -39,21 +39,34 @@ class ModFunction():
 
 
 
-
 class LinearADSR():
-    def __init__(self, k, A, D, R, tone_duration, modType="polyFlatTop", n=3.0):
+    def __init__(self, k, A, D, R, modType="polyFlatTop", n=3.0):
         self.k = k
         self.attack = A
         self.decay = D
         self.release = R
-        self.tone_duration = tone_duration
+        self.sustain = None
 
         self.attackFunction = ModFunction(modType, n)
         self.decayFunction = ModFunction(modType, n)
         self.releaseFunction = ModFunction(modType, n)
 
-        points = int((self.tone_duration + R) * 44100)
-        self.t = np.linspace(0, self.tone_duration + R, points, endpoint=False)
+
+    def set_tone_duration(self, tone_duration, sample_rate=44100):
+        points = int((tone_duration + self.release) * sample_rate)
+        self.t = np.linspace(0, tone_duration + self.release, points, endpoint=False)
+
+        if tone_duration < self.attack + self.decay:
+            tone_duration = self.attack + self.decay
+        self.sustain = tone_duration - self.attack - self.decay        
+
+    def set_total_time(self, total_time, sample_rate=44100):
+        points = int(total_time * sample_rate)
+        self.t = np.linspace(0, total_time, points, endpoint=False)
+
+        if total_time < self.attack + self.decay + self.release:
+            raise Exception("LinearADSR: Total time must be greater than A+D+R")
+        self.sustain = total_time - self.attack - self.decay - self.release
 
     def time(self):
         return self.t
@@ -65,35 +78,40 @@ class LinearADSR():
         """
         # Calculate the sustain phase duration
 
+        if self.sustain is None:
+            raise Exception("LinearADSR: You must call 'set_tone_duration(d)' or 'set_total_time(t)' before calling envelope()")
+
         k = self.k
         A = self.attack
         D = self.decay
+        S = self.sustain
         R = self.release
         t = self.t
         
-        if self.tone_duration < A + D:
-            self.tone_duration = A + D
-        S = self.tone_duration - self.attack - self.decay        
 
         # Create an output array of the same shape as t
         output = np.zeros_like(t)
         
 
         # Attack phase
-        attack_mask = t < A
-        output[attack_mask] = self.attackFunction.mod(t[attack_mask], x1=A, y1=k)
+        if A > 0.0:
+            attack_mask = t < A
+            output[attack_mask] = self.attackFunction.mod(t[attack_mask], x1=A, y1=k)
         
         # Decay phase
-        decay_mask = (t >= A) & (t < A + D)
-        output[decay_mask] = self.decayFunction.mod(t[decay_mask], x0=A, x1=A+D, y0=k*1, y1=1)
+        if D > 0.0:
+            decay_mask = (t >= A) & (t < A + D)
+            output[decay_mask] = self.decayFunction.mod(t[decay_mask], x0=A, x1=A+D, y0=k*1, y1=1)            
         
         # Sustain phase
-        sustain_mask = (t >= A + D) & (t < A + D + S)
-        output[sustain_mask] = 1.0
+        if S > 0.0:
+            sustain_mask = (t >= A + D) & (t < A + D + S)
+            output[sustain_mask] = 1.0
         
         # Release phase
-        release_mask = (t >= A + D + S) & (t < A + D + S + R)
-        output[release_mask] = self.releaseFunction.mod(t[release_mask], x0=A+D+S, x1=A+D+S+R, y0=1, y1=0)
+        if R > 0.0:
+            release_mask = (t >= A + D + S) & (t < A + D + S + R)
+            output[release_mask] = self.releaseFunction.mod(t[release_mask], x0=A+D+S, x1=A+D+S+R, y0=1, y1=0)
                 
         return output
     

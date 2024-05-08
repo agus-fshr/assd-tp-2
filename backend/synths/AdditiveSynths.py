@@ -47,7 +47,9 @@ class PureToneSynth(SynthBaseClass):
         R = self.params["R"]
         
 
-        adsr = LinearADSR(k, A, D, R, duration)     # Sustain time is calculated internally
+        adsr = LinearADSR(k, A, D, R)
+        adsr.set_tone_duration(duration, self.sample_rate)
+        
         t = adsr.time()
 
         out = amp * wave(2 * np.pi * freq * t)
@@ -88,7 +90,8 @@ class GuitarAdditive(SynthBaseClass):
 
         k = self.params["k"]
 
-        adsr = LinearADSR(k, 0.01, 0.05, 2.0, duration)     # Sustain time is calculated internally
+        adsr = LinearADSR(k, A=0.01, D=0.05, R=2.0)
+        adsr.set_tone_duration(duration, self.sample_rate)
         t = adsr.time()
 
         out = np.zeros(len(t))
