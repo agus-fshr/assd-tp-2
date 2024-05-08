@@ -115,7 +115,7 @@ class FlangerEffect(EffectBaseClass):
         
         flanger_effect = np.zeros(length)
         for j in range(length):
-            flanger_effect[j] = np.float(sound[j]) + np.float(sound[int(index[j])])
+            flanger_effect[j] = sound[j] + sound[int(index[j])]
         return flanger_effect
     
 

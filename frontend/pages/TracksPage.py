@@ -42,21 +42,17 @@ class TracksPage(BaseClassPage):
 
     # Callback for when a MIDI file is selected from the dropdown
     def on_midi_selected(self, name, path):
-        midi_meta = self.model.midi_handler.get_midi_metadata(path)
+        midi_data = self.model.midi_handler.parseMidiNotes(path)
+
         self.trackList.clear()
-        for trackMeta in midi_meta["trackMeta"]:
-            trackName = trackMeta["name"]
-            prefix = f"#{trackMeta['channel']} " if "channel" in trackMeta else ""
-            notesRefChannels = trackMeta["notesRefChannels"]
-            playedNotes = trackMeta["playedNotes"]
+        
+        for channel in midi_data.channels():
+            channelData = midi_data.getChannelData(channel)
 
-            if playedNotes == 0:
-                continue
+            title = channelData["title"]
+            duration = channelData["duration"]
 
-            title = prefix + trackName
-
-            childTextData = f"Notes: {playedNotes}\n"
-            childTextData += f"Ref. Channels: {notesRefChannels}"
+            childTextData = f"Duration: {duration:.02f}s\n"
 
             card = CardWidget(child=QLabel(childTextData), mainTitle=title)
             self.trackList.addCard(card)
