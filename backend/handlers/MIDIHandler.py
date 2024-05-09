@@ -329,6 +329,8 @@ class MIDIFilesHandler:
                     if msg["channel"] not in notesRefChannels:
                         notesRefChannels.append(msg["channel"])
 
+        if "name" not in track_data:
+            track_data["name"] = "Unnamed Track"
         track_data["playedNotes"] = playedNotes
         track_data["notesRefChannels"] = notesRefChannels
         track_data["ticks"] = ticks
