@@ -2,7 +2,7 @@ from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 import numpy as np
 from scipy import signal
 
-from .EnvelopeModulators import LinearADSR
+from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass
 
 class PureToneSynth(SynthBaseClass):
@@ -45,20 +45,72 @@ class PureToneSynth(SynthBaseClass):
         A = self.params["A"]
         D = self.params["D"]
         R = self.params["R"]
+        
 
-        if duration < A + D:
-            duration = A + D
+        adsr = LinearADSR(k, A, D, R)
+        adsr.set_tone_duration(duration, self.sample_rate)
 
-        envelope = LinearADSR(amp, k, A, D, R)          # Sustain time is calculated internally
-        total_time = duration + R                       # Total time is the note duration + Release time
+        t = adsr.time()
 
-        t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         out = amp * wave(2 * np.pi * freq * t)
 
-        return out * envelope(t, duration)
-    
+        return out * adsr.envelope()
     
 
+class GuitarAdditive(SynthBaseClass):
+    """ Simple pure tone synthesizer"""
+    def __init__(self):
+        super().__init__()
+
+        self.name = "Guitar Additive" # Este nombre es el que se muestra en la interfaz
+
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            NumParam("k", interval=(1, 10), value=2, step=0.1, text="k value"),
+            NumParam("A", interval=(0, 0.5), value=0.03, step=0.0001, text="Attack [s]"),
+            NumParam("D", interval=(0, 0.5), value=0.1, step=0.0001, text="Decay [s]"),
+            NumParam("R", interval=(0, 5), value=0.6, step=0.1, text="Release [s]"),
+        )
+
+
+    def generate(self, freq, amp, duration):
+        """ 
+        Generate a pure tone with the given frequency, amplitude and duration
+        - freq: tone frequency [Hz]
+        - amp: tone amplitude [0, 1]
+        - duration: on-off note duration [s]  
+        """        
+        partials = [   # [freq, amp]
+            (130.66, 0.1811),
+            (261.09, 0.1278),
+            (783.73, 0.0695),
+            (391.75, 0.0648),
+            (914.39, 0.0272),
+            (1045.27, 0.0211),
+            (522.41, 0.0180),
+        ]
+
+        k = self.params["k"]
+        A = self.params["A"]
+        D = self.params["D"]
+        R = self.params["R"]
+
+        adsr = LinearADSR(k, A, D, R)
+        adsr.attackFunction = ModFunction("exp", n=9.2)
+        adsr.decayFunction = ModFunction("cos", n=3.0)
+        adsr.releaseFunction = ModFunction("log", n=20.0)
+
+        adsr.set_tone_duration(duration, self.sample_rate)
+        
+        t = adsr.time()
+
+        out = np.zeros(len(t))
+
+        for f, a in partials:
+            out += a * np.sin(2 * np.pi * f * t)
+
+        return amp * out * adsr.envelope()
 
 
 

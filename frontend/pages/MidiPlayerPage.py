@@ -14,9 +14,9 @@ import numpy as np
 import os
 import webbrowser
 
-class ChordPage(BaseClassPage):
+class MIDIPlayerPage(BaseClassPage):
     
-    title = "Chord Testbench"
+    title = "MIDI Player"
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -27,18 +27,15 @@ class ChordPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
-        self.ampSelector = NumberInput("Amplitude", default=0.4, interval=(0, 1), step=0.01)
-        self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
-        self.delaySelector = NumberInput("Delay", default=0.2, interval=(0, 5), step=0.01)
+        self.timeLimiter = NumberInput("Time Limit [s]", interval=(0, 100), step=1, default=20)
+        self.volume = NumberInput("Volume", interval=(0, 1), step=0.01, default=0.2)
 
-        self.noteViewerConsole = ConsoleWidget(fixedWidth=350)
+        self.midiSelector = DropDownMenu("Select MIDI File", onChoose=self.on_midi_selected)
+        self.trackSelector = DropDownMenu("Select Track", onChoose=self.on_track_selected)
 
-        addButton = Button("Add Note", on_click=self.addNote, background_color="lightgreen", hover_color="white")
-        penScaleButton = Button("Pen Scale", on_click=self.penScale, background_color="yellow", hover_color="white")
-        popButton = Button("Pop Note", on_click=self.popNote, background_color="lightcoral", hover_color="white")
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightblue", hover_color="white")
         synthButton.setFixedWidth(150)
+
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
         openFileExplorerButton = Button("Open Folder", on_click=self.openFileExplorer)
 
@@ -62,27 +59,22 @@ class ChordPage(BaseClassPage):
         topHLayout.addSpacing(20)
         topHLayout.addWidget(self.effectSelector)
         topHLayout.addStretch(1)
+        topHLayout.addWidget(self.midiSelector)
+        topHLayout.addWidget(self.trackSelector)
 
         # Setup controls layout
-        controlsHLayout.addWidget(self.freqSelector)
+        controlsHLayout.addWidget(self.timeLimiter)
+        controlsHLayout.addWidget(self.volume)
         controlsHLayout.addSpacing(20)
-        controlsHLayout.addWidget(self.ampSelector)
-        controlsHLayout.addSpacing(20)
-        controlsHLayout.addWidget(self.durationSelector)
-        controlsHLayout.addSpacing(20)
-        controlsHLayout.addWidget(self.delaySelector)
         controlsHLayout.addSpacing(20)
         controlsHLayout.addWidget(synthButton)
-        controlsHLayout.addSpacing(10)
-        controlsHLayout.addWidget(addButton)
-        controlsHLayout.addWidget(popButton)
-        controlsHLayout.addWidget(penScaleButton)
-        controlsHLayout.addSpacing(10)
+
+
+        controlsHLayout.addStretch()
         controlsHLayout.addWidget(saveWAVButton)
         controlsHLayout.addWidget(openFileExplorerButton)
         
         # Setup settings layout
-        leftVLayout.addWidget(self.noteViewerConsole)
         leftVLayout.addWidget(self.dynamicSettings)
         vplotlay = QVBoxLayout()
         vplotlay.addWidget(self.player)
@@ -113,20 +105,21 @@ class ChordPage(BaseClassPage):
 
         song_length = 0
         for note in self.noteArr:
-            song_length += int(note["Delay"] * self.model.audioPlayer.framerate)
+            song_length += int(note["Delay"]*1.01 * self.model.audioPlayer.framerate)
         
         song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
 
         print(f"Song Length (Samples): {song_length}")
         
-        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 2)
+        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 1)
 
         curr = 0
-        for note in self.noteArr:
+        for i, note in enumerate(self.noteArr):
             freq = note["Frequency"]
             amp = note["Amplitude"]
             duration = note["Duration"]
             delay = note["Delay"]
+            print(f"Note: {i} / {len(self.noteArr)}")
 
             instrument = self.synthSelector.selected
             effect = self.effectSelector.selected
@@ -134,16 +127,16 @@ class ChordPage(BaseClassPage):
             wave_array = effect(wave_array)
 
 
-            if curr + wave_array.size >= song_array.size:
-                song_array[curr:] += wave_array[:song_array.size - curr]
+            curr += int(delay * self.model.audioPlayer.framerate)
+
+            if curr + wave_array.size>= song_array.size:
                 print("ERROR: Song too short or note too long. Breaking loop.")
                 print("song_array size: ", song_array.size)
                 print("wave_array size: ", wave_array.size)
+                song_array[curr:] += wave_array[:song_array.size - curr]
                 break
 
             song_array[curr : curr + wave_array.size] += wave_array
-
-            curr += int(delay * self.model.audioPlayer.framerate)
 
 
         # set time axis
@@ -155,58 +148,6 @@ class ChordPage(BaseClassPage):
         self.model.audioPlayer.set_array(song_array)
         self.player.play()
 
-    def updateConsole(self):
-        text = "Time     Freq\tAmp \tDur\n"
-        absTime = 0
-        for note in self.noteArr:
-            absTime += note["Delay"]
-            timestr = f"{absTime:.03f}".ljust(8)
-            text += f"{timestr} {note['Frequency']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
-        self.noteViewerConsole.setText(text)
-
-    def popNote(self):
-        self.noteArr.pop()
-        self.updateConsole()
-
-    def penScale(self):
-    #   A minor pentatonic     A4,     C4,     D4,     E4,     G4,    A5
-        A_minor_pentatonic = [440, 523.25, 587.33, 659.25, 783.99, 880]
-
-        self.noteArr = []
-
-        for f in A_minor_pentatonic:
-            note = {}
-            note["Frequency"] = f
-            note["Amplitude"] = self.ampSelector.value()
-            note["Duration"] = self.durationSelector.value()
-            note["Delay"] = self.delaySelector.value()
-
-            self.noteArr.append(note)
-        
-        self.noteArr[-1]["Delay"] = 1.5
-
-        for f in A_minor_pentatonic:
-            note = {}
-            note["Frequency"] = f
-            note["Amplitude"] = self.ampSelector.value()
-            note["Duration"] = 2
-            note["Delay"] = 0
-
-            self.noteArr.append(note)
-
-        self.updateConsole()
-
-    def addNote(self):
-        print("Note added!")
-
-        note = {}
-        note["Frequency"] = self.freqSelector.value()
-        note["Amplitude"] = self.ampSelector.value()
-        note["Duration"] = self.durationSelector.value()
-        note["Delay"] = self.delaySelector.value()
-
-        self.noteArr.append(note)
-        self.updateConsole()
         
 
     def load_instrument_options(self):
@@ -230,3 +171,65 @@ class ChordPage(BaseClassPage):
     # Display the parameters of the selected instrument
     def on_instrument_selected(self, name, instrument):
         self.dynamicSettings.updateUI(instrument.params, title=f"{name} Settings")
+
+
+
+
+    # Refresh dropdown options looking for newly imported MIDI files
+    def refresh_midi_options(self):
+        options = {}
+        for fmeta in self.model.file_handler.available_files("mid"):
+            options[fmeta.name] = fmeta.path
+        
+        self.midiSelector.set_options(options)
+
+
+    def on_track_selected(self, name, channelData):
+        self.noteArr = []
+
+        notes = channelData["notes"]
+
+        lastTime = 0.0
+
+        for n in notes:
+            f = 440 * 2**((n.note - 69) / 12)
+            d = n.time_on - lastTime
+            lastTime = n.time_on
+
+            if n.time_off is not None and n.time_off > self.timeLimiter.value():
+                print("Reached time limit!")
+                break
+
+            note = {}
+            note["Frequency"] = f
+            note["Amplitude"] = (n.vel / 127) * self.volume.value()
+            note["Duration"] = n.duration
+            note["Delay"] = d
+
+            self.noteArr.append(note)
+            print(f"Note added! n={n.note}, f={f:.0f}, t0 ={n.time_on:.02f}, t1={n.time_off:.02f}, d = {d:.02f}")
+
+
+
+    # Callback for when a MIDI file is selected from the dropdown
+    def on_midi_selected(self, name, path):
+        midi_data = self.model.midi_handler.parseMidiNotes(path)
+
+        options = {}
+
+        self.trackSelector.selected = None
+        self.trackSelector.selected_title = None
+
+        for chKey in midi_data.channels():
+            channelData = midi_data.getChannelData(chKey)
+
+            title = channelData["title"]
+            
+            options[title] = channelData
+
+        self.trackSelector.set_options(options)
+
+
+    def on_tab_focus(self):
+        # Refresh dropdown options looking for new MIDI files
+        self.refresh_midi_options()

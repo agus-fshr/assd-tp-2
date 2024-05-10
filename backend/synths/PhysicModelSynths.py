@@ -2,7 +2,7 @@ import numpy as np
 from scipy import signal
 from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 
-from .EnvelopeModulators import LinearADSR
+from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass
 
 class KSGuitar(SynthBaseClass):
@@ -13,8 +13,14 @@ class KSGuitar(SynthBaseClass):
         self.name = "Karplus-Strong Guitar"
 
         self.params = ParameterList(
-            NumParam("Stretch Factor", interval=(0.01, 3000), value=2.1, step=0.01, text="Stretch Factor"),
+            NumParam("Stretch Factor", interval=(1.0, 5.0), value=1.03, step=0.01, text="Stretch Factor"),
             ChoiceParam("Initial Noise", options=["Normal", "Uniform", "2-Level"], value="Normal", text="Initial Noise"),
+            
+            NumParam("r_factor", interval=(0.0, 1.0), value=0.3, step=0.01, text="Release Factor"),
+
+            ChoiceParam("modType", options=["cos", "sin", "log", "polyFlatTop", "poly", "exp"], value="sin", text="Env Mod function"),
+            NumParam("modN", interval=(0.1, 20), value=3, step=0.1, text="Mod function N"),
+            NumParam("extraTime", interval=(0.0, 2.0), value=0.1, step=0.01, text="Extra Time"),
         )
 
     def init_wavetable(self, amp, stretch, noise_type, freq):
@@ -61,6 +67,18 @@ class KSGuitar(SynthBaseClass):
 
         wavetable = self.init_wavetable(amp, stretch, noise_type, freq)
 
+        duration += self.params["extraTime"]
         n_samples = int(duration * self.sample_rate)
 
-        return self.karplus_strong(wavetable, n_samples, stretch)
+        out = self.karplus_strong(wavetable, n_samples, stretch)
+
+        t = duration
+        r_coef = self.params["r_factor"]
+
+        modType = self.params["modType"]
+        n = self.params["modN"]
+        adsr = LinearADSR(1, 0, 0, t*r_coef, modType, n)
+
+        adsr.set_total_time(t, self.sample_rate)
+
+        return out * adsr.envelope()

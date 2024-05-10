@@ -28,7 +28,7 @@ class MainModel:
     # Add synthesizers here !
     synthesizers = [
         PureToneSynth(),
-        YourSynth(),
+        GuitarAdditive(),
         FMSynth(),
         KSGuitar(),
     ]
@@ -37,7 +37,9 @@ class MainModel:
     effects = [
         # NoEffect(),
         DelayEffect(),
-        # ReverbEffect(),
+        SimpleEchoEffect(),
+        FlangerEffect(),
+        ReberbRIR()
     ]
 
 

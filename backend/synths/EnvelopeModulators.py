@@ -1,42 +1,120 @@
 import numpy as np
 
+
+#   FUNCTION MODULATOR
+class ModFunction():
+    def __init__(self, type="linear", n=1.0):
+        if n < 0.1 or n > 20:
+            raise ValueError("ModFunction n must be between 0.1 and 20")
+        
+        match type:
+            case "linear":
+                self.func = lambda x: x
+            case "exp":
+                self.func = lambda x: (np.exp(n*x) - 1) / (np.exp(n) - 1)
+            case "log":
+                self.func = lambda x: np.log(n*x + 1) / np.log(n + 1)
+            case "poly":
+                self.func = lambda x: x**n
+            case "polyFlatTop":
+                self.func = lambda x: 1 - (1 - x)**n
+            case "sin":
+                self.func = lambda x: (np.sin(x * np.pi / 2)) ** n
+            case "cos":
+                self.func = lambda x: 1 - (np.cos(x * np.pi / 2)) ** n
+
+
+    def __call__(self, x):
+        if np.min(x) < 0.0 or np.max(x) > 1.0:
+            raise ValueError("Call Input value must be between 0 and 1")
+        return self.func(x)
+
+
+    def mod(self, x, x0=0.0, x1=0.0, y0=0.0, y1=0.0):
+        """ Modulate a value x between x0 and x1 to a value between y0 and y1"""
+        if np.min(x) < x0 or np.max(x) > x1:
+            raise ValueError("Mod Input value must be between x0 and x1")
+        return y0 + (y1 - y0) * self((x - x0) / (x1 - x0))
+
+
+
+
 class LinearADSR():
-    def __init__(self, amp, k, A, D, R):
-        self.A = amp
+    def __init__(self, k, A, D, R, modType="polyFlatTop", n=3.0):
         self.k = k
         self.attack = A
         self.decay = D
         self.release = R
+        self.sustain = None
+
+        self.attackFunction = ModFunction(modType, n)
+        self.decayFunction = ModFunction(modType, n)
+        self.releaseFunction = ModFunction(modType, n)
 
 
-    def __call__(self, t, tone_duration):
+    def set_tone_duration(self, tone_duration, sample_rate=44100):
+        points = int((tone_duration + self.release) * sample_rate)
+        self.t = np.linspace(0, tone_duration + self.release, points, endpoint=False)
+
+        if tone_duration < self.attack + self.decay:
+            tone_duration = self.attack + self.decay
+        self.sustain = tone_duration - self.attack - self.decay        
+
+    def set_total_time(self, total_time, sample_rate=44100):
+        points = int(total_time * sample_rate)
+        self.t = np.linspace(0, total_time, points, endpoint=False)
+
+        if total_time < self.attack + self.decay + self.release:
+            raise Exception("LinearADSR: Total time must be greater than A+D+R")
+        self.sustain = total_time - self.attack - self.decay - self.release
+
+    def time(self):
+        return self.t
+
+    def envelope(self):
         """ Generate the ADSR envelope for a given time array t and note duration
         t: numpy array of time values
         duration: total duration of the note in seconds (from on to off)
         """
         # Calculate the sustain phase duration
-        S = tone_duration - self.attack - self.decay
 
+        if self.sustain is None:
+            raise Exception("LinearADSR: You must call 'set_tone_duration(d)' or 'set_total_time(t)' before calling envelope()")
+
+        k = self.k
+        A = self.attack
+        D = self.decay
+        S = self.sustain
+        R = self.release
+        t = self.t
+        
         # Create an output array of the same shape as t
         output = np.zeros_like(t)
-        
+
         # Attack phase
-        attack_mask = t < self.attack
-        output[attack_mask] = self.A * (t[attack_mask] / self.attack) * self.k
+        if A > 0.0:
+            attack_mask = t < A
+            output[attack_mask] = self.attackFunction.mod(t[attack_mask], x1=A, y1=k)
         
         # Decay phase
-        decay_mask = (t >= self.attack) & (t < self.attack + self.decay)
-        output[decay_mask] = self.A * (self.k - (self.k - 1) * (t[decay_mask] - self.attack) / self.decay)
+        if D > 0.0:
+            decay_mask = (t >= A) & (t < A + D)
+            output[decay_mask] = self.decayFunction.mod(t[decay_mask], x0=A, x1=A+D, y0=k*1, y1=1)            
         
         # Sustain phase
-        sustain_mask = (t >= self.attack + self.decay) & (t < self.attack + self.decay + S)
-        output[sustain_mask] = self.A
+        if S > 0.0:
+            sustain_mask = (t >= A + D) & (t < A + D + S)
+            output[sustain_mask] = 1.0
         
         # Release phase
-        release_mask = (t >= self.attack + self.decay + S) & (t < self.attack + self.decay + S + self.release)
-        output[release_mask] = self.A * (1 - (t[release_mask] - self.attack - self.decay - S) / self.release)
+        if R > 0.0:
+            release_mask = (t >= A + D + S) & (t < A + D + S + R)
+            output[release_mask] = self.releaseFunction.mod(t[release_mask], x0=A+D+S, x1=A+D+S+R, y0=1, y1=0)
                 
         return output
+    
+
+    
     
 class WoodwindEnvelope():
     def __init__(self, amp, k, A, D, R):

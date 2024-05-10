@@ -1,5 +1,6 @@
 import mido
 import json
+import copy
 
 class MidiNoteData:
     def __init__(self, note, vel, time_on=0.0, time_off=0.0):
@@ -53,6 +54,11 @@ class MidiNoteData:
         else:
             return str(self.__dict__) + " ERROR"
 
+
+
+
+
+
 class MidiMusicData:
     def __init__(self, path, title, handleOverlap="ignore"):
         handleOverlap_options = ["ignore", "FIFO"]
@@ -62,8 +68,8 @@ class MidiMusicData:
         self.handleOverlap = handleOverlap
         self.path = path
         self.title = title
+        self.channel_data = {}
         self.channel_raw_notes = {}     # dict of notes indexed by channel
-        self.chanel_notes_with_duration = {}
 
 
     def appendNote(self, channel=0, absTime=0.0, ntype="", note=0, vel=0):
@@ -72,11 +78,14 @@ class MidiMusicData:
         
         # if channel not in dict, add it
         if channel not in self.channel_raw_notes:
-            self.channel_raw_notes[channel] = {}
-            self.chanel_notes_with_duration[channel] = {}
+            self.channel_raw_notes[channel] = []
 
-        if note not in self.channel_raw_notes[channel]:
-            self.channel_raw_notes[channel][note] = []
+        if channel not in self.channel_data:
+            self.channel_data[channel] = {
+                "title": f"channel_{channel:03}",
+                "notes": [],
+                "duration": 0.0,
+            }
 
         on_off = True if ntype == 'note_on' else False
 
@@ -90,63 +99,79 @@ class MidiMusicData:
         else:
             note_data.time_off = absTime
 
-        self.channel_raw_notes[channel][note].append(note_data)
+        self.channel_raw_notes[channel].append(note_data)
 
 
     def computeNoteDurations(self):
-        self.chanel_notes_with_duration = {}
-
         for channel in self.channel_raw_notes.keys():
-            note_on_dict = {}
 
+            note_on_dict = {}
 
             channel_notes = []
 
-            for nkey in self.channel_raw_notes[channel].keys():
+            for n in self.channel_raw_notes[channel]:
 
-                for n in self.channel_raw_notes[channel][nkey]:
+                pitch = n.note
+                if n.on_off():  # note_on event
 
-                    pitch = n.note
-                    if n.on_off():  # note_on event
+                    if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
+                        if self.handleOverlap == "ignore":
+                            continue
+                        elif self.handleOverlap == "FIFO":
+                            note_on_dict[pitch].append(n)
 
-                        if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
-                            if self.handleOverlap == "ignore":
-                                continue
-                            elif self.handleOverlap == "FIFO":
-                                note_on_dict[pitch].append(n)
+                        print(f"Warning: ON without OFF for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
+                    else:
+                        note_on_dict[pitch] = [n]
 
-                            print(f"Warning: ON without OFF for n={pitch} in ch={channel} at t={n.time():.03f}. Tot notes={len(note_on_dict[pitch])}")
-                        else:
-                            note_on_dict[pitch] = [n]
+                else:  # note_off
+                    if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
+                        if self.handleOverlap == "ignore" or self.handleOverlap == "FIFO":
+                            prevNote = note_on_dict[pitch].pop(0)
 
-                    else:  # note_off
-                        if pitch in note_on_dict and len(note_on_dict[pitch]) > 0:
-                            if self.handleOverlap == "ignore" or self.handleOverlap == "FIFO":
-                                prevNote = note_on_dict[pitch].pop(0)
+                        prevNote.set_duration(n.time_off)
+                        if prevNote.duration > 0:
+                            channel_notes.append(prevNote)
+                        elif self.handleOverlap != "ignore":
+                            print(f"Warning: Note with duration=0 for n={pitch} in ch={channel} at t={n.time():.03f}")
+                    else:
+                        if self.handleOverlap == "ignore":
+                            continue
+                        print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}")
 
-                            prevNote.set_duration(n.time_off)
-                            if prevNote.duration > 0:
-                                channel_notes.append(prevNote)
-                            elif self.handleOverlap != "ignore":
-                                print(f"Warning: Note with duration=0 for n={pitch} in ch={channel} at t={n.time():.03f}")
-                        else:
-                            if self.handleOverlap == "ignore":
-                                continue
-                            print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}")
-
-            self.chanel_notes_with_duration[channel] = channel_notes
+            self.channel_data[channel]["notes"] = channel_notes
+            self.channel_data[channel]["duration"] = channel_notes[-1].time_off - channel_notes[0].time_on
 
     def channels(self):
-        return self.chanel_notes_with_duration.keys()
+        return self.channel_raw_notes.keys()
+    
+    def setChannelTitle(self, channel, title):
+        if channel not in self.channel_data:
+            raise ValueError(f"Channel {channel} not found")
+        self.channel_data[channel]["title"] = title
 
     def getChannelRawNotes(self, channel):
+        if channel not in self.channel_raw_notes:
+            raise ValueError(f"Channel {channel} not found")
         return self.channel_raw_notes[channel]
 
-    def getChannelNotes(self, channel):
-        if self.chanel_notes_with_duration[channel] == {}:
+    def getChannelData(self, channel):
+        if channel not in self.channel_data or len(self.channel_data[channel]["notes"]) == 0:
             self.computeNoteDurations()
-        return self.chanel_notes_with_duration[channel]
+        return self.channel_data[channel]
+
+    def getChannelNotes(self, channel):
+        if channel not in self.channel_raw_notes:
+            raise ValueError(f"Channel {channel} not found")
+        if channel not in self.channel_data or len(self.channel_data[channel]["notes"]) == 0:
+            self.computeNoteDurations()
+        return self.channel_data[channel]["notes"]
         
+
+
+
+
+
 
 
 class MIDIFilesHandler:
@@ -168,6 +193,21 @@ class MIDIFilesHandler:
 
             if (msg.type == 'note_on' or msg.type == 'note_off'):
                 midi_data.appendNote(msg.channel, totTime, msg.type, msg.note, msg.velocity)
+
+        midi_data.computeNoteDurations()
+
+        channelCount = 0
+        for channel in midi_data.channels():
+            names = self.get_channel_names(path, channel)
+            if len(names) == 0:
+                continue
+            if len(names) == 1:
+                pass
+            else:
+                print(f"Warning: Channel {channel} has more than one name: {names}")
+            name = f"#{channelCount}  {names[0]}"
+            midi_data.setChannelTitle(channel, name)
+            channelCount += 1
         
         self.current_midi_data = midi_data
         return midi_data
@@ -182,6 +222,7 @@ class MIDIFilesHandler:
     def clear(self):
         self.midi_objects = {}
 
+
     # Import the MIDI file and store in midi_objects
     def import_file(self, path) -> bool:
         try:
@@ -192,6 +233,27 @@ class MIDIFilesHandler:
             print(f"Error importing {path}: {e}")
             return False
         return True
+
+
+
+    def get_channel_names(self, path, channel):
+        if path not in self.midi_metadata:
+            self.get_midi_metadata(path)
+
+        names = []
+        for track in self.midi_metadata[path]["trackMeta"]:
+            if track["playedNotes"] > 0:
+                notesRefChannels = track["notesRefChannels"]
+                prefix = int(track['channel']) if "channel" in track else -999
+                name = track["name"] if "name" in track else f"Unnamed Track {prefix:02}"
+
+                if ("channel" in track) and (prefix == channel) and (channel in notesRefChannels):
+                    names.append(name)
+                if ("channel" not in track) and (channel in notesRefChannels):
+                    names.append(name)
+        return names
+
+
 
 
     # Returns a dict with information about the requested MIDI file
@@ -234,6 +296,8 @@ class MIDIFilesHandler:
         
         ticks = 0
         refChannels = []
+        notesRefChannels = []
+        playedNotes = 0
         for msg in track:
             ticks += msg.time
 
@@ -242,18 +306,33 @@ class MIDIFilesHandler:
                 if msg.channel not in refChannels:
                     refChannels.append(msg.channel)
 
-            if isinstance(msg, mido.MetaMessage):
-                msg = msg.dict()
-                t = msg["type"]
+            msg = msg.dict()
 
-                if t == "track_name":
+            t = msg["type"]
+            match t:
+                case "track_name":
                     track_data["name"] = msg["name"]
-                            
-                elif t == "midi_port":
+                
+                case "midi_port":
                     track_data["port"] = msg["port"]
 
-                elif t == "channel_prefix":
-                    track_data["channel_prefix"] = msg["channel"]
+                case "channel_prefix":
+                    track_data["channel"] = msg["channel"]
+
+                case "note_on":
+                    if msg["channel"] not in notesRefChannels:
+                        notesRefChannels.append(msg["channel"])
+                    if msg["velocity"] > 0:
+                        playedNotes += 1
+
+                case "note_off":
+                    if msg["channel"] not in notesRefChannels:
+                        notesRefChannels.append(msg["channel"])
+
+        if "name" not in track_data:
+            track_data["name"] = "Unnamed Track"
+        track_data["playedNotes"] = playedNotes
+        track_data["notesRefChannels"] = notesRefChannels
         track_data["ticks"] = ticks
         track_data["refChannels"] = refChannels
         return track_data
