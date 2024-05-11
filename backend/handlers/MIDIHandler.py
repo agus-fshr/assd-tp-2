@@ -3,12 +3,12 @@ import json
 import copy
 
 class MidiNoteData:
-    def __init__(self, note, vel, time_on=0.0, time_off=0.0):
+    def __init__(self, note, velocity, time_on=0.0, time_off=0.0):
         self.time_on = time_on
         self.time_off = time_off
         self.duration = 0.0
         self.note = note
-        self.vel = vel
+        self.velocity = velocity
 
     def set_duration(self, time_off):
         self.time_off = time_off
@@ -27,10 +27,10 @@ class MidiNoteData:
         if self.duration != 0.0:
             raise ValueError("Note has duration, not on_off")
         
-        elif self.time_off > 0.0 or self.vel == 0:
+        elif self.time_off > 0.0 or self.velocity == 0:
             return False
         
-        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.vel > 0:
+        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.velocity > 0:
             return True
         
         else:
@@ -40,16 +40,16 @@ class MidiNoteData:
         if self.duration != 0.0:
             timestr = f"{self.time_on:.03f}".ljust(9)
             durstr = f"{self.duration:.03f}".ljust(7)
-            return f"{timestr} + {durstr} N:{self.note} V:{self.vel}"
+            return f"{timestr} + {durstr} N:{self.note} V:{self.velocity}"
         
-        elif self.time_off > 0.0 or self.vel == 0:
+        elif self.time_off > 0.0 or self.velocity == 0:
             if self.time_off > 0.0 and self.time_on > 0.0:
                 self.duration = self.time_off - self.time_on
-                return f"N:{self.note:03} V:{self.vel:03}\t\t t={self.time_on:.03f} ON\t\t t={self.time_off:.03f} OFF"
-            return f"N:{self.note:03} V:{self.vel:03}\t\t t={self.time_off:.03f} OFF"
+                return f"N:{self.note:03} V:{self.velocity:03}\t\t t={self.time_on:.03f} ON\t\t t={self.time_off:.03f} OFF"
+            return f"N:{self.note:03} V:{self.velocity:03}\t\t t={self.time_off:.03f} OFF"
         
-        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.vel > 0:
-            return f"N:{self.note:03} V:{self.vel:03} t={self.time_on:.03f} ON"
+        elif self.time_on >= 0.0 and self.time_off == 0.0 and self.velocity > 0:
+            return f"N:{self.note:03} V:{self.velocity:03} t={self.time_on:.03f} ON"
         
         else:
             return str(self.__dict__) + " ERROR"
@@ -70,9 +70,10 @@ class MidiMusicData:
         self.title = title
         self.channel_data = {}
         self.channel_raw_notes = {}     # dict of notes indexed by channel
+        self.total_duration = 0.0
 
 
-    def appendNote(self, channel=0, absTime=0.0, ntype="", note=0, vel=0):
+    def appendNote(self, channel=0, absTime=0.0, ntype="", note=0, velocity=0):
         if "note_" not in ntype:
             return
         
@@ -89,11 +90,11 @@ class MidiMusicData:
 
         on_off = True if ntype == 'note_on' else False
 
-        if vel == 0:
+        if velocity == 0:
             on_off = False
 
-        #           0: time, 1: on_off, 2: vel
-        note_data = MidiNoteData(note, vel)
+        #           0: time, 1: on_off, 2: velocity
+        note_data = MidiNoteData(note, velocity)
         if on_off:
             note_data.time_on = absTime
         else:
@@ -140,7 +141,8 @@ class MidiMusicData:
                         print(f"Warning: OFF without ON for n={pitch} in ch={channel} at t={n.time():.03f}")
 
             self.channel_data[channel]["notes"] = channel_notes
-            self.channel_data[channel]["duration"] = channel_notes[-1].time_off - channel_notes[0].time_on
+            self.channel_data[channel]["duration"] = channel_notes[-1].time_off
+            self.total_duration = max(self.total_duration, channel_notes[-1].time_off)
 
     def channels(self):
         return self.channel_raw_notes.keys()
@@ -167,6 +169,15 @@ class MidiMusicData:
             self.computeNoteDurations()
         return self.channel_data[channel]["notes"]
         
+
+
+
+
+
+
+
+
+
 
 
 
@@ -331,6 +342,7 @@ class MIDIFilesHandler:
 
         if "name" not in track_data:
             track_data["name"] = "Unnamed Track"
+            
         track_data["playedNotes"] = playedNotes
         track_data["notesRefChannels"] = notesRefChannels
         track_data["ticks"] = ticks

@@ -1,7 +1,5 @@
 
 
-from typing import Any
-
 
 class FileMetadataObject:
     def __init__(self, path):

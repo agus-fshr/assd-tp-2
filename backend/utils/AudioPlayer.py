@@ -1,6 +1,4 @@
 from PyQt5.QtCore import QObject, pyqtSignal, QThread, QMutex, QMutexLocker
-from PyQt5 import QtCore
-from PyQt5 import Qt
 import pyaudio
 import numpy as np
 import wave

@@ -31,7 +31,7 @@ class WaveformViewerWidget(QWidget):
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
         
         self.histogramPlot = pg.HistogramLUTWidget(gradientPosition="left")
-        self.histogramPlot.setMinimumWidth(150)
+        self.histogramPlot.setMinimumWidth(180)
         self.histogramPlot.hide()
 
         # self.histogramPlot.setMaximumWidth(navHeight)
@@ -93,11 +93,13 @@ class WaveformViewerWidget(QWidget):
     def changeView(self, view):
         self.redraw()
         if self.plotTypeMenu.selected != "Spectrogram":
+
             self.waveformPlot1.autoRange()
             self.waveformPlot1.enableAutoRange(axis='y')
             self.waveformPlot1.setAutoVisible(y=True)
             self.waveformPlot1.setMouseEnabled(x=True, y=False)
         else:
+            self.histogramPlot.autoHistogramRange()
             self.waveformPlot1.disableAutoRange()
             self.waveformPlot1.setAutoVisible(y=False)
             self.waveformPlot1.setMouseEnabled(x=True, y=True)
@@ -230,85 +232,3 @@ class WaveformViewerWidget(QWidget):
     def updateRegion(self, window, viewRange):
         rgn = viewRange[0]
         self.region.setRegion(rgn)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# win = pg.QtGui.QMainWindow()
-# widget = QWidget()
-# win.setCentralWidget(widget)
-
-# layout = QGridLayout()
-# widget.setLayout(layout)
-# layout.setSpacing(0)
-
-# view = pg.GraphicsView()
-# vb = pg.ViewBox()
-# vb.setAspectLocked()
-# view.setCentralItem(vb)
-# layout.addWidget(view, 0, 1, 3, 1)  # TUKO
-
-# hist = pg.HistogramLUTWidget(gradientPosition="left")
-# layout.addWidget(hist, 0, 2)
-
-
-# monoRadio = QtWidgets.QRadioButton('mono')
-# rgbaRadio = QtWidgets.QRadioButton('rgba')
-# layout.addWidget(monoRadio, 1, 2)
-# layout.addWidget(rgbaRadio, 2, 2)
-# monoRadio.setChecked(True)
-
-
-# def setLevelMode():
-#     mode = 'mono' if monoRadio.isChecked() else 'rgba'
-#     hist.setLevelMode(mode)
-
-
-# monoRadio.toggled.connect(setLevelMode)
-
-# data = pg.gaussianFilter(np.random.normal(size=(256, 256, 3)), (20, 20, 0))
-# for i in range(32):
-#     for j in range(32):
-#         data[i*8, j*8] += .1
-# img = pg.ImageItem(data)
-# vb.addItem(img)
-# vb.autoRange()
-
-# hist.setImageItem(img)
-
-# if __name__ == '__main__':
-#     pg.exec()

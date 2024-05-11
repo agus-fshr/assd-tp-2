@@ -1,4 +1,4 @@
-from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
+from backend.utils.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 import numpy as np
 from scipy import signal
 

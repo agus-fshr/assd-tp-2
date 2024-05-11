@@ -19,9 +19,6 @@ class MIDIPlayerPage(BaseClassPage):
     title = "MIDI Player"
 
     def initUI(self, layout):
-        # Class widgets (used externally with self.)
-        self.noteArr = []
-
         self.synthSelector = DropDownMenu("Select Instrument", onChoose=self.on_instrument_selected)
         self.effectSelector = DropDownMenu("Select Effect", onChoose=self.on_effect_selected)
         self.load_instrument_options()
@@ -34,7 +31,7 @@ class MIDIPlayerPage(BaseClassPage):
         self.trackSelector = DropDownMenu("Select Track", onChoose=self.on_track_selected)
 
         synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightblue", hover_color="white")
-        synthButton.setFixedWidth(150)
+        synthButton.setFixedWidth(100)
 
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
         openFileExplorerButton = Button("Open Folder", on_click=self.openFileExplorer)
@@ -103,49 +100,67 @@ class MIDIPlayerPage(BaseClassPage):
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
 
-        song_length = 0
+        self.song_length = 0
         for note in self.noteArr:
-            song_length += int(note["Delay"]*1.01 * self.model.audioPlayer.framerate)
+            self.song_length += int(note["Delay"]*1.01 * self.model.audioPlayer.framerate)
         
-        song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
+        self.song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
 
-        print(f"Song Length (Samples): {song_length}")
+        print(f"Song Length (Samples): {self.song_length}")
         
-        song_array = np.zeros(song_length + self.model.audioPlayer.framerate * 1)
+        self.song_array = np.zeros(self.song_length + self.model.audioPlayer.framerate * 1)
 
-        curr = 0
+        self.model.synthWorker.cancel()
+        self.model.synthWorker.wait()
+
+        n0 = 0
         for i, note in enumerate(self.noteArr):
             freq = note["Frequency"]
             amp = note["Amplitude"]
             duration = note["Duration"]
             delay = note["Delay"]
-            print(f"Note: {i} / {len(self.noteArr)}")
 
             instrument = self.synthSelector.selected
             effect = self.effectSelector.selected
-            wave_array = instrument(freq, amp, duration)
-            wave_array = effect(wave_array)
+
+            n0 += int(delay * self.model.audioPlayer.framerate)
+            self.model.synthWorker.add_task((n0, note, instrument, effect))
+
+        self.model.synthWorker.disconnectAll()
+        self.model.synthWorker.taskComplete.connect(self.on_note_synthesized)
+        self.model.synthWorker.finished.connect(self.on_song_synthesized)
+        self.model.synthWorker.onError.connect( lambda e: print(f"Synth Worker Error: {e}"))
+
+        self.model.synthWorker.start()
 
 
-            curr += int(delay * self.model.audioPlayer.framerate)
-
-            if curr + wave_array.size>= song_array.size:
+    def on_note_synthesized(self, n0_wave):
+        n0, wave_array = n0_wave
+        try:
+            if n0 + wave_array.size >= self.song_array.size:
                 print("ERROR: Song too short or note too long. Breaking loop.")
-                print("song_array size: ", song_array.size)
+                print("song_array size: ", self.song_array.size)
                 print("wave_array size: ", wave_array.size)
-                song_array[curr:] += wave_array[:song_array.size - curr]
-                break
+                self.song_array[n0:] += wave_array[:self.song_array.size - n0]
+                self.model.synthWorker.cancel()
+                return
 
-            song_array[curr : curr + wave_array.size] += wave_array
+            self.song_array[n0 : n0 + wave_array.size] += wave_array
+            print(self.model.synthWorker.progressBarString())
+        except Exception as e:
+            print(e)
+            self.model.synthWorker.cancel()
+            self.model.synthWorker.wait()
+            return
 
 
+    def on_song_synthesized(self):
         # set time axis
-        time = np.arange(len(song_array)) / self.model.audioPlayer.framerate
+        time = np.arange(len(self.song_array)) / self.model.audioPlayer.framerate
 
+        self.waveformViewer.plot(time, self.song_array)
 
-        self.waveformViewer.plot(time, song_array)
-
-        self.model.audioPlayer.set_array(song_array)
+        self.model.audioPlayer.set_array(self.song_array)
         self.player.play()
 
         
@@ -202,7 +217,7 @@ class MIDIPlayerPage(BaseClassPage):
 
             note = {}
             note["Frequency"] = f
-            note["Amplitude"] = (n.vel / 127) * self.volume.value()
+            note["Amplitude"] = (n.velocity / 127) * self.volume.value()
             note["Duration"] = n.duration
             note["Delay"] = d
 
