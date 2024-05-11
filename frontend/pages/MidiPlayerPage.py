@@ -138,11 +138,9 @@ class MIDIPlayerPage(BaseClassPage):
         n0, wave_array = n0_wave
         try:
             if n0 + wave_array.size >= self.song_array.size:
-                print("ERROR: Song too short or note too long. Breaking loop.")
-                print("song_array size: ", self.song_array.size)
-                print("wave_array size: ", wave_array.size)
-                self.song_array[n0:] += wave_array[:self.song_array.size - n0]
-                self.model.synthWorker.cancel()
+                print("ERROR: Song too short or note too long. Adding more zeros to song_array")
+                zeros_needed = n0 + wave_array.size - self.song_array.size + 1  # +1 to avoid off-by-one error
+                self.song_array = np.append(self.song_array, np.zeros(zeros_needed))
                 return
 
             self.song_array[n0 : n0 + wave_array.size] += wave_array
