@@ -25,7 +25,7 @@ class InstrumentPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
+        self.midiNoteSelector = NumberInput("Note", default=440, interval=(20, 10000), step=1)
         self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
         
@@ -55,7 +55,7 @@ class InstrumentPage(BaseClassPage):
         topHLayout.addStretch(1)
 
         # Setup controls layout
-        controlsHLayout.addWidget(self.freqSelector)
+        controlsHLayout.addWidget(self.midiNoteSelector)
         controlsHLayout.addSpacing(20)
         controlsHLayout.addWidget(self.ampSelector)
         controlsHLayout.addSpacing(20)
@@ -93,14 +93,14 @@ class InstrumentPage(BaseClassPage):
 
     # Synthesize a sound using the selected instrument and effect
     def synthesize(self):
-        freq = self.freqSelector.value()
+        note = self.midiNoteSelector.value()
         amp = self.ampSelector.value()
         duration = self.durationSelector.value()
 
         instrument = self.synthSelector.selected
         effect = self.effectSelector.selected
 
-        wave_array = instrument(freq, amp, duration)
+        wave_array = instrument(note, amp, duration)
         wave_array = effect(wave_array)
 
         # set time axis

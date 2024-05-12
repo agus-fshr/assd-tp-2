@@ -52,9 +52,9 @@ class TracksPage(BaseClassPage):
             title = channelData["title"]
             duration = channelData["duration"]
 
-            childTextData = f"Duration: {duration:.02f}s\n"
+            subtitle = f"Duration: {duration:.02f}s\n"
 
-            card = CardWidget(child=QLabel(childTextData), mainTitle=title)
+            card = CardWidget(title=title, subtitle=subtitle)
             self.trackList.addCard(card)
 
 

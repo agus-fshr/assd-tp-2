@@ -115,9 +115,6 @@ class MIDIPlayerPage(BaseClassPage):
 
         n0 = 0
         for i, note in enumerate(self.noteArr):
-            freq = note["Frequency"]
-            amp = note["Amplitude"]
-            duration = note["Duration"]
             delay = note["Delay"]
 
             instrument = self.synthSelector.selected
@@ -205,7 +202,6 @@ class MIDIPlayerPage(BaseClassPage):
         lastTime = 0.0
 
         for n in notes:
-            f = 440 * 2**((n.note - 69) / 12)
             d = n.time_on - lastTime
             lastTime = n.time_on
 
@@ -214,13 +210,13 @@ class MIDIPlayerPage(BaseClassPage):
                 break
 
             note = {}
-            note["Frequency"] = f
+            note["Note"] = n.note
             note["Amplitude"] = (n.velocity / 127) * self.volume.value()
             note["Duration"] = n.duration
             note["Delay"] = d
 
             self.noteArr.append(note)
-            print(f"Note added! n={n.note}, f={f:.0f}, t0 ={n.time_on:.02f}, t1={n.time_off:.02f}, d = {d:.02f}")
+            print(f"Note added! n={n.note}, t0 ={n.time_on:.02f}, t1={n.time_off:.02f}, d = {d:.02f}")
 
 
 
