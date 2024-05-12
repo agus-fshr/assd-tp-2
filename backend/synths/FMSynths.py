@@ -23,7 +23,7 @@ class FMSynth(SynthBaseClass):
     def __init__(self):
         super().__init__()
 
-        self.name = "FM Synthesizer"
+        self.name = "Clarinet Synthesizer"
 
         self.params = ParameterList(
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
@@ -105,7 +105,7 @@ class FMSynthSax(SynthBaseClass):
     def __init__(self):
         super().__init__()
 
-        self.name = "FM Synthesizer"
+        self.name = "Sax Synthesizer"
 
         self.params = ParameterList(
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
