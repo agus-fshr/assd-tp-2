@@ -41,7 +41,7 @@ class SettingsDialog(QDialog):
 
     def showEvent(self, event):
         # Set size of the QDialog
-        self.resize(500, 400)  # Width, Height
+        self.resize(500, 700)  # Width, Height
 
         # Set position of the QDialog
         self.move(100, 100)  # X, Y
