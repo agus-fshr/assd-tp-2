@@ -59,14 +59,13 @@ class SimpleEchoEffect(EffectBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             BoolParam("active", value=False, text="Active"),
-            NumParam("delay", interval=(0, 1.2), value=0.5, step=0.01, text="Delay time [s]"),
             NumParam("Duration", interval=(0, 8), value=1, step=0.1, text="Durantion [repetitions]"),
-            NumParam("atenuation", interval=(0, 1), value=0.5, step=0.01, text="Atenuation"),
+            NumParam("atenuation", interval=(0, 0.99), value=0.5, step=0.01, text="Atenuation"),
         )
     
     def process(self, sound):
         """ Apply a delay effect to the sound """
-        delay_time = float(self.params["delay"])
+        delay_time = float(len(sound)/self.sample_rate)
         atenuation = float(self.params["atenuation"])
         duratio = float(self.params["Duration"])
         active = self.params["active"]
@@ -90,6 +89,45 @@ class SimpleEchoEffect(EffectBaseClass):
         
         return echo_effect
     
+class ReverbEffect(EffectBaseClass):
+    def __init__(self):
+        super().__init__()
+        self.name = "Reverb Effect" # Este nombre es el que se muestra en la interfaz
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            BoolParam("active", value=False, text="Active"),
+            NumParam("delay", interval=(0, 1.2), value=0.5, step=0.01, text="Delay time [s]"),
+            NumParam("Duration", interval=(0, 8), value=1, step=0.1, text="Durantion [repetitions]"),
+            NumParam("atenuation", interval=(0, 0.99), value=0.5, step=0.01, text="Atenuation"),
+        )
+    
+    def process(self, sound):
+        """ Apply a delay effect to the sound """
+        delay_time = float(self.params["delay"])
+        atenuation = float(self.params["atenuation"])
+        duratio = float(self.params["Duration"])
+        active = self.params["active"]
+        if not active:
+            return sound
+        
+        delay_samples = int(delay_time * self.sample_rate) +1 
+        
+        #amplio el array
+        new_sound = np.append(np.zeros(delay_samples), sound)
+        new_sound = np.append(new_sound, np.zeros(int(duratio*delay_samples)))
+        
+        
+        sound_out = np.zeros(len(new_sound)+delay_samples)
+        
+        
+        for i in range(delay_samples, len(sound_out)):
+            sound_out[i] = new_sound[i-delay_samples] + sound_out[i - delay_samples]*atenuation
+        reverb_effect = sound_out[(2*delay_samples):]
+        
+        
+        return reverb_effect
+
 class FlangerEffect(EffectBaseClass):
     def __init__(self):
         super().__init__()
