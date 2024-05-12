@@ -60,6 +60,7 @@ class SimpleEchoEffect(EffectBaseClass):
         self.params = ParameterList(
             BoolParam("active", value=False, text="Active"),
             NumParam("delay", interval=(0, 1.2), value=0.5, step=0.01, text="Delay time [s]"),
+            NumParam("Duration", interval=(0, 8), value=1, step=0.1, text="Durantion [repetitions]"),
             NumParam("atenuation", interval=(0, 1), value=0.5, step=0.01, text="Atenuation"),
         )
     
@@ -67,6 +68,7 @@ class SimpleEchoEffect(EffectBaseClass):
         """ Apply a delay effect to the sound """
         delay_time = float(self.params["delay"])
         atenuation = float(self.params["atenuation"])
+        duratio = float(self.params["Duration"])
         active = self.params["active"]
         if not active:
             return sound
@@ -75,7 +77,7 @@ class SimpleEchoEffect(EffectBaseClass):
         
         #amplio el array
         new_sound = np.append(np.zeros(delay_samples), sound)
-        new_sound = np.append(new_sound, np.zeros(int(1.5*atenuation*10*delay_samples)))
+        new_sound = np.append(new_sound, np.zeros(int(duratio*delay_samples)))
         
         
         sound_out = np.zeros(len(new_sound)+delay_samples)
