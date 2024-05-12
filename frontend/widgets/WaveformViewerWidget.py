@@ -39,6 +39,15 @@ class SettingsDialog(QDialog):
         self.layout.addLayout(hlayout)
         self.setLayout(self.layout)
 
+    def showEvent(self, event):
+        # Set size of the QDialog
+        self.resize(500, 400)  # Width, Height
+
+        # Set position of the QDialog
+        self.move(100, 100)  # X, Y
+
+        super().showEvent(event)
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             event.accept()
