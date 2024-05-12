@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import signal
-from backend.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
+from backend.utils.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
 
 from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass

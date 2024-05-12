@@ -5,7 +5,7 @@ from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMen
 from frontend.widgets.DynamicSettingsWidget import DynamicSettingsWidget
 from frontend.widgets.WaveformViewerWidget import WaveformViewerWidget
 
-from backend.ParamObject import *
+from backend.utils.ParamObject import *
 
 
 class TestPage(BaseClassPage):

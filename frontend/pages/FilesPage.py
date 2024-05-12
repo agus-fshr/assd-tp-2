@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QLabel, QFileDialog, QTableWidget, QTableWidgetItem, QHeaderView, QHBoxLayout, QMessageBox
 from PyQt5.Qt import QSizePolicy
-from PyQt5.QtCore import Qt
 
 from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button
@@ -45,12 +44,6 @@ class FilesPage(BaseClassPage):
         self.update_table()
 
 
-    # Import the files listed in the table
-    def import_files(self):
-        self.model.import_files()
-        self.update_table()
-
-
     # Open a file explorer dialog to select files
     def popup_file_explorer_dialog(self):
         file_dialog = QFileDialog()
@@ -65,9 +58,7 @@ class FilesPage(BaseClassPage):
             self.update_table()
             return
         file_dialog.close()
-        self.update_table()                                         # Show them
-        self.import_files()                                         # Import them
-        self.update_table()                                         # Show them again
+        self.model.import_files(self.update_table)                  # Import them
 
 
     # Callback for when a table item is edited

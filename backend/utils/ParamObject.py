@@ -105,6 +105,12 @@ class ParameterList():
 
 
     def getFunction(self, eq, var, const = {}):
+        '''
+        If a TextParam is a valid equation, this function returns a lambda function that can be used to evaluate the equation with a given variable, the exising parameters and constants.
+        - eq: name of the TextParam that contains the equation
+        - var: name of the variable to be used in the equation (is not needed to be present in the equation)
+        - const: dictionary with constant values (optional)
+        '''
         eqstr = self[eq]
         try:
             eq = sp.sympify(eqstr)

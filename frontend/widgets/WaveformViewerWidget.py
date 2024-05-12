@@ -29,9 +29,14 @@ class WaveformViewerWidget(QWidget):
         self.plotLayout = pg.GraphicsLayoutWidget()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
+
+        self.label = pg.TextItem()
+        self.label.setZValue(20)
+        self.proxy = pg.SignalProxy(self.waveformPlot1.scene().sigMouseMoved, rateLimit=60, slot=self.mouseMoved)
+        self.waveformPlot1.addItem(self.label)
         
         self.histogramPlot = pg.HistogramLUTWidget(gradientPosition="left")
-        self.histogramPlot.setMinimumWidth(150)
+        self.histogramPlot.setMinimumWidth(180)
         self.histogramPlot.hide()
 
         # self.histogramPlot.setMaximumWidth(navHeight)
@@ -72,7 +77,44 @@ class WaveformViewerWidget(QWidget):
         layout.addLayout(plotsHLayout)
         self.setLayout(layout)        
 
+    @staticmethod
+    def eng_format(x, pos=0):
+        'The two args are the value and tick position'
+        magnitude = 0
+        while abs(x) >= 1000:
+            magnitude += 1
+            x /= 1000.0
+        while abs(x) < 1 and magnitude > -3:
+            magnitude -= 1
+            x *= 1000.0
+        # add more suffixes if you need them
+        return '{}{}'.format('{:.0f}'.format(x).rstrip('0').rstrip('.'), ['p', 'n', 'u', 'm', '', 'K', 'M', 'G', 'T', 'P'][magnitude+4])
+    
 
+    def mouseMoved(self, evt):
+        pos = evt[0]  # using signal proxy turns original arguments into a tuple
+        if self.waveformPlot1.sceneBoundingRect().contains(pos):
+            mousePoint = self.waveformPlot1.vb.mapSceneToView(pos)
+            index = int(mousePoint.x())
+            if 0 <= index < len(self.x):
+                # Set the size of the text
+                xstr = self.eng_format(mousePoint.x())
+                ystr = self.eng_format(mousePoint.y())
+                self.label.setText(f"x={xstr}, y={ystr}")
+                self.label.setAnchor((1, 0))
+
+                # get the position of upper right corner of the visible area
+                x = self.waveformPlot1.vb.viewRect().right()
+                y = self.waveformPlot1.vb.viewRect().top()
+
+                # calculate a small offset
+                x_offset = self.waveformPlot1.viewRect().width() * 0.05
+                y_offset = self.waveformPlot1.viewRect().height() * 0.2
+
+                # set the position of the text
+                self.label.setPos(x - x_offset, y + y_offset)
+
+                
     def captureVisibleData(self):
         minX, maxX = self.region.getRegion()
         x = np.array(self.x)
@@ -91,8 +133,11 @@ class WaveformViewerWidget(QWidget):
 
 
     def changeView(self, view):
+        self.label.hide()
         self.redraw()
+        self.histogramPlot.autoHistogramRange()
         if self.plotTypeMenu.selected != "Spectrogram":
+
             self.waveformPlot1.autoRange()
             self.waveformPlot1.enableAutoRange(axis='y')
             self.waveformPlot1.setAutoVisible(y=True)
@@ -101,6 +146,7 @@ class WaveformViewerWidget(QWidget):
             self.waveformPlot1.disableAutoRange()
             self.waveformPlot1.setAutoVisible(y=False)
             self.waveformPlot1.setMouseEnabled(x=True, y=True)
+        self.label.show()
 
     def redraw(self, _=None):
         self.plot(self.x, self.y)
@@ -122,6 +168,7 @@ class WaveformViewerWidget(QWidget):
             self.waveformPlot1.removeItem(item)
         self.waveformPlot1.clear()
         self.waveformPlot2.clear()
+        self.waveformPlot1.addItem(self.label)
         self.plotItems = []
 
         self.waveformPlot2.addItem(self.region, ignoreBounds=True)
@@ -161,7 +208,7 @@ class WaveformViewerWidget(QWidget):
             self.waveformPlot1.enableAutoRange(axis='y')
         else:
             # Plot the spectrogram
-            f, t, Sxx = signal.spectrogram(y, fs=1/Ts)
+            f, t, Sxx = signal.spectrogram(y, fs=1/Ts, nperseg=1024, noverlap=512, scaling='spectrum', mode='magnitude')
 
             if ylog:
                 Sxx = np.log10(Sxx)
@@ -230,85 +277,3 @@ class WaveformViewerWidget(QWidget):
     def updateRegion(self, window, viewRange):
         rgn = viewRange[0]
         self.region.setRegion(rgn)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# win = pg.QtGui.QMainWindow()
-# widget = QWidget()
-# win.setCentralWidget(widget)
-
-# layout = QGridLayout()
-# widget.setLayout(layout)
-# layout.setSpacing(0)
-
-# view = pg.GraphicsView()
-# vb = pg.ViewBox()
-# vb.setAspectLocked()
-# view.setCentralItem(vb)
-# layout.addWidget(view, 0, 1, 3, 1)  # TUKO
-
-# hist = pg.HistogramLUTWidget(gradientPosition="left")
-# layout.addWidget(hist, 0, 2)
-
-
-# monoRadio = QtWidgets.QRadioButton('mono')
-# rgbaRadio = QtWidgets.QRadioButton('rgba')
-# layout.addWidget(monoRadio, 1, 2)
-# layout.addWidget(rgbaRadio, 2, 2)
-# monoRadio.setChecked(True)
-
-
-# def setLevelMode():
-#     mode = 'mono' if monoRadio.isChecked() else 'rgba'
-#     hist.setLevelMode(mode)
-
-
-# monoRadio.toggled.connect(setLevelMode)
-
-# data = pg.gaussianFilter(np.random.normal(size=(256, 256, 3)), (20, 20, 0))
-# for i in range(32):
-#     for j in range(32):
-#         data[i*8, j*8] += .1
-# img = pg.ImageItem(data)
-# vb.addItem(img)
-# vb.autoRange()
-
-# hist.setImageItem(img)
-
-# if __name__ == '__main__':
-#     pg.exec()
