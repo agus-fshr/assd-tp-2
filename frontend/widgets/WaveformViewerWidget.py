@@ -11,6 +11,7 @@ from .BasicWidgets import DropDownMenu, Button, TextInput
 from .DynamicSettingsWidget import DynamicSettingsWidget
 from backend.utils.ParamObject import ParameterList, NumParam, TextParam, BoolParam, ChoiceParam
 
+ALLOWED_WINDOWS = ['barthann','bartlett','blackman','blackmanharris','bohman','boxcar','rectangular','flattop','hamming','hann','tukey',]
 
 class SettingsDialog(QDialog):
     def __init__(self, on_apply=None):
@@ -20,8 +21,8 @@ class SettingsDialog(QDialog):
 
         self.settings = ParameterList(
             NumParam("padding", value=0, interval=(0,10000), step=1, text="Signal Padding"),
-            ChoiceParam("FFTWindow", options=['barthann','bartlett','blackman','blackmanharris','bohman','boxcar','rectangular','flattop','hamming','hann','tukey',], value='rectangular', text="FFT Window"),
-            ChoiceParam("specWindow", options=['barthann','bartlett','blackman','blackmanharris','bohman','boxcar','rectangular','flattop','hamming','hann','tukey',], value='rectangular', text="Spectrogram Window"),
+            ChoiceParam("FFTWindow", options=ALLOWED_WINDOWS, value='rectangular', text="FFT Window"),
+            ChoiceParam("specWindow", options=ALLOWED_WINDOWS, value='rectangular', text="Spectrogram Window"),
             NumParam("nperseg", value=1024, interval=(128, 8192), step=1, text="Spectrogram Window Size"),
             NumParam("noverlap", value=512, interval=(0, 4096), step=1, text="Spectrogram Window Overlap"),
         )
