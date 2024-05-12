@@ -11,67 +11,12 @@ from .BasicWidgets import DropDownMenu, Button, TextInput
 from .DynamicSettingsWidget import DynamicSettingsWidget
 from backend.utils.ParamObject import ParameterList, NumParam, TextParam, BoolParam, ChoiceParam
 
-ALLOWED_WINDOWS = ['barthann','bartlett','blackman','blackmanharris','bohman','boxcar','rectangular','flattop','hamming','hann','tukey',]
-
-class SettingsDialog(QDialog):
-    def __init__(self, on_apply=None):
-        super().__init__()
-
-        self.on_apply = on_apply
-
-        self.setWindowTitle("Settings")
-
-        self.settings = ParameterList(
-            NumParam("padding", value=0, interval=(0,10000), step=1, text="Signal Padding"),
-            ChoiceParam("FFTWindow", options=ALLOWED_WINDOWS, value='rectangular', text="FFT Window"),
-            ChoiceParam("specWindow", options=ALLOWED_WINDOWS, value='rectangular', text="Spectrogram Window"),
-            NumParam("nperseg", value=1024, interval=(128, 8192), step=1, text="Spectrogram Window Size"),
-            NumParam("noverlap", value=512, interval=(0, 4096), step=1, text="Spectrogram Window Overlap"),
-        )
-
-        self.dynSettings = DynamicSettingsWidget(self.settings, on_edit=self.on_apply)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(Button("Cerrar", on_click=self.accept))
-
-
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.dynSettings)
-        self.layout.addLayout(hlayout)
-        self.setLayout(self.layout)
-
-    def showEvent(self, event):
-        # Set size of the QDialog
-        self.resize(500, 700)  # Width, Height
-
-        # Set position of the QDialog
-        self.move(100, 100)  # X, Y
-
-        super().showEvent(event)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            event.accept()
-            self.on_apply()
-        else:
-            super().keyPressEvent(event)
-
-    def __getitem__(self, key):
-        return self.settings.__getitem__(key)
-
 
 class WaveformViewerWidget(QWidget):
     def __init__(self, navHeight=100, onFFT = lambda f, x: None, onEvent = None):
         super().__init__()
-        pg.setConfigOptions(imageAxisOrder='row-major')
 
-        self.plotTypeMenu = DropDownMenu(options=["Waveform", "FFT", "Spectrogram"], onChoose=self.reloadPlot, firstSelected=True)
-        self.xAxisScale = DropDownMenu(options=["Linear X", "Log X"], onChoose=self.reloadPlot, firstSelected=True)
-        self.yAxisScale = DropDownMenu(options=["Linear Y", "Log Y"], onChoose=self.reloadPlot, firstSelected=True)
-        self.paddingInput = TextInput("Padding", default="0", regex="^[0-9]*$", on_change=self.reloadPlot, layout='h')
-
-        self.settingsDialog = SettingsDialog(on_apply=self.redraw)
-
-        self.plotLayout = pg.GraphicsLayoutWidget()
+        self.plot = pg.PlotItem()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
         self.waveformPlot2 = self.plotLayout.addPlot(row=2, col=0)
 
