@@ -370,6 +370,14 @@ class DropDownMenu(Button):
             }
         """)
 
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+
     def set_options(self, options={}, firstSelected=False):
         # release previous connected actions
         for action in self.menu.actions():

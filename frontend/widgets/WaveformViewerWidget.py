@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QDialog, QLabel, QSpinBox
 from PyQt5.QtGui import QTransform
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 
 import pyqtgraph as pg
 
@@ -17,6 +17,8 @@ class SettingsDialog(QDialog):
     def __init__(self, on_apply=None):
         super().__init__()
 
+        self.on_apply = on_apply
+
         self.setWindowTitle("Settings")
 
         self.settings = ParameterList(
@@ -27,15 +29,22 @@ class SettingsDialog(QDialog):
             NumParam("noverlap", value=512, interval=(0, 4096), step=1, text="Spectrogram Window Overlap"),
         )
 
-        self.dynSettings = DynamicSettingsWidget(self.settings)
+        self.dynSettings = DynamicSettingsWidget(self.settings, on_edit=self.on_apply)
         hlayout = QHBoxLayout()
-        hlayout.addWidget(Button("Apply", on_click=on_apply))
-        hlayout.addWidget(Button("OK", on_click=self.accept))
+        hlayout.addWidget(Button("Cerrar", on_click=self.accept))
+
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.dynSettings)
         self.layout.addLayout(hlayout)
         self.setLayout(self.layout)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            event.accept()
+            self.on_apply()
+        else:
+            super().keyPressEvent(event)
 
     def __getitem__(self, key):
         return self.settings.__getitem__(key)
@@ -116,7 +125,8 @@ class WaveformViewerWidget(QWidget):
         x, y = self.setPadding(x, y, Ts)
         x, y = self.computePlotData(x, y, Ts)
         self.plotComputedData(x, y)
-        self.histogramPlot.setLevels(*self.histLastLevels)
+        if self.plotTypeMenu.selected == "Spectrogram" and self.histLastLevels is not None:
+            self.histogramPlot.setLevels(*self.histLastLevels)
         self.updateScale()
 
 
@@ -151,6 +161,7 @@ class WaveformViewerWidget(QWidget):
         self.histogramPlot.autoHistogramRange()
         if self.histDefaultLevels is not None:
             self.histogramPlot.setLevels(*self.histDefaultLevels)
+            print(f"autoRange histDefaultLevels: {self.histDefaultLevels}")
         self.updateRegion(self.waveformPlot1.getViewBox(), self.waveformPlot1.getViewBox().viewRange())
 
 
@@ -216,6 +227,7 @@ class WaveformViewerWidget(QWidget):
             img.setPos(0, 0)
             img.setTransform(tr)            
 
+            self.histogramPlot.sigLevelChangeFinished.disconnect(self.histogramLevelsChanged)   # DO
             self.histogramPlot.setImageItem(img)
             self.histDefaultLevels = (np.min(Sxx), np.max(Sxx))
             self.histogramPlot.setLevels(*self.histDefaultLevels)
@@ -225,6 +237,7 @@ class WaveformViewerWidget(QWidget):
                         (1.0, (246, 111, 0, 255)),
                         (0.0, (75, 0, 113, 255))]})
             # hist.gradient.loadPreset('flame')
+            self.histogramPlot.sigLevelChangeFinished.connect(self.histogramLevelsChanged)
             self.waveformPlot1.addItem(img)
         else:
             raise ValueError("Invalid plot type")
@@ -285,3 +298,4 @@ class WaveformViewerWidget(QWidget):
     def histogramLevelsChanged(self):
         ''' Save the last levels of the histogram '''
         self.histLastLevels = self.histogramPlot.getLevels()
+        print(f"histogramLevelsChanged: {self.histLastLevels}")

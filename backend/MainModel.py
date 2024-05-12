@@ -99,13 +99,22 @@ class MainModel:
 
     # DO NOT TOUCH THIS FUNCTION
     def verify(self):
+        synthNames = []
+        effectNames = []
         for synth in self.synthesizers:
             if not isinstance(synth, SynthBaseClass):
                 raise Exception(f"Synthesizer '{synth}' is not an instance of SynthBaseClass")
             if not hasattr(synth, "params") or not isinstance(synth.params, ParameterList):
                 raise Exception(f"Synthesizer '{synth}' does not have a 'params' attribute of type ParameterList")
+            synthNames.append(synth.name)
         for effect in self.effects:
             if not isinstance(effect, EffectBaseClass):
                 raise Exception(f"Effect '{effect}' is not an instance of EffectBaseClass")
             if not hasattr(effect, "params") or not isinstance(effect.params, ParameterList):
                 raise Exception(f"Effect '{effect}' does not have a 'params' attribute of type ParameterList")
+            effectNames.append(effect.name)
+            
+        if len(synthNames) != len(set(synthNames)):
+            raise Exception(f"Synthesizer names are not unique: {synthNames}")
+        if len(effectNames) != len(set(effectNames)):
+            raise Exception(f"Effect names are not unique: {effectNames}")
