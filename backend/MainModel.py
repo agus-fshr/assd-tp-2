@@ -34,6 +34,7 @@ class MainModel:
         PureToneSynth(),
         GuitarAdditive(),
         FMSynth(),
+        FMSynthSax(),
         KSGuitar(),
     ]
 
