@@ -30,7 +30,6 @@ if __name__ == '__main__':
         TracksPage(),
         # TracksMetadataPage(),
         MidiViewerPage(),
-        
         InstrumentPage(),
         ChordPage(),
         SoundPlayerPage(),

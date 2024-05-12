@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGraphicsDropShadowEffect, QSizePolicy, QLabel, QLineEdit, QWidget, QSlider, QPushButton, QMenu, QAction
 from PyQt5.QtGui import QColor, QRegExpValidator
-from PyQt5.QtCore import Qt, QRegExp
+from PyQt5.QtCore import Qt, QRegExp, pyqtSignal
 import numpy as np
 
 # Button class
@@ -16,8 +16,11 @@ class Button(QPushButton):
 
         self.setColors(color, background_color, hover_color, click_color)
 
-        self.clicked.connect(self.on_click_callback)
-        self.on_click = on_click
+        if isinstance(on_click, pyqtSignal):
+            self.clicked.connect(on_click)
+        else:
+            self.clicked.connect(self.on_click_callback)
+            self.on_click = on_click
 
         shadow = QGraphicsDropShadowEffect()
         shadow.setColor(QColor(shadow_color))
