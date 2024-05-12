@@ -44,6 +44,7 @@ class MainModel:
         # NoEffect(),
         DelayEffect(),
         SimpleEchoEffect(),
+        ReverbEffect(),
         FlangerEffect(),
         ReberbRIR()
     ]
