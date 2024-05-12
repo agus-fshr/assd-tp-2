@@ -33,7 +33,7 @@ class SoundPlayerPage(BaseClassPage):
         self.playerWidget = AudioPlayerWidget(audioPlayer=self.model.audioPlayer)
 
         # Setup waveform viewer widget
-        self.plotWidget = WaveformViewerWidget(onFFT=self.onFFT, onEvent=self.waveformViewerEvent)
+        self.plotWidget = WaveformViewerWidget()
         
         # Add widgets to page layout
         layout.addLayout(topHLayout)
