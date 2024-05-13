@@ -4,59 +4,89 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QGraphics
 from PyQt5.QtGui import QPixmap, QFont, QColor
 from PyQt5.QtCore import Qt
 
+class ContainerWidget(QWidget):
+    def __init__(self, child=None, children=None, layoutType=QHBoxLayout(), shadow=True, borderRadius=10, backgroundColor="#aaaaaa"):
+        super(ContainerWidget, self).__init__()
 
-class CardWidget(QWidget):
-    def __init__(self, child, icon=QStyle.SP_DriveCDIcon, mainTitle="Card", width=None, height=None, iconSize=64):
-        super(CardWidget, self).__init__()
-        
-        # Container widget
-        self.container = QWidget()
-        self.containerLayout = QHBoxLayout()
+        self.containerLayout = layoutType
         self.containerLayout.setContentsMargins(10, 10, 10, 10)
         self.containerLayout.setSpacing(10)
-        self.container.setLayout(self.containerLayout)
 
-        # Add a vertical layout for the contents (Title and Child widget)
-        self.contentLayout = QVBoxLayout()
-        self.contentLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        
+        self.setStyleSheet(f"""
+            QWidget {{
+                background-color: {backgroundColor};
+                border-radius: {borderRadius}px;
+            }}
+        """)
+
         # Set up the shadow effect for the container widget
-        self.shadowEffect = QGraphicsDropShadowEffect()
-        self.shadowEffect.setBlurRadius(15)
-        self.shadowEffect.setColor(QColor(0, 0, 0, 80))
-        self.shadowEffect.setXOffset(0)
-        self.shadowEffect.setYOffset(4)
-        self.container.setGraphicsEffect(self.shadowEffect)
+        if shadow:
+            shadowEffect = QGraphicsDropShadowEffect()
+            shadowEffect.setBlurRadius(15)
+            shadowEffect.setColor(QColor(0, 0, 0, 80))
+            shadowEffect.setXOffset(0)
+            shadowEffect.setYOffset(4)
+            self.setGraphicsEffect(shadowEffect)
+
+        if isinstance(child, QWidget):
+            self.containerLayout.addWidget(child)
+        if isinstance(child, QVBoxLayout) or isinstance(child, QHBoxLayout):
+            self.containerLayout.addLayout(child)
+        if isinstance(children, list):
+            for child in children:
+                if isinstance(child, QWidget):
+                    self.containerLayout.addWidget(child)
+                if isinstance(child, QVBoxLayout) or isinstance(child, QHBoxLayout):
+                    self.containerLayout.addLayout(child)
+
+        wrapperWidget = QWidget()
+        wrapperWidget.setLayout(self.containerLayout)
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(wrapperWidget)
+        self.setLayout(mainLayout)
+
+    def addWidget(self, widget):
+        if isinstance(widget, QWidget):
+            self.containerLayout.addWidget(widget)
+        if isinstance(widget, list):
+            for w in widget:
+                if isinstance(w, QWidget):
+                    self.containerLayout.addWidget(w)
+
+
+class CardWidget(QWidget):
+    def __init__(self, child=None, children=None, title="Card", subtitle="", width=None, height=None, iconSize=64, icon=QStyle.SP_DriveCDIcon, titleFont=QFont('Arial', 16, QFont.Bold), subtitleFont=None):
+        super(CardWidget, self).__init__()
         
         # Use a standard icon
-        self.iconLabel = QLabel()
+        iconLabel = QLabel()
         icon = self.style().standardIcon(icon)
         pixmap = icon.pixmap(iconSize, iconSize)
-        self.iconLabel.setPixmap(pixmap)
-        self.iconLabel.setAlignment(Qt.AlignCenter)
+        iconLabel.setPixmap(pixmap)
+        iconLabel.setAlignment(Qt.AlignCenter)
         
         # Main Title
-        self.titleLabel = QLabel(mainTitle)
-        self.titleLabel.setFont(QFont('Arial', 16, QFont.Bold))
-        self.titleLabel.setAlignment(Qt.AlignLeft)
-        
-        # Child Widget
-        self.child = child
-        
-        # Add widgets to container layout
-        self.contentLayout.addWidget(self.titleLabel)
-        self.contentLayout.addWidget(self.child)
-        self.containerLayout.addWidget(self.iconLabel)
-        self.containerLayout.addLayout(self.contentLayout)
-        self.containerLayout.addStretch(1)
+
+        titlesLayout = QVBoxLayout()
+        titleLabel = QLabel(title)
+        if isinstance(titleFont, QFont):
+            titleLabel.setFont(titleFont)
+        titleLabel.setAlignment(Qt.AlignLeft)
+        subtitleLabel = QLabel(subtitle)
+        if isinstance(subtitleFont, QFont):
+            subtitleLabel.setFont(subtitleFont)
+        subtitleLabel.setAlignment(Qt.AlignLeft)
+        titlesLayout.addWidget(titleLabel)
+        titlesLayout.addWidget(subtitleLabel)
+                
+        # Container widget
+        container = ContainerWidget(children=[iconLabel, titlesLayout, child])
+
         
         # Main layout for the widget
-        self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.container)
-        self.setLayout(self.mainLayout)
-        
-        # Apply styles to ensure visual unity
-        self.applyStyles()
+        mainLayout = QVBoxLayout()
+        mainLayout.addWidget(container)
+        self.setLayout(mainLayout)
 
         # Set fixed size for the whole widget
         if width is not None and height is not None:
@@ -64,28 +94,7 @@ class CardWidget(QWidget):
         elif width is not None:
             self.setFixedWidth(width)
         elif height is not None:
-            self.setFixedHeight(height)
-
-    def applyStyles(self):
-        self.container.setStyleSheet("""
-            QWidget {
-                background-color: #ffffff;
-                border-radius: 10px;
-            }
-        """)
-        self.setStyleSheet("""
-            QLabel, QPushButton {
-                color: #333;
-            }
-            QPushButton {
-                background-color: #007bff;
-                color: white;
-                border-radius: 5px;
-                padding: 5px 10px;
-                margin-top: 5px;
-            }
-        """)
-
+            self.setFixedHeight(height)        
 
 
 
@@ -130,10 +139,11 @@ class CardListWidget(QWidget):
     
     def clearAllCards(self):
         """Remove all cards from the list."""
-        while self.children:
+        while len(self.children) > 0:
             card = self.children.pop()
             self.containerLayout.removeWidget(card)
             card.deleteLater()
+
     def clear(self):
         self.clearAllCards()
 

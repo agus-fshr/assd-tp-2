@@ -45,6 +45,7 @@ class MainModel:
         # NoEffect(),
         DelayEffect(),
         SimpleEchoEffect(),
+        ReverbEffect(),
         FlangerEffect(),
         ReberbRIR()
     ]
@@ -57,10 +58,10 @@ class MainModel:
 
 
     def synthWorkerFunction(self, n0, note, instrument, effect):
-        freq = note["Frequency"]
+        midiNote = note["Note"]
         amp = note["Amplitude"]
         duration = note["Duration"]
-        wave_array = instrument(freq, amp, duration)
+        wave_array = instrument(midiNote, amp, duration)
         wave_array = effect(wave_array)
         return n0, wave_array
     
@@ -114,7 +115,7 @@ class MainModel:
             if not hasattr(effect, "params") or not isinstance(effect.params, ParameterList):
                 raise Exception(f"Effect '{effect}' does not have a 'params' attribute of type ParameterList")
             effectNames.append(effect.name)
-            
+
         if len(synthNames) != len(set(synthNames)):
             raise Exception(f"Synthesizer names are not unique: {synthNames}")
         if len(effectNames) != len(set(effectNames)):
