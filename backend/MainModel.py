@@ -35,6 +35,7 @@ class MainModel:
         GuitarAdditive(),
         FMSynth(),
         FMSynthSax(),
+        DFM_SAX(),
         KSGuitar(),
     ]
 
