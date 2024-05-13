@@ -355,6 +355,7 @@ class DropDownMenu(Button):
         self.selected_title = None
         self.showSelected = showSelected
         self.is_list = False
+        self.is_widget = False
         self.options = options
         self.menu = QMenu(self)
         self.setMenu(self.menu)
@@ -384,14 +385,26 @@ class DropDownMenu(Button):
             action.triggered.disconnect()
         self.menu.clear()
 
-        self.is_list = True if isinstance(options, list) else False
+        self.is_list = True if isinstance(options, list) else False     # check if list
+        if self.is_list and len(options) > 0:
+            self.is_widget = isinstance(options[0], QWidget)            # check QWidget
         self.options = options
+
+        if self.is_widget:
+            if not hasattr(options[0], "title"):
+                raise Exception("DropDownMenu: First element of the list is a QWidget but it doesn't have a 'title' attribute")
+
 
         if len(options) > 0 and firstSelected:
             if self.is_list:
-                self.selected = options[0]
-                self.selected_title = options[0]
-                self.setText(options[0])
+                if self.is_widget:
+                    self.selected_title = options[0].title
+                else:
+                    self.selected_title = options[0]
+
+                if self.showSelected:
+                    self.setText(self.selected_title)
+                self.selected = options[0]  # text or widget
             else:
                 self.selected_title = list(options.keys())[0]
                 self.selected = options[self.selected_title]
@@ -403,20 +416,25 @@ class DropDownMenu(Button):
         else:
             iterator = options.keys()
         for key in iterator:
-            action = QAction(key, self)
+            if self.is_widget:
+                action = QAction(key.title, self)
+            else:
+                action = QAction(key, self)
             action.triggered.connect(lambda _, k=key: self.call_selected_option(k))
             self.menu.addAction(action)
 
     def call_selected_option(self, key):
-        print(f"Selected option: {key}")
-        if self.showSelected:
-            self.setText(key)
-
         if self.is_list:
             self.selected = key
-            self.selected_title = key
+            if self.is_widget:
+                self.selected_title = key.title
+            else:
+                self.selected_title = key
             self.onChoose(key)
         else:
             self.selected = self.options[key]
             self.selected_title = key
             self.onChoose(key, self.options[key])
+
+        if self.showSelected:
+            self.setText(self.selected_title)

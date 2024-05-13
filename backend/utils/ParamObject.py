@@ -34,35 +34,48 @@ class ParameterBase():
 
 class TextParam(ParameterBase):
     """ Text parameter with a string"""
-    def __init__(self, name="txt", value="", text="text parameter"):
+    def __init__(self, name="txt", value="", text="text parameter", default=None):
         super().__init__(name, text)
         self.type = "text"
-        self.value = value
+        if default is not None:
+            self.value = default
+        else:
+            self.value = value
 
 
 class NumParam(ParameterBase):
     """ Numerical parameter with interval and step"""
-    def __init__(self, name="x", interval=(0, 100), step=1, value=0, text="numerical parameter"):
+    def __init__(self, name="x", interval=(0, 100), step=1, value=0, text="numerical parameter", default=None):
         super().__init__(name, text)
         self.type = "Number"
         self.interval = interval
         self.step = step
-        self.value = value
+        if default is not None:
+            self.value = default
+        else:
+            self.value = value
 
 class ChoiceParam(ParameterBase):
     """ Choice parameter with a list of choices"""
-    def __init__(self, name="y", options=["A", "B", "C"], value="A", text="choice parameter"):
+    def __init__(self, name="y", options=["A", "B", "C"], value="A", text="choice parameter", default=None):
         super().__init__(name, text)
         self.type = "Choice"
         self.options = options
-        self.value = value
+        if default is not None:
+            self.value = default
+        else:
+            self.value = value
+
 
 class BoolParam(ParameterBase):
     """ Boolean parameter"""
-    def __init__(self, name="z", value=False, text="boolean parameter"):
+    def __init__(self, name="z", value=False, text="boolean parameter", default=None):
         super().__init__(name, text)
         self.type = "Boolean"
-        self.value = value
+        if default is not None:
+            self.value = default
+        else:
+            self.value = value
 
 
 class ParameterList():

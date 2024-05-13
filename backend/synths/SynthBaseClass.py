@@ -55,6 +55,6 @@ class SynthBaseClass():
         else:
             raise Exception("generate method must have 'note' or 'freq' as an argument")
 
-    def generate(self, *args):
+    def generate(self, note, amp, duration):
         raise NotImplementedError("generate(self, *args) must be implemented in Synth subclass")
     
