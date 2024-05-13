@@ -25,7 +25,7 @@ class InstrumentPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.midiNoteSelector = NumberInput("Note", default=440, interval=(20, 10000), step=1)
+        self.midiNoteSelector = NumberInput("Note", default=69, interval=(0, 127), step=1)
         self.ampSelector = NumberInput("Amplitude", default=0.5, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
         

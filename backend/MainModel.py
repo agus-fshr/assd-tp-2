@@ -37,6 +37,7 @@ class MainModel:
         FMSynthSax(),
         DFM_SAX(),
         KSGuitar(),
+        KSDrum(),
     ]
 
 
