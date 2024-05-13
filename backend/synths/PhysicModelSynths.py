@@ -17,11 +17,13 @@ class KSDrum(SynthBaseClass):
         )
 
     def generate(self, note, amp, duration):
-        
+
         print(f"KS Drum: {note} {amp} {duration}")
 
         # Return the sound array
         return np.zeros(int(duration * self.sample_rate))
+
+
 
 
 class KSGuitar(SynthBaseClass):
