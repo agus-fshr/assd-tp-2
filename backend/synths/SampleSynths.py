@@ -2,14 +2,14 @@ from backend.utils.ParamObject import NumParam, ChoiceParam, BoolParam, Paramete
 from .SynthBaseClass import SynthBaseClass
 from scipy import signal
 import numpy as np
-from .SampleSynthUtils import shift_pitch, shiftPitch, extend, smooth
+from .SampleSynthUtils import shift_pitch, extend, smooth
 from scipy.io import wavfile
 
 # Add the sample files here lmao
-violin_sample_rate, violin_data = wavfile.read('')
-flute_sample_rate, flute_data = wavfile.read('')
-trumpet_sample_rate, trumpet_data = wavfile.read('')
-piano_sample_rate, piano_data = wavfile.read('')
+# violin_sample_rate, violin_data = wavfile.read('')
+# flute_sample_rate, flute_data = wavfile.read('')
+# trumpet_sample_rate, trumpet_data = wavfile.read('')
+# piano_sample_rate, piano_data = wavfile.read('')
 
 
 class SampleSynth(SynthBaseClass):

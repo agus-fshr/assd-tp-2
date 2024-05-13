@@ -5,7 +5,7 @@ from .handlers.WavHandler import *
 from .synths.SynthBaseClass import *
 from .synths.PhysicModelSynths import *
 from .synths.AdditiveSynths import *
-from .synths.SampleSynths import *
+#from .synths.SampleSynths import *
 from .synths.FMSynths import *
 
 from .effects.EffectBaseClass import *

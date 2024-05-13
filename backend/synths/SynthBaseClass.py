@@ -45,7 +45,7 @@ class SynthBaseClass():
         # debug_str += f"{note} {freq:.2f} Hz"
         # print(debug_str)
 
-        arg_names = inspect.getargspec(self.generate).args
+        arg_names = inspect.getfullargspec(self.generate).args
 
         # check if generate method has "note" argument
         if "note" in arg_names:
