@@ -162,6 +162,7 @@ class FMSynthSax(SynthBaseClass):
         
 
         envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        
         total_time = duration + r2                    # Total time is the note duration + Release time
 
         f1 = N1 * freq                  #frecuencia de la primera modulante
@@ -171,7 +172,7 @@ class FMSynthSax(SynthBaseClass):
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
 
         
-        fmwave = amp * DFM(t,f1, f2, 1, I1, I2)
+        fmwave = DFM(t,f1, f2, 1, I1, I2)
 
 
         return fmwave * envelope(t, duration)
