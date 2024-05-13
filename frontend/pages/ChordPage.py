@@ -27,7 +27,7 @@ class ChordPage(BaseClassPage):
         self.load_instrument_options()
         self.load_effect_options()
 
-        self.freqSelector = NumberInput("Frequency", default=440, interval=(20, 10000), step=1)
+        self.freqSelector = NumberInput("Note", default=69, interval=(0, 127), step=1)
         self.ampSelector = NumberInput("Amplitude", default=0.4, interval=(0, 1), step=0.01)
         self.durationSelector = NumberInput("Duration", default=0.4, interval=(0, 3), step=0.1)
         self.delaySelector = NumberInput("Delay", default=0.2, interval=(0, 5), step=0.01)
@@ -123,7 +123,7 @@ class ChordPage(BaseClassPage):
 
         curr = 0
         for note in self.noteArr:
-            freq = note["Frequency"]
+            freq = note["Note"]
             amp = note["Amplitude"]
             duration = note["Duration"]
             delay = note["Delay"]
@@ -156,12 +156,12 @@ class ChordPage(BaseClassPage):
         self.player.play()
 
     def updateConsole(self):
-        text = "Time     Freq\tAmp \tDur\n"
+        text = "Time     Note\tAmp \tDur\n"
         absTime = 0
         for note in self.noteArr:
             absTime += note["Delay"]
             timestr = f"{absTime:.03f}".ljust(8)
-            text += f"{timestr} {note['Frequency']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
+            text += f"{timestr} {note['Note']}\t{note['Amplitude']:.02f}\t{note['Duration']:.03f}\n"
         self.noteViewerConsole.setText(text)
 
     def popNote(self):
@@ -170,13 +170,14 @@ class ChordPage(BaseClassPage):
 
     def penScale(self):
     #   A minor pentatonic     A4,     C4,     D4,     E4,     G4,    A5
-        A_minor_pentatonic = [440, 523.25, 587.33, 659.25, 783.99, 880]
+    #   A_minor_pentatonic = [440, 523.25, 587.33, 659.25, 783.99, 880]
+        A_minor_pentatonic = ["A4", "C5", "D5", "E5", "G5", "A5"]
 
         self.noteArr = []
 
-        for f in A_minor_pentatonic:
+        for noteName in A_minor_pentatonic:
             note = {}
-            note["Frequency"] = f
+            note["Note"] = noteName
             note["Amplitude"] = self.ampSelector.value()
             note["Duration"] = self.durationSelector.value()
             note["Delay"] = self.delaySelector.value()
@@ -185,9 +186,9 @@ class ChordPage(BaseClassPage):
         
         self.noteArr[-1]["Delay"] = 1.5
 
-        for f in A_minor_pentatonic:
+        for noteName in A_minor_pentatonic:
             note = {}
-            note["Frequency"] = f
+            note["Note"] = noteName
             note["Amplitude"] = self.ampSelector.value()
             note["Duration"] = 2
             note["Delay"] = 0
@@ -200,7 +201,7 @@ class ChordPage(BaseClassPage):
         print("Note added!")
 
         note = {}
-        note["Frequency"] = self.freqSelector.value()
+        note["Note"] = self.freqSelector.value()
         note["Amplitude"] = self.ampSelector.value()
         note["Duration"] = self.durationSelector.value()
         note["Delay"] = self.delaySelector.value()
