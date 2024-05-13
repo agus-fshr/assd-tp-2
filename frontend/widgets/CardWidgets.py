@@ -103,29 +103,28 @@ class CardWidget(QWidget):
 class CardListWidget(QWidget):
     def __init__(self):
         super(CardListWidget, self).__init__()
-        
+
         self.children = []  # Initialize the list to keep track of card widgets
-        
+
         # Scroll Area Setup
         self.scrollArea = QScrollArea()
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaFrame = QFrame()  # Frame that will hold the layout of cards
-        
+
         # Container Widget and Layout
-        self.containerLayout = QVBoxLayout()
-        self.containerLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.scrollAreaFrame.setLayout(self.containerLayout)
-        
+        self.listLayout = QVBoxLayout()
+        self.listLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        self.scrollAreaFrame.setLayout(self.listLayout)
+
         # Adding the frame to the scroll area
-        self.scrollArea.setWidget(self.scrollAreaFrame)
+        scrollAreaLayout = QVBoxLayout(self.scrollArea)
+        scrollAreaLayout.addWidget(self.scrollAreaFrame)
         
         # Main Layout for this widget
         self.mainLayout = QVBoxLayout()
         self.mainLayout.addWidget(self.scrollArea)
         self.setLayout(self.mainLayout)
         
-        # Style adjustments
-        self.applyStyles()
 
     def addCardList(self, cardList):
         """Add a list of CardViewWidgets to the list."""
@@ -134,15 +133,21 @@ class CardListWidget(QWidget):
 
     def addCard(self, cardWidget):
         """Add a CardWidget to the list."""
-        self.containerLayout.addWidget(cardWidget)
+        self.listLayout.addWidget(cardWidget)
         self.children.append(cardWidget)  # Keep track of the card
     
     def clearAllCards(self):
         """Remove all cards from the list."""
         while len(self.children) > 0:
             card = self.children.pop()
-            self.containerLayout.removeWidget(card)
-            card.deleteLater()
+            self.listLayout.removeWidget(card)
+            card.setParent(None)  # Reparent the widget
+            card.deleteLater()    # def clearAllCards(self):
+    #     """Remove all cards from the list."""
+    #     while len(self.children) > 0:
+    #         card = self.children.pop()
+    #         self.listLayout.removeWidget(card)
+    #         card.deleteLater()
 
     def clear(self):
         self.clearAllCards()
@@ -151,9 +156,5 @@ class CardListWidget(QWidget):
         """Remove a specific card from the list."""
         if cardWidget in self.children:
             self.children.remove(cardWidget)
-            self.containerLayout.removeWidget(cardWidget)
+            self.listLayout.removeWidget(cardWidget)
             cardWidget.deleteLater()
-    
-    def applyStyles(self):
-        # You can add styles specific to the card list here
-        pass
