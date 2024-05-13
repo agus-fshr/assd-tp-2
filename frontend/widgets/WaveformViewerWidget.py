@@ -120,14 +120,14 @@ class WaveformViewerWidget(QWidget):
 
     def reloadPlot(self, _=None):
         ''' Plot with the same data '''
-        print("reloadPlot")
+        # print("reloadPlot")
         x, y = self.data
         self.plot(x, y)
 
 
     def redraw(self, _=None):
         ''' Plot with the same data without changing the view or the scale '''
-        print("redraw")
+        # print("redraw")
         self.clear()
         x, y = self.data
         Ts = x[1] - x[0]    # sampling interval
@@ -145,9 +145,9 @@ class WaveformViewerWidget(QWidget):
 
 
     def plot(self, x, y):
-        print("plot")
+        # print("plot")
         if len(x) == 0 or len(y) == 0:
-            print("No data to plot")
+            # print("No data to plot")
             return
         # save the data
         self.data = x, y
@@ -164,18 +164,18 @@ class WaveformViewerWidget(QWidget):
 
 
     def autoRange(self):
-        print("autoRange")
+        # print("autoRange")
         self.waveformPlot1.autoRange()
         self.waveformPlot2.autoRange()
         self.histogramPlot.autoHistogramRange()
         if self.histDefaultLevels is not None:
             self.histogramPlot.setLevels(*self.histDefaultLevels)
-            print(f"autoRange histDefaultLevels: {self.histDefaultLevels}")
+            # print(f"autoRange histDefaultLevels: {self.histDefaultLevels}")
         self.updateRegion(self.waveformPlot1.getViewBox(), self.waveformPlot1.getViewBox().viewRange())
 
 
     def plotComputedData(self, x, y):
-        print("plotComputedData")
+        # print("plotComputedData")
         if self.plotTypeMenu.selected in ["Waveform", "FFT"]:
             self.waveformPlot1.plot(x, y)
             self.waveformPlot2.plot(x, y)
@@ -184,7 +184,7 @@ class WaveformViewerWidget(QWidget):
 
 
     def updateScale(self):
-        print("updateScale")
+        # print("updateScale")
         xlog = True if self.xAxisScale.selected == "Log X" else False
         ylog = True if self.yAxisScale.selected == "Log Y" else False
         plotType = self.plotTypeMenu.selected
@@ -207,7 +207,7 @@ class WaveformViewerWidget(QWidget):
 
 
     def computePlotData(self, x, y, Ts):
-        print("computePlotData")
+        # print("computePlotData")
         plotType = self.plotTypeMenu.selected
         if plotType == "FFT":
             # apply the window function
@@ -262,7 +262,7 @@ class WaveformViewerWidget(QWidget):
 
 
     def updateLabels(self):
-        print("updateLabels")
+        # print("updateLabels")
         plotType = self.plotTypeMenu.selected
         if plotType == "FFT":
             self.waveformPlot1.setLabel('bottom', "Frequency", units='Hz')
@@ -307,4 +307,4 @@ class WaveformViewerWidget(QWidget):
     def histogramLevelsChanged(self):
         ''' Save the last levels of the histogram '''
         self.histLastLevels = self.histogramPlot.getLevels()
-        print(f"histogramLevelsChanged: {self.histLastLevels}")
+        # print(f"histogramLevelsChanged: {self.histLastLevels}")

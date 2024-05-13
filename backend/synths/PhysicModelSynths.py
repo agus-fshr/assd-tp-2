@@ -5,6 +5,25 @@ from backend.utils.ParamObject import NumParam, ChoiceParam, BoolParam, Paramete
 from .EnvelopeModulators import LinearADSR, ModFunction
 from .SynthBaseClass import SynthBaseClass
 
+
+class KSDrum(SynthBaseClass):
+    """ Your synthesizer here"""
+    def __init__(self):
+        super().__init__()
+        self.name = "KS Drum"
+
+        self.params = ParameterList(
+            # Add your parameters here, using NumParam, ChoiceParam or BoolParam
+        )
+
+    def generate(self, note, amp, duration):
+        
+        print(f"KS Drum: {note} {amp} {duration}")
+
+        # Return the sound array
+        return np.zeros(int(duration * self.sample_rate))
+
+
 class KSGuitar(SynthBaseClass):
     """ Simple Karplus-Strong Guitar String Synthesizer"""
     def __init__(self):

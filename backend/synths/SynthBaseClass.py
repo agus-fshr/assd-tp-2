@@ -35,15 +35,15 @@ class SynthBaseClass():
     def __call__(self, note, amp, duration):
         """ This method is called when the synth is used as a function"""
 
-        debug_str = ""
+        # debug_str = ""
         if isinstance(note, str):
-            debug_str = f"note: {note} "
+            # debug_str = f"note: {note} "
             note = noteNameToMidi[note]
         note = int(note)
         freq = 440 * 2**((note - 69) / 12)
 
-        debug_str += f"{note} {freq:.2f} Hz"
-        print(debug_str)
+        # debug_str += f"{note} {freq:.2f} Hz"
+        # print(debug_str)
 
         arg_names = inspect.getargspec(self.generate).args
 
