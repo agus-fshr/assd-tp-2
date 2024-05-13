@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QDialog, QLabel, QSpinBox
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, QDialog, QLabel, QSpinBox, QTextEdit
 from PyQt5.QtGui import QTransform
 from PyQt5.QtCore import pyqtSignal, Qt
 
@@ -13,14 +13,125 @@ from backend.utils.ParamObject import ParameterList, NumParam, TextParam, BoolPa
 
 ALLOWED_WINDOWS = ['barthann','bartlett','blackman','blackmanharris','bohman','boxcar','rectangular','flattop','hamming','hann','tukey',]
 
-class SettingsDialog(QDialog):
-    def __init__(self, on_apply=None):
+
+class AddonBaseClass(QDialog):
+    def __init__(self, title="Undefined", on_apply=None, title_postfix=" Addon"):
         super().__init__()
-
+        self.title = title
         self.on_apply = on_apply
+        self.setWindowTitle(title + title_postfix)
+        self.dataGetter = lambda: print("Data getter not set")
+        self.vlayout = QVBoxLayout()
 
-        self.setWindowTitle("Settings")
+        self.initUI(self.vlayout)
 
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(Button("Cerrar", on_click=self.accept, background_color="lightcoral"))
+        self.layout = QVBoxLayout()
+        self.layout.addLayout(self.vlayout)
+        self.layout.addLayout(hlayout)
+        self.setLayout(self.layout)
+
+    def initUI(self, layout):
+        raise NotImplementedError("initUI method must be implemented in Addon subclass")
+
+    def setDataGetter(self, dataGetter):
+        self.dataGetter = dataGetter
+
+    def showEvent(self, event):
+        self.resize(500, 700)  # w, h               # Set size of the QDialog
+        self.move(100, 100)  # X, Y                 # Set position of the QDialog
+        self.setModal(False)
+        super().showEvent(event)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            event.accept()
+            if self.on_apply is not None:
+                self.on_apply()
+        else:
+            super().keyPressEvent(event)
+
+
+class AddonsMenu(DropDownMenu):
+    def __init__(self, onChoose, dataGetter, addons=[]):
+        for addon in addons:
+            if not isinstance(addon, AddonBaseClass):
+                raise ValueError("Addon should be an instance of AddonBaseClass")
+            addon.setDataGetter(dataGetter)
+        super().__init__(title="Addons", showSelected=False, onChoose=onChoose, options=addons)
+
+
+
+class FindPeaksAddon(AddonBaseClass):
+    def __init__(self):
+        super().__init__(title="Find Visible Peaks")
+
+    def initUI(self, layout):
+        self.settings = ParameterList(
+            NumParam("markerSize", value=20, interval=(1, 100), step=1, text="Marker Size"),
+            NumParam("minHeight", value=0.1, interval=(0, 1), step=0.00001, text="Minimum Peak Height"),
+            NumParam("minDistance", value=50, interval=(0.01, 1000), step=0.01, text="Minimum Peak Distance"),
+            NumParam("threshold", value=0, interval=(0, 1), step=0.00001, text="Threshold (vertical distance to its neighboring samples)"),
+        )
+        settingsWidget = DynamicSettingsWidget(paramList=self.settings, on_edit=self.find_peaks)
+        settingsWidget.setMinimumHeight(350)
+        self.textEdit = QTextEdit()
+        self.textEdit.setReadOnly(True)
+        # self.textEdit.setMinimumHeight(100)
+        # self.textEdit.setMaximumHeight(200)
+
+        layout.addWidget(settingsWidget)
+        layout.addWidget(Button("Capture Visible Peaks", on_click=self.find_peaks, background_color="lightgreen"))
+        layout.addWidget(self.textEdit)
+
+    def exec(self):
+        self.find_peaks()
+        super().exec()
+
+    def find_peaks(self):
+        data, plot1, plot2 = self.dataGetter()
+        if data is None or plot1 is None:
+            print("No data")
+            return
+        
+        self.textEdit.clear()
+        if data["type"] in ["FFT", "Waveform"]:
+            x, y = data["visibleData"]
+
+            yRange = y.max() - y.min()
+            # search for peaks
+            n_x_distance = int(self.settings["minDistance"] / (x[1] - x[0]))
+            height = self.settings["minHeight"] * yRange
+            threshold = self.settings["threshold"]
+            peaks, _ = signal.find_peaks(y, height=height, distance=n_x_distance, threshold=threshold)
+            peaks_x = x[peaks]
+            peaks_y = y[peaks]
+            
+            # Order peaks by amplitude (from highest to lowest amplitude)
+            peaks_x = peaks_x[np.argsort(peaks_y)[::-1]]
+            peaks_y = peaks_y[np.argsort(peaks_y)[::-1]]
+
+            peak_log_str = f"{len(peaks_x)} Peaks:\nx,\ty\n"
+            for px, py in zip(peaks_x, peaks_y):
+                peak_log_str += f"{px:.3f},\t{py:.5f}\n"
+            self.textEdit.setPlainText(peak_log_str)
+
+            mks = int(self.settings["markerSize"])
+            plot1.plot(peaks_x, peaks_y, pen=None, symbol='x', symbolSize=mks, symbolBrush=(255, 0, 0))
+            plot2.plot(peaks_x, peaks_y, pen=None, symbol='x', symbolSize=(mks//2)+1, symbolBrush=(255, 0, 0))
+
+            # plot infinite horizontal lines (plot is a pg.PlotItem)
+            height_inf_line = pg.InfiniteLine(pos=height, angle=0, pen=pg.mkPen('r', width=2, style=Qt.DashLine))
+            plot1.addItem(height_inf_line)
+
+
+
+class SettingsDialog(AddonBaseClass):
+    def __init__(self, on_apply=None):
+        super().__init__(title="Settings", on_apply=on_apply, title_postfix="")
+
+    def initUI(self, layout):
         self.settings = ParameterList(
             NumParam("padding", value=0, interval=(0,10000), step=1, text="Signal Padding"),
             ChoiceParam("FFTWindow", options=ALLOWED_WINDOWS, value='rectangular', text="FFT Window"),
@@ -28,35 +139,12 @@ class SettingsDialog(QDialog):
             NumParam("nperseg", value=1024, interval=(128, 8192), step=1, text="Spectrogram Window Size"),
             NumParam("noverlap", value=512, interval=(0, 4096), step=1, text="Spectrogram Window Overlap"),
         )
-
         self.dynSettings = DynamicSettingsWidget(self.settings, on_edit=self.on_apply)
-        hlayout = QHBoxLayout()
-        hlayout.addWidget(Button("Cerrar", on_click=self.accept))
-
-
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.dynSettings)
-        self.layout.addLayout(hlayout)
-        self.setLayout(self.layout)
-
-    def showEvent(self, event):
-        # Set size of the QDialog
-        self.resize(500, 700)  # Width, Height
-
-        # Set position of the QDialog
-        self.move(100, 100)  # X, Y
-
-        super().showEvent(event)
-
-    def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            event.accept()
-            self.on_apply()
-        else:
-            super().keyPressEvent(event)
+        layout.addWidget(self.dynSettings)
 
     def __getitem__(self, key):
         return self.settings.__getitem__(key)
+
 
 
 class WaveformViewerWidget(QWidget):
@@ -67,9 +155,12 @@ class WaveformViewerWidget(QWidget):
         self.plotTypeMenu = DropDownMenu(options=["Waveform", "FFT", "Spectrogram"], onChoose=self.reloadPlot, firstSelected=True)
         self.xAxisScale = DropDownMenu(options=["Linear X", "Log X"], onChoose=self.reloadPlot, firstSelected=True)
         self.yAxisScale = DropDownMenu(options=["Linear Y", "Log Y"], onChoose=self.reloadPlot, firstSelected=True)
-        self.paddingInput = TextInput("Padding", default="0", regex="^[0-9]*$", on_change=self.reloadPlot, layout='h')
 
         self.settingsDialog = SettingsDialog(on_apply=self.redraw)
+
+        self.addonsMenu = AddonsMenu(onChoose=self.onAddonSelected, dataGetter=self.getAddonData, addons=[
+            FindPeaksAddon(),
+        ])
 
         self.plotLayout = pg.GraphicsLayoutWidget()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
@@ -84,7 +175,8 @@ class WaveformViewerWidget(QWidget):
         # self.histogramPlot.setMaximumWidth(navHeight)
         self.waveformPlot2.setMaximumHeight(navHeight)
 
-        self.data = None  # x, y
+        self.data = None        # x, y
+        self.addonData = {}   
         self.histDefaultLevels = None
         self.histLastLevels = None
 
@@ -103,9 +195,10 @@ class WaveformViewerWidget(QWidget):
         hlayout.addWidget(self.plotTypeMenu)
         hlayout.addWidget(self.xAxisScale)
         hlayout.addWidget(self.yAxisScale)
-        hlayout.addWidget(self.paddingInput)
         hlayout.addSpacing(20)
         hlayout.addWidget(Button("Settings", on_click = self.settingsDialog.exec ))
+        hlayout.addSpacing(20)
+        hlayout.addWidget(self.addonsMenu)
         hlayout.addStretch(1)
         hlayout.addWidget(Button("Autoscale", on_click=self.autoRange))
         plotsHLayout = QHBoxLayout()
@@ -118,9 +211,50 @@ class WaveformViewerWidget(QWidget):
         self.setLayout(layout)        
     
 
+    def getAddonData(self):
+        if self.addonData == {}:
+            return None, self.waveformPlot1, self.waveformPlot2
+        minX, maxX = self.waveformPlot1.vb.viewRange()[0]
+        minY, maxY = self.waveformPlot1.vb.viewRange()[1]
+
+        self.redraw()
+
+        if self.plotTypeMenu.selected in ["Waveform", "FFT"]:
+            x, y = self.addonData["data"]
+            x = np.array(x)
+            y = np.array(y)
+            mask = (x >= minX) & (x <= maxX)
+            xvis = x[mask]
+            yvis = y[mask]
+            self.addonData["visibleData"] = (xvis, yvis)
+            self.addonData["viewRangeX"] = [minX, maxX]
+            self.addonData["viewRangeY"] = [minY, maxY]
+            return self.addonData, self.waveformPlot1, self.waveformPlot2
+        
+        elif self.plotTypeMenu.selected == "Spectrogram":
+            f, t, Sxx = self.addonData["data"]
+            maskT = (t >= minX) & (t <= maxX)
+            maskF = (f >= minY) & (f <= maxY)
+            tvis = t[maskT]
+            fvis = f[maskF]
+            Sxxvis = Sxx[maskF, :][:, maskT]
+            self.addonData["visibleData"] = (fvis, tvis, Sxxvis)
+            self.addonData["viewRangeX"] = [minX, maxX]
+            self.addonData["viewRangeY"] = [minY, maxY]
+            return self.addonData, self.waveformPlot1, self.waveformPlot2
+
+
+    def onAddonSelected(self, addon):
+        # get the visible data from the waveformPlot1
+        print(f"Addon selected: {addon.title}")
+        addon.exec()
+
+
     def reloadPlot(self, _=None):
         ''' Plot with the same data '''
         # print("reloadPlot")
+        if self.data is None:
+            return
         x, y = self.data
         self.plot(x, y)
 
@@ -215,8 +349,16 @@ class WaveformViewerWidget(QWidget):
             y = y * signal.get_window(window, len(y))
             y = np.abs(np.fft.rfft(y)) / len(y)
             x = np.fft.rfftfreq(len(x), d=Ts)
+            self.addonData = {
+                "data": (x, y),
+                "type": "FFT",
+            }
         elif plotType == "Waveform":
             pass
+            self.addonData = {
+                "data": (x, y),
+                "type": "Waveform",
+            }
         elif plotType == "Spectrogram":
             nperseg = int(self.settingsDialog["nperseg"])
             noverlap = int(self.settingsDialog["noverlap"])
@@ -225,6 +367,11 @@ class WaveformViewerWidget(QWidget):
 
             if self.yAxisScale.selected == "Log Y":
                 Sxx = np.log10(Sxx)
+
+            self.addonData = {
+                "data": (f, t, Sxx),
+                "type": "Spectrogram",    
+            }
 
             x_scale = (x.max() - x.min()) / Sxx.shape[1]
             y_scale = (f.max() - f.min()) / Sxx.shape[0]
@@ -278,10 +425,7 @@ class WaveformViewerWidget(QWidget):
 
 
     def setPadding(self, x, y, Ts):
-        if self.paddingInput.text() == "":
-            padding = 0
-        else:
-            padding = int(self.paddingInput.text())
+        padding = int(self.settingsDialog["padding"])
         if padding > len(x) // 2:
             padding = len(x) // 2
         # Add zero padding
