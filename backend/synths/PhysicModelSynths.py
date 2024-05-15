@@ -10,18 +10,74 @@ class KSDrum(SynthBaseClass):
     """ Your synthesizer here"""
     def __init__(self):
         super().__init__()
-        self.name = "KS Drum"
+        self.name = "Karplus-Strong Drum"
 
         self.params = ParameterList(
-            # Add your parameters here, using NumParam, ChoiceParam or BoolParam
+            NumParam("Stretch Factor", interval=(1.0, 5.0), value=1.03, step=0.01, text="Stretch Factor"),
+            ChoiceParam("Initial Noise", options=["Normal", "Uniform", "2-Level"], value="Normal", text="Initial Noise"),
+            NumParam("r_factor", interval=(0.0, 1.0), value=0.3, step=0.01, text="Release Factor"),
+            ChoiceParam("modType", options=["cos", "sin", "log", "polyFlatTop", "poly", "exp"], value="sin", text="Env Mod function"),
+            NumParam("modN", interval=(0.1, 20), value=3, step=0.1, text="Mod function N"),
+            NumParam("extraTime", interval=(0.0, 2.0), value=0.1, step=0.01, text="Extra Time"),
         )
 
+    def init_wavetable(self, amp, stretch, freq):
+        size = int(np.floor(self.sample_rate / freq - 1/(2*stretch)))
+        dist = amp * np.ones(size)
+        return dist - np.mean(dist)
+
     def generate(self, note, amp, duration):
+        """ 
+        Generate a Karplus-Strong guitar string sound
+        - freq: tone frequency [Hz]
+        - amp: tone amplitude [0, 1]
+        - duration: on-off note duration [s]  
+        """
 
-        print(f"KS Drum: {note} {amp} {duration}")
+        # print(f"KS Drum: {note} {amp} {duration}")
 
-        # Return the sound array
-        return np.zeros(int(duration * self.sample_rate))
+        stretch = self.params["Stretch Factor"]
+
+        wavetable = self.init_wavetable(amp, stretch, note)
+
+        duration += self.params["extraTime"]
+        n_samples = int(duration * self.sample_rate)
+
+        out = self.karplus_strong(wavetable, n_samples, stretch, probability=0.5)
+
+        t = duration
+        r_coef = self.params["r_factor"]
+
+        modType = self.params["modType"]
+        n = self.params["modN"]
+        adsr = LinearADSR(1, 0, 0, t*r_coef, modType, n)
+
+        adsr.set_total_time(t, self.sample_rate)
+
+        return out * adsr.envelope()
+
+    def karplus_strong(self, wavetable, n_samples, stretch_factor, probability=0.5):
+
+        samples = []
+
+        curr_sample = 0
+        prev_value = 0
+
+        while len(samples) < n_samples:
+
+            stretch = np.random.binomial(1, 1 - 1/stretch_factor)
+
+            drum_sign = np.random.binomial(1, probability)
+            sign = float(drum_sign == 1) * 2 - 1
+
+            if stretch == 0:
+                wavetable[curr_sample] = sign * 0.5 * (wavetable[curr_sample] + prev_value)
+            
+            samples.append(wavetable[curr_sample])
+            prev_value = samples[-1]
+            curr_sample = (curr_sample + 1) % wavetable.size
+
+        return np.array(samples)
 
 
 
