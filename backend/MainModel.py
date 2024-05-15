@@ -36,6 +36,11 @@ class MainModel:
         FMSynth(),
         FMSynthSax(),
         DFM_SAX(),
+        DFM_OBOE(),
+        DFM_FrenchHorn(),
+        DFM_Harpsichord(),
+        DFM_PipeOrgan(),
+        DFM_Trumpet(),
         KSGuitar(),
         KSDrum(),
     ]
