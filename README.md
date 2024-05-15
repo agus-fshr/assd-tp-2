@@ -108,6 +108,167 @@ $$f = \frac{f_s}{L+\frac{1}{2}}$$
 El sistema tiene transferencia
 $$H(z) = \frac{ 1 + z^{-1} }{2 - R_Lz^{-L} - R_L z^{-(L+1)}}$$
 
+
+# Modulación FM
+
+La modulación en frecuencia es una técnica conocida y aplicada en comunicación por radio por ejemplo. La fórmula general de la FM viene dada por:
+
+$$f(t) = A(t)\cdot sin(\omega_c t + I(t) sin(\omega_m t))$$
+
+donde $\omega_c$ es la frecuencia de la portadora (carrier) (en $\frac{rad}{s}$) y  $\omega_m$ la frecuencia de la modulante. $I(t)$ es el índice de modulación, que da una medida de qué tanto se desvía la frecuencia instantánea de la portadora respecto a su valor original. Se define como $I = \frac{d}{\omega_m}$, donde $d$ es el desvío máximo de la frecuencia instantánea. Por supuesto que si $I(t) = 0$ se tiene una onda senoidal sin desvío, escalada por $A(t)$. 
+
+En cuanto al espectro, si $I > 0$, se tienen componentes en frecuencia al rededor de la frecuencia de la portadora, separadas por $\omega_m$ exactamente, y dependiendo del valor de $I$ cada componente tendrá distinta amplitud, y además el espectro tendrá un mayor ancho de banda mientras $I$ sea mayor. Una aproximación al ancho de banda es:
+$$BW \approx 2\cdot (d+\omega_m) = 2\cdot\omega_m \cdot(I+1)$$
+
+Las amplitudes de las componentes se pueden obtener de expresar a la onda mediante el uso de una expansión trigonométrica:
+
+$$
+\begin{align*}
+f(t) = & \; A\cdot \{ \; \cdot J_0(I) \cdot \sin(\omega_c t) \\
+       & \; + J_1(I) \cdot [\sin((\omega_c + \omega_m) t) - \sin((\omega_c - \omega_m) t)] \\
+       & \; + J_2(I) \cdot [\sin((\omega_c + 2\omega_m) t) + \sin((\omega_c - 2\omega_m) t)] \\
+       & \; + J_3(I) \cdot [\sin((\omega_c + 3\omega_m) t) - \sin((\omega_c - 3\omega_m) t)]\\
+       & \; + J_4(I) \cdot [\sin((\omega_c + 4\omega_m) t) + \sin((\omega_c - 4\omega_m) t)]\\
+       &\; +  .... \}
+\end{align*}
+$$
+
+
+Donde $J_i(I)$ son las funciones de Bessel de primera especie, ¡y vienen en función del índice de modulación! A continuación se presentan algunas de las funciones de Bessel:
+
+<p align="center">
+  <img src="informe/img/BESSEL_FUNC.png" alt="Primeras funciones de Bessel" width="400
+  ">
+</p>
+
+Se realizó mediante Python una FM con $f_c = 4950 Hz$ y $f_m = 330 Hz$ donde se varió el índice de modulación. Para el caso de $I=1$ se tiene:
+
+<p align="center">
+  <img src="informe/img/FM_I1.png" alt="Primeras funciones de Bessel" width="400
+  " height = "150">
+</p>
+
+y con $I=5$ :
+
+<p align="center">
+  <img src="informe/img/FM_I5.png" alt="Primeras funciones de Bessel" width="400
+  " height = "150">
+</p>
+Como puede observarse, a medida que el índice de modulación incrementa, la potencia de la señal se repartirá entre más armónicos. La amplitud de los armónicos coincide con las funciones de Bessel vistas previamente, y no siempre la frecuencia portadora tendrá la mayor amplitud. Además, las funciones de Bessel pueden ser negativas, lo que conlleva a un cambio en la fase de $180^\circ$, que por lo general se ignora cuando se grafica el espectro, pero es de suma importancia para el método de sintesis de FM. 
+
+
+
+## Reflexiones
+
+Cuando se trabaja con una frecuencia portadora cercana a la modulante, o con un índice de modulación muy alto, se tienen componentes de las bandas laterales del espectro que caen en las frecuencias negativas, y esto hace que se "reflejen" respecto de $0 Hz$ y caigan en el lado positivo del espectro, lo que puede pensarse como una especie de aliasing por el lado negativo del espectro. Al reflejarse, si coinciden en frecuencia con alguna otra componente, se mezclan, y dependiendo del signo que lleven, se suman o restan. Al espejarse se obtiene un desfasaje extra de $180^\circ$, por lo que hay que considerar el desfasaje previo, que dicta si se resta o se suma.
+
+## Espectro Armónico
+Se dan propiedades interesantes cuando la relación de frecuencia portadora a modulante es un cociente de números enteros, es decir
+
+$$\frac{\omega_c}{\omega_m} = \frac{N_1}{N_2}$$
+
+siendo una fracción irreducible. En ese caso, la frecuencia fundamental será 
+
+$$\omega_0 = \frac{\omega_c}{N1} = \frac{\omega_m}{N2} \$$
+
+Es importante que el cociente sea el indicado, ya que de ser irracional, el sonido generado es totalmente diferente y no agradable para el oído.
+
+Si además se considera que $I$ depende del tiempo, es decir $I = I(t)$, se puede variar el espectro en el tiempo, y con esto se puede sintetizar el espectro de los instrumentos. Encontrar la función $I(t)$ es complicado, y mediante prueba y error es algo tedioso, así como encontrar el cociente indicado $\frac{N_1}{N_2}$. Por este motivo se investigó en la literatura para encontrar dichos parámetros.
+
+## Envolventes
+
+Se encontró que las funciones $A(t)$ e $I(t)$ pueden ser modeladas mediante ADSR, pero para instrumentos de viento, éstas funciones son muy particulares, siendo:
+
+
+<p align="center">
+  <img src="informe/img/Woodwind_envelope.png" alt="Woodwind Envelope" width="400
+  " height = "150">
+</p>
+
+la forma normalizada de la función $A(t)$. Y la forma normalizada del índice de modulación es:
+
+<p align="center">
+  <img src="informe/img/Woodwind_I_env.png" alt="Woodwind Envelope" width="400
+  " height = "150">
+</p>
+
+Si se necesita que el índice de modulación comience en un valor mayor al que termina, la última función será restada al índice de modulación inicial.
+
+## Implementación
+
+Ahora que se tienen las formas de las funciones, es hora de darle vida a los instrumentos. Según el paper 1 de la bibliografía, para generar el sonido de un clarinete, los parámetros son:
+
+- $f_c = 3\cdot f_0$    
+- $f_m = 2\cdot f_0$ 
+- $I_1 = 4$
+- $I_2 = 2$
+
+es decir que la frecuencia de la portadora es $3$ veces la central de la nota, y la modulante es dos veces la central. Además, el índice de modulación comienza en $4$ y termina en $2$, por lo que como mencionamos, al inicial se le restará la función de la anterior figura para que llegue a $2$. Sin embargo, empíricamente se comprobó que las notas sintetizadas no coincidían con las verdaderas del clarinete, por lo que ajustando $N_1$ y $N_2$, sin modificar el cociente (que debe ser $\frac{3}{2}$), se llegó a un resultado mucho más parecido a un clarinete real, comparándose con las notas del siguiente video [Notas del clarinete](https://www.youtube.com/watch?v=uisOCi99qd0). Dicho ajusté llevó a los siguientes parámetros
+
+- $f_c = 1.365\cdot f_0$    
+- $f_m = 0.91\cdot f_0$ 
+- $I_1 = 4$
+- $I_2 = 2$
+
+donde se tiene que la relación está intacta.
+
+Para por ejemplo producir un sonido parecido al de un fagot (basoon), los parámetros son:
+
+- $f_c = 5\cdot f_0$    
+- $f_m = 1\cdot f_0$ 
+- $I_1 = 0$
+- $I_2 = 1.5$
+
+
+# Modulación DFM
+
+Por otro lado, se investigó otra forma de modular en frecuencia, que usa en vez de una frecuencia de portadora fija y un seno modificando la frecuencia instantánea, se tienen dos senoidales con un índice de modulación fijo, es decir
+
+$$f(t) = A(t)\cdot sin(I_1(t) sin(\omega_1 t) + I_2(t) sin(\omega_2 t))$$
+
+Esta forma de modular se llama Double Frequency Modulation, (DFM), y es una alternativa mucho más ligera en cálculo que la Asymmetrical Frequency Modulation, que agrega un parámetro extra a la FM normal y permite que el espectro no sea simétrico. La DFM se puede expresar como:
+
+$$f(t) = A(t) \sum_i \sum_k J_i(I_1) J_k(I_2)sin(iw_1t + kw_2t)$$
+
+Lo cual por supuesto vuelve mucho más complejo el cálculo a mano del espectro. Por suerte, en el [paper](https://phyweb.physics.nus.edu.sg/~phytanb/automatedparameter.pdf) 2 se utiliza un algoritmo annealing para estimar los parámetros que se utilizan para sintetizar los instrumentos. Además, si se suman varias DFM, es decir $f(t) = f_1(t) + f_2(t) + f_3(t)$ se logra una aproximación mucho mejor al espectro del instrumento. Como envolvente (A(t)) se utilizó la función anterior, y además, cada $f_i(t)$ tiene su propio "peso" para aportar apropiadamente las componentes necesarias. Los parámetros para algunos de los instrumentos sintetizados son:
+
+![alt text](informe/img/SaxoParams.png)
+
+donde se muestra cada amplitud (peso relativo), índice de modulación 1 y 2, y la frecuencia de cada senoidal que acompaña al índice. 
+Para extrapolar a otras notas (ya que esto es para una frecuencia de $440 Hz$), se divide cada frecuencia por $440$ y ese será el multiplicador para la frecuencia de la nota, así se logra sintetizar cada nota.
+Además, en la figura se aprecia el grado de concordancia de la respuesta del algoritmo con el espectro de la nota obtenida de una muestra. 
+
+Otros ejemplos de parámetros son:
+
+![alt text](informe/img/FrenchHornParams.png)
+
+![alt text](informe/img/Trumpet.png)
+
+
+# Implementación
+En Python, se realizaron dichos algoritmos mediante el uso de funciones de numpy como el sin() y las envolventes se fabricaron mediante combinaciones de funciones del estilo.
+
+Por otro lado, todos los parámetros de los instrumentos son modificables durante la ejecución del programa, sin la necesidad de volver a compilar, aunque tienen un valor por defecto al iniciar el programa, que se considera el valor óptimo, para que luego el usuario modifique a gusto dichas variables. Se pueden modificar cosas como el tiempo de ataque de la envolvente o de la I(t), los parámetros $N_1$, $N_2$, etc.
+
+Los instrumentos sintetizados (con su respectivo método) fueron:
+
+- Clarinete (FM)
+- Fagot/Basoon (FM)
+- Saxofón (DFM)
+- Oboe (DFM)
+- Trompa Francesa (DFM)
+- Clavicordio/Harpsichord (DFM)
+- Órgano (DFM)
+- Trompeta (DFM)
+
+El clavicordio, al ser un instrumento de cuerda, debe cambiarse la envolvente para que tenga un attack rápido, sin sustain y solo se tenga decay, de la siguiente forma:
+
+![alt text](informe/img/ClavicordioEnv.png)
+
+El órgano sin embargo no suena de forma adecuada, por lo que se piensa que agregando efectos como flanger puede llegarse a una sintetización más coincidente con la realidad.
+
+  
+
 # Efectos de Audio
 
 En esta sección se va a explicar cada efecto implementado
@@ -172,3 +333,19 @@ Es la implementación en paralelo de 4 chorus, donde el delay de cada uno va ent
 $$y(n) = x(n)g + x(n-M_1(n))g_1 + x(n-M_2(n))g_2 + x(n-M_3(n))g_3 + x(n-M_4(n))g_4$$
 
 Donde $M_n$ es el delay de cada etapa y $g_n$ su respectiva ganancia y $g$ la ganancia del sonido original.
+
+
+# Bibliografía
+- [The Synthesis of Complex Audio Spectra by Means of Frequency Modulation](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf)
+- [Automated ParameterOptimization for Double FrequencyModulation Synthesis Using the Genetic Annealing Algorithm](https://phyweb.physics.nus.edu.sg/~phytanb/automatedparameter.pdf)
+- [Frecuencia de las notas](https://www.liutaiomottola.com/formulae/freqtab.htm)
+- [DIGITAL SYNTHESIS MODELS OF CLARINET-LIKE INSTRUMENTS INCLUDING NONLINEAR LOSSES IN THE RESONATOR](https://www.dafx.de/paper-archive/2006/papers/p_083.pdf)
+- [Frequency Modulation Basics](https://www.sfu.ca/~truax/fmtut.html)
+- [Digital Synthesis of Musical Sounds](https://alumni.media.mit.edu/~gan/Gan/Education/NUS/Physics/MScThesis/)
+- [Real-Time Audio Processing by Means of FM Synthesis Parameters](https://www.researchgate.net/publication/298982542_Audio_Processing_by_Means_of_FM_Synthesis_Parameters_Fundamentals_Real-Time_Implementation_and_Preliminary_Compositional_Applications)
+- [WELSH’S SYNTHESIZER COOKBOOK](https://synthesizer-cookbook.com/SynCookbook.pdf)
+- [Saxophone acoustics: an introduction](https://www.phys.unsw.edu.au/jw/saxacoustics.html#pff)
+- [Basoon First Notes](https://ettonehome.weebly.com/bassoon-first-notes.html)
+- [Synthesis of Wind-Instrument Tones](https://physics.byu.edu/docs/publication/2477)
+- [Musical aero-acoustics of the clarinet](https://www.researchgate.net/publication/45624695_Musical_aero-acoustics_of_the_clarinet)
+

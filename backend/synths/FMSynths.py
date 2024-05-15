@@ -117,7 +117,7 @@ class FM_Bassoon(SynthBaseClass):
         self.params = ParameterList(
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
             NumParam("I1", interval=(-1, 10), value=0, step=0.1, text="Min mod index"),
-            NumParam("I2", interval=(0, 10), value=5, step=0.1, text="Max mod index"),
+            NumParam("I2", interval=(0, 10), value=1.5, step=0.1, text="Max mod index"),
             NumParam("N1", interval=(0, 10), value=5, step=0.1, text="Carrier multiplier"), #Ajustado por Sully y Agus
             NumParam("N2", interval=(0, 10), value=1, step=0.1, text="Modulator multiplier"), #Ajustado por Sully y Agus
             
@@ -578,7 +578,7 @@ class DFM_Harpsichord(SynthBaseClass):
             NumParam("d2", interval=(0, 1), value=0.1, step=0.001, text="Decay time, envelope "),
             NumParam("s2", interval=(0, 10), value=1, step=0.1, text="Sustain slope, envelope "),
             NumParam("r2", interval=(0, 1), value=0, step=0.01, text="Release time, envelope "),
-            NumParam("k2", interval=(0.0001, 1), value=0.95, step=0.01, text="Sustain constant, envelope ")
+            NumParam("k2", interval=(0.0001, 30), value=10, step=0.01, text="Sustain constant, envelope ")
         )
 
     def generate(self, freq, amp, duration):
@@ -618,7 +618,7 @@ class DFM_Harpsichord(SynthBaseClass):
         d2 = duration - a2
         
 
-        adsr = LinearADSR(1/k2, a2, d2, r2, modType="linear", n = 9.4)          # Sustain time is calculated internally
+        adsr = LinearADSR(k2, a2, d2, r2, modType="linear", n = 9.4)          # Sustain time is calculated internally
         adsr.set_total_time(duration, self.sample_rate)
         
         t = adsr.time()
@@ -643,7 +643,7 @@ class DFM_Harpsichord(SynthBaseClass):
         DFM3 = DFM_1(t,f31, f32, amp3, I31, I32)
 
         
-        fmwave = amp * (DFM1 + DFM2 + DFM3)
+        fmwave = amp/k2 * (DFM1 + DFM2 + DFM3)
 
 
         return fmwave * adsr.envelope()
