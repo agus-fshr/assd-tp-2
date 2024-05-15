@@ -40,6 +40,9 @@ class WavHandler:
     def __init__(self):
         self.metadata = {}  # dict of metadata indexed by path
 
+        self.data = {}      # dict of numpy arrays indexed by path
+
+
     def clear(self):
         self.metadata = {}
 
