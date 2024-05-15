@@ -148,7 +148,7 @@ class SettingsDialog(AddonBaseClass):
 
 
 class WaveformViewerWidget(QWidget):
-    def __init__(self, navHeight=100, onFFT = lambda f, x: None, onEvent = None):
+    def __init__(self, navHeight=100, plotTypeMenu=True, scaleMenu=True, settingsBtn=True, addonsMenu=True):
         super().__init__()
         pg.setConfigOptions(imageAxisOrder='row-major')
 
@@ -156,11 +156,25 @@ class WaveformViewerWidget(QWidget):
         self.xAxisScale = DropDownMenu(options=["Linear X", "Log X"], onChoose=self.reloadPlot, firstSelected=True)
         self.yAxisScale = DropDownMenu(options=["Linear Y", "Log Y"], onChoose=self.reloadPlot, firstSelected=True)
 
+        self.plotTypeMenu.hide()
+        self.xAxisScale.hide()
+        self.yAxisScale.hide()
+
+        if plotTypeMenu:
+            self.plotTypeMenu.show()
+        if scaleMenu:
+            self.xAxisScale.show()
+            self.yAxisScale.show()
+
         self.settingsDialog = SettingsDialog(on_apply=self.redraw)
 
         self.addonsMenu = AddonsMenu(onChoose=self.onAddonSelected, dataGetter=self.getAddonData, addons=[
             FindPeaksAddon(),
         ])
+
+        self.addonsMenu.hide()
+        if addonsMenu:
+            self.addonsMenu.show()
 
         self.plotLayout = pg.GraphicsLayoutWidget()
         self.waveformPlot1 = self.plotLayout.addPlot(row=1, col=0)
@@ -191,12 +205,17 @@ class WaveformViewerWidget(QWidget):
         self.region.sigRegionChanged.connect(self.updatePlot1)
         self.waveformPlot1.sigRangeChanged.connect(self.updateRegion)
 
+        self.settingsBtn = Button("Settings", on_click = self.settingsDialog.exec )
+        self.settingsBtn.hide()
+        if settingsBtn:
+            self.settingsBtn.show()
+
         hlayout = QHBoxLayout()
         hlayout.addWidget(self.plotTypeMenu)
         hlayout.addWidget(self.xAxisScale)
         hlayout.addWidget(self.yAxisScale)
         hlayout.addSpacing(20)
-        hlayout.addWidget(Button("Settings", on_click = self.settingsDialog.exec ))
+        hlayout.addWidget(self.settingsBtn)
         hlayout.addSpacing(20)
         hlayout.addWidget(self.addonsMenu)
         hlayout.addStretch(1)
@@ -209,6 +228,11 @@ class WaveformViewerWidget(QWidget):
         layout.addLayout(hlayout)
         layout.addLayout(plotsHLayout)
         self.setLayout(layout)        
+    
+
+    def getViewRangeX(self):
+        minX, maxX = self.waveformPlot1.vb.viewRange()[0]
+        return minX, maxX
     
 
     def getAddonData(self):
@@ -250,19 +274,20 @@ class WaveformViewerWidget(QWidget):
         addon.exec()
 
 
-    def reloadPlot(self, _=None):
+    def reloadPlot(self, _=None, __=None, clear=True):
         ''' Plot with the same data '''
         # print("reloadPlot")
         if self.data is None:
             return
         x, y = self.data
-        self.plot(x, y)
+        self.plot(x, y, clear=clear)
 
 
-    def redraw(self, _=None):
+    def redraw(self, _=None, __=None, clear=True):
         ''' Plot with the same data without changing the view or the scale '''
         # print("redraw")
-        self.clear()
+        if clear:
+            self.clear()
         x, y = self.data
         Ts = x[1] - x[0]    # sampling interval
         x, y = self.setPadding(x, y, Ts)
@@ -277,24 +302,47 @@ class WaveformViewerWidget(QWidget):
         self.waveformPlot1.plot(x, y, pen=None, symbol='x', symbolSize=20, symbolBrush=(255, 0, 0))
         self.waveformPlot2.plot(x, y, pen=None, symbol='x', symbolSize=20, symbolBrush=(255, 0, 0))
 
+    def plotInfiniteLine(self, y, color='w', width=2, style=Qt.DashLine):
+        infLine = pg.InfiniteLine(pos=y, angle=0, pen=pg.mkPen(color, width=width, style=style))
+        self.waveformPlot1.addItem(infLine)
 
-    def plot(self, x, y):
+    def plotEnvelope(self, x, y0, y1, clear=True):
+        if clear:
+            self.clear()
+        self.waveformPlot1.plot(x, y0, pen=(255, 0, 0), fillLevel=0, fillBrush=(255, 0, 0, 50))
+        self.waveformPlot1.plot(x, y1, pen=(255, 0, 0), fillLevel=0, fillBrush=(255, 0, 0, 50))
+        self.waveformPlot2.plot(x, y0, pen=(255, 0, 0), fillLevel=0, fillBrush=(255, 0, 0, 50))
+        self.waveformPlot2.plot(x, y1, pen=(255, 0, 0), fillLevel=0, fillBrush=(255, 0, 0, 50))
+
+        self.waveformPlot1.setLabel('bottom', "Time", units='s')
+        self.waveformPlot2.setLabel('bottom', "Time", units='s')
+
+
+
+    def plot(self, x, y, subsampling=1, clear=True):
         # print("plot")
         if len(x) == 0 or len(y) == 0:
             # print("No data to plot")
             return
         # save the data
+
+        subsampling = int(subsampling)
+        if subsampling > 1:
+            x = x[::subsampling]
+            y = y[::subsampling]
+
         self.data = x, y
 
         Ts = x[1] - x[0]    # sampling interval
-        self.clear()
+        if clear:
+            self.clear()
 
         x, y = self.setPadding(x, y, Ts)
         x, y = self.computePlotData(x, y, Ts)
         self.updateLabels()
         self.plotComputedData(x, y)
-        self.updateScale()
         self.autoRange()
+        self.updateScale()
 
 
     def autoRange(self):
@@ -322,7 +370,6 @@ class WaveformViewerWidget(QWidget):
         xlog = True if self.xAxisScale.selected == "Log X" else False
         ylog = True if self.yAxisScale.selected == "Log Y" else False
         plotType = self.plotTypeMenu.selected
-        self.waveformPlot1.enableAutoRange(x=xlog, y=ylog)
         if plotType in ["FFT", "Waveform"]:
             self.waveformPlot1.setLogMode(x=xlog, y=ylog)
             self.waveformPlot2.setLogMode(x=xlog, y=ylog)
@@ -362,6 +409,8 @@ class WaveformViewerWidget(QWidget):
         elif plotType == "Spectrogram":
             nperseg = int(self.settingsDialog["nperseg"])
             noverlap = int(self.settingsDialog["noverlap"])
+            if noverlap >= nperseg:
+                noverlap = nperseg - 10
             window = self.settingsDialog["specWindow"]
             f, t, Sxx = signal.spectrogram(y, fs=1/Ts, nperseg=nperseg, noverlap=noverlap, scaling='spectrum', mode='magnitude')
 

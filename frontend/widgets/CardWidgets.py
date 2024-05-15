@@ -26,11 +26,14 @@ class CardWidget(QWidget):
         self.container.setGraphicsEffect(self.shadowEffect)
         
         # Use a standard icon
-        self.iconLabel = QLabel()
+        iconLabel = QLabel()
         icon = self.style().standardIcon(icon)
         pixmap = icon.pixmap(iconSize, iconSize)
-        self.iconLabel.setPixmap(pixmap)
-        self.iconLabel.setAlignment(Qt.AlignCenter)
+        iconLabel.setPixmap(pixmap)
+        iconLabel.setAlignment(Qt.AlignCenter)
+        iconLayout = QHBoxLayout()
+        iconLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        iconLayout.addWidget(iconLabel)
         
         # Main Title
         titleLabel = QLabel(title)
@@ -38,9 +41,6 @@ class CardWidget(QWidget):
         titleLabel.setAlignment(Qt.AlignLeft)
         subtitleLabel = QLabel(subtitle)
         
-        # Child Widget
-        self.child = child
-
         # Add a vertical layout for the contents (Title and Child widget)
         titlesLayout = QVBoxLayout()
         titlesLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
@@ -48,12 +48,19 @@ class CardWidget(QWidget):
         # Add widgets to container layout
         titlesLayout.addWidget(titleLabel)
         titlesLayout.addWidget(subtitleLabel)
+        titlesLayout.addLayout(iconLayout)
 
-        self.containerLayout.addWidget(self.iconLabel)
         self.containerLayout.addLayout(titlesLayout)
-        if self.child is not None:
-            self.containerLayout.addWidget(self.child)
-        self.containerLayout.addStretch(1)
+        if child is not None:
+            if isinstance(child, QWidget):
+                self.containerLayout.addWidget(child)
+            elif isinstance(child, list):
+                for c in child:
+                    self.containerLayout.addWidget(c)
+            elif isinstance(child, QHBoxLayout) or isinstance(child, QVBoxLayout):
+                self.containerLayout.addLayout(child)
+            else:
+                raise Exception("Child must be a QWidget, a list of QWidget, or a QHBoxLayout/VBoxLayout")
         
         # Main layout for the widget
         self.mainLayout = QVBoxLayout()
@@ -110,7 +117,11 @@ class CardListWidget(QWidget):
         # Container Widget and Layout
         self.containerLayout = QVBoxLayout()
         self.containerLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
-        self.scrollAreaFrame.setLayout(self.containerLayout)
+        wrapperLayout = QVBoxLayout()
+        wrapperLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        wrapperLayout.addLayout(self.containerLayout)
+        wrapperLayout.addStretch(1)
+        self.scrollAreaFrame.setLayout(wrapperLayout)
         
         # Adding the frame to the scroll area
         self.scrollArea.setWidget(self.scrollAreaFrame)

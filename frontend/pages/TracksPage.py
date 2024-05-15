@@ -1,15 +1,19 @@
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea
+from PyQt5.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QMessageBox, QScrollArea, QDialog, QProgressBar, QDesktopWidget
 from PyQt5.Qt import QSizePolicy
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont
 
 from frontend.pages.BaseClassPage import *
 from frontend.widgets.BasicWidgets import Button, TextInput, Slider, DropDownMenu
 from frontend.widgets.ConsoleWidget import ConsoleWidget
 from frontend.widgets.CardWidgets import CardWidget, CardListWidget
 
+from frontend.widgets.MidiNotesViewerWidget import MidiNotesViewerWidget
+       
+
 class TracksPage(BaseClassPage):
 
-    title = "Tracks"    
+    title = "Track"    
 
     def initUI(self, layout):
         # Class widgets (used externally with self.)
@@ -54,7 +58,15 @@ class TracksPage(BaseClassPage):
 
             subtitle = f"Duration: {duration:.02f}s\n"
 
-            card = CardWidget(title=title, subtitle=subtitle)
+            notes = channelData["notes"]
+
+
+            midiNotesView = MidiNotesViewerWidget(title, self.model, notes)
+            # midiNotesView.clicked.connect(synthPopup.exec)
+
+            midiNotesView.plotNotes(notes)
+
+            card = CardWidget(title=title, subtitle=subtitle, child=midiNotesView)
             self.trackList.addCard(card)
 
 
