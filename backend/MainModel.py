@@ -34,6 +34,7 @@ class MainModel:
         PureToneSynth(),
         GuitarAdditive(),
         FMSynth(),
+        FM_Bassoon(),
         FMSynthSax(),
         DFM_SAX(),
         DFM_OBOE(),

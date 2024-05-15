@@ -38,9 +38,8 @@ class FMSynth(SynthBaseClass):
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
             NumParam("I1", interval=(0, 10), value=4, step=0.1, text="Min mod index"),
             NumParam("I2", interval=(0, 10), value=2, step=0.1, text="Max mod index"),
-            NumParam("N1", interval=(0, 10), value=1.365, step=0.1, text="Carrier multiplier"), #Ajustado por Sully y Agus
-            NumParam("N2", interval=(0, 10), value=0.91, step=0.1, text="Modulator multiplier"), #Ajustado por Sully y Agus
-            BoolParam("Testing", value= False, text="Testing Sawtooth"),
+            NumParam("N1", interval=(0, 10), value=1.365, step=0.001, text="Carrier multiplier"), #Ajustado por Sully y Agus
+            NumParam("N2", interval=(0, 10), value=0.91, step=0.001, text="Modulator multiplier"), #Ajustado por Sully y Agus
             
             NumParam("a1", interval=(0, 1), value=0.1, step=0.01, text="Attack time, modulator "),
             NumParam("d1", interval=(0, 1), value=0.1, step=0.001, text="Decay time, modulator "),
@@ -49,7 +48,7 @@ class FMSynth(SynthBaseClass):
             NumParam("k1", interval=(0, 1), value=0.95, step=0.01, text="Sustain constant, modulator "),
             NumParam("fmConst", interval=(-10, 10), value=0.16, step=0.01, text="Modulation frequency addition"),
             NumParam("k2d", interval=(0, 1), value=0.4, step=0.01, text="Linear rise time, modulator "),
-
+            NumParam("n", interval=(0.1, 20), value=5, step=0.01, text="exponential deformation"),
             NumParam("a2", interval=(0, 1), value=0.1, step=0.01, text="Attack time, envelope "),
             NumParam("d2", interval=(0, 1), value=0.1, step=0.001, text="Decay time, envelope "),
             NumParam("s2", interval=(0, 10), value=1, step=0.1, text="Sustain slope, envelope "),
@@ -69,8 +68,8 @@ class FMSynth(SynthBaseClass):
         r1 = float(self.params["r1"])
         k1 = float(self.params["k1"])
         k2d = float(self.params["k2d"])
-        testMod = bool(self.params["Testing"])
 
+        n_var = float(self.params["n"])
         a2 = float(self.params["a2"])       #Signal envelope params
         d2 = float(self.params["d2"])
         s2 = float(self.params["s2"])
@@ -81,34 +80,112 @@ class FMSynth(SynthBaseClass):
         N2 = float(self.params["N2"])
         fmConst = float(self.params["fmConst"]) #additional frequency value
 
-        if duration < a2+d2 :
-            duration = a2+d2
+        if duration < a2+d2+r2 :
+            duration = a2+d2+r2
         
-
-        envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
-        total_time = duration + r2                    # Total time is the note duration + Release time
+        adsr = LinearADSR(1/k2, a2, d2, r2, modType="exp", n = n_var )          # Sustain time is calculated internally
+        adsr.set_total_time(duration, self.sample_rate)
+        
+        t = adsr.time()
+        #envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        #total_time = duration + r2                    # Total time is the note duration + Release time
 
         fp = N1 * freq                  #frecuencia de la portadora
         fm = N2 *freq +fmConst                   #frecuencia de la modulante
 
         
         modIndex = GenerateModIndex(I1, I2, a1, d1, r1, k1, k2d, s1) 
-        t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
+        #t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
 
         if I1>I2:
             modulationIndex =I1 -modIndex(t,duration) 
         else:
             modulationIndex = I1 + modIndex(t,duration) 
 
-        if testMod:
-            fmwave = amp * FM_senoidal(t,fp, fm, 1, 3 - sawtooth(2*np.pi *t/total_time))
-        else: 
-            fmwave = amp * FM_senoidal(t,fp, fm, 1, modulationIndex)
+        fmwave = amp * FM_senoidal(t,fp, fm, 1, modulationIndex)
 
 
-        return fmwave * envelope(t, duration)
+        return fmwave * adsr.envelope()
     
+class FM_Bassoon(SynthBaseClass):
 
+    def __init__(self):
+        super().__init__()
+
+        self.name = "Bassoon Synthesizer"
+
+        self.params = ParameterList(
+            # Add your parameters here, using NumParam, ChoiceParam or BoolParam
+            NumParam("I1", interval=(-1, 10), value=0, step=0.1, text="Min mod index"),
+            NumParam("I2", interval=(0, 10), value=5, step=0.1, text="Max mod index"),
+            NumParam("N1", interval=(0, 10), value=5, step=0.1, text="Carrier multiplier"), #Ajustado por Sully y Agus
+            NumParam("N2", interval=(0, 10), value=1, step=0.1, text="Modulator multiplier"), #Ajustado por Sully y Agus
+            
+            NumParam("a1", interval=(0, 1), value=0.1, step=0.01, text="Attack time, modulator "),
+            NumParam("d1", interval=(0, 1), value=0.1, step=0.001, text="Decay time, modulator "),
+            NumParam("s1", interval=(0, 1), value=0.99, step=0.1, text="Sustain final value, modulator "), #[0,1] as a fraction of the sustain value that will be dropped
+            NumParam("r1", interval=(0, 1), value=0.05, step=0.01, text="Release time, modulator "),
+            NumParam("k1", interval=(0, 1), value=0.95, step=0.01, text="Sustain constant, modulator "),
+            NumParam("fmConst", interval=(-10, 10), value=0.16, step=0.01, text="Modulation frequency addition"),
+            NumParam("k2d", interval=(0, 1), value=0.4, step=0.01, text="Linear rise time, modulator "),
+            NumParam("n", interval=(0.1, 20), value=5, step=0.01, text="exponential deformation"),
+            NumParam("a2", interval=(0, 1), value=0.1, step=0.01, text="Attack time, envelope "),
+            NumParam("d2", interval=(0, 1), value=0.1, step=0.001, text="Decay time, envelope "),
+            NumParam("s2", interval=(0, 10), value=1, step=0.1, text="Sustain slope, envelope "),
+            NumParam("r2", interval=(0, 1), value=0.05, step=0.01, text="Release time, envelope "),
+            NumParam("k2", interval=(0, 1), value=0.95, step=0.01, text="Sustain constant, envelope ")
+        )
+
+    def generate(self, freq, amp, duration):
+        # Add your synthesizer code here
+
+        I1 = float(self.params["I1"])       #Modulation index limits
+        I2 = float(self.params["I2"])
+
+        a1 = float(self.params["a1"])       #Modulator envelope params
+        d1 = float(self.params["d1"])   
+        s1 = float(self.params["s1"])
+        r1 = float(self.params["r1"])
+        k1 = float(self.params["k1"])
+        k2d = float(self.params["k2d"])
+
+        n_var = float(self.params["n"])
+        a2 = float(self.params["a2"])       #Signal envelope params
+        d2 = float(self.params["d2"])
+        s2 = float(self.params["s2"])
+        r2 = float(self.params["r2"])
+        k2 = float(self.params["k2"])
+
+        N1 = float(self.params["N1"])         #Modulation-carrier frequency relations
+        N2 = float(self.params["N2"])
+        fmConst = float(self.params["fmConst"]) #additional frequency value
+
+        if duration < a2+d2+r2 :
+            duration = a2+d2+r2
+        
+        adsr = LinearADSR(1/k2, a2, d2, r2, modType="exp", n = n_var )          # Sustain time is calculated internally
+        adsr.set_total_time(duration, self.sample_rate)
+        
+        t = adsr.time()
+        #envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        #total_time = duration + r2                    # Total time is the note duration + Release time
+
+        fp = N1 * freq                  #frecuencia de la portadora
+        fm = N2 *freq +fmConst                   #frecuencia de la modulante
+
+        
+        modIndex = GenerateModIndex(I1, I2, a1, d1, r1, k1, k2d, s1) 
+        #t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
+
+        if I1>I2:
+            modulationIndex =I1 -modIndex(t,duration) 
+        else:
+            modulationIndex = I1 + modIndex(t,duration) 
+
+        fmwave = amp * FM_senoidal(t,fp, fm, 1, modulationIndex)
+
+
+        return fmwave * adsr.envelope()
 class FMSynthSax(SynthBaseClass):
 
     def __init__(self):
@@ -132,6 +209,7 @@ class FMSynthSax(SynthBaseClass):
             NumParam("fmConst", interval=(-10, 10), value=0.16, step=0.01, text="Modulation frequency addition"),
             NumParam("k2d", interval=(0, 1), value=0.4, step=0.01, text="Linear rise time, modulator "),
 
+            NumParam("n", interval=(0.1, 20), value=5, step=0.01, text="exponential deformation"),
             NumParam("a2", interval=(0, 1), value=0.1, step=0.01, text="Attack time, envelope "),
             NumParam("d2", interval=(0, 1), value=0.1, step=0.001, text="Decay time, envelope "),
             NumParam("s2", interval=(0, 10), value=1, step=0.1, text="Sustain slope, envelope "),
@@ -152,7 +230,7 @@ class FMSynthSax(SynthBaseClass):
         k1 = float(self.params["k1"])
         k2d = float(self.params["k2d"])
         
-
+        n_var = float(self.params["n"])
         a2 = float(self.params["a2"])       #Signal envelope params
         d2 = float(self.params["d2"])
         s2 = float(self.params["s2"])
@@ -166,22 +244,25 @@ class FMSynthSax(SynthBaseClass):
         if duration < a2+d2 :
             duration = a2+d2
         
-
-        envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        adsr = LinearADSR(1/k2, a2, d2, r2, modType="exp", n = n_var )          # Sustain time is calculated internally
+        adsr.set_total_time(duration, self.sample_rate)
         
-        total_time = duration + r2                    # Total time is the note duration + Release time
+        t = adsr.time()
+        #envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        
+        #total_time = duration + r2                    # Total time is the note duration + Release time
 
         f1 = N1 * freq                  #frecuencia de la primera modulante
         f2 = N2 *freq                   #frecuencia de la segunda modulante
         
         modIndex = GenerateModIndex(I1, I2, a1, d1, r1, k1, k2d, s1) 
-        t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
+        #t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
 
         
         fmwave = DFM_1(t,f1, f2, 1, I1, I2)
 
 
-        return fmwave * envelope(t, duration)
+        return fmwave *amp *adsr.envelope()
     
 class DFM_SAX(SynthBaseClass):
 
@@ -212,7 +293,7 @@ class DFM_SAX(SynthBaseClass):
             NumParam("W2", interval=(0, 10), value=1.27713, step=0.00001, text="Weight DFM2"), 
             NumParam("W3", interval=(-1, 10), value=4.19095, step=0.00001, text="Weight DFM3"), 
             
-            
+            NumParam("n", interval=(0.1, 20), value=5, step=0.01, text="exponential deformation"),
             NumParam("a2", interval=(0, 1), value=0.1, step=0.01, text="Attack time, envelope "),
             NumParam("d2", interval=(0, 1), value=0.1, step=0.001, text="Decay time, envelope "),
             NumParam("s2", interval=(0, 10), value=1, step=0.1, text="Sustain slope, envelope "),
@@ -232,7 +313,7 @@ class DFM_SAX(SynthBaseClass):
         I31 = float(self.params["I31"])       
         I32 = float(self.params["I32"]) 
         
-
+        n_var = float(self.params["n"])
         a2 = float(self.params["a2"])       #Signal envelope params
         d2 = float(self.params["d2"])
         s2 = float(self.params["s2"])
@@ -257,9 +338,12 @@ class DFM_SAX(SynthBaseClass):
         if duration < a2+d2 :
             duration = a2+d2
         
-
-        envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
-        total_time = duration + r2                    # Total time is the note duration + Release time
+        adsr = LinearADSR(1/k2, a2, d2, r2, modType="exp", n = n_var )          # Sustain time is calculated internally
+        adsr.set_total_time(duration, self.sample_rate)
+        
+        t = adsr.time()
+        #envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
+        #total_time = duration + r2                    # Total time is the note duration + Release time
 
         f11 = N11 * freq                  #frecuencia de la primera modulante
         f12 = N12 *freq                   #frecuencia de la segunda modulante
@@ -270,21 +354,21 @@ class DFM_SAX(SynthBaseClass):
         f31 = N31 *freq                   #frecuencia de la primer modulante
         f32 = N32 *freq                   #frecuencia de la segunda modulante
 
-        t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
+        #t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
         amp3 = W3/normaPesos
-        DFM3 = DFM(t,f31, f32, amp3, I31, I32, a2, k)
+        DFM3 = DFM_1(t,f31, f32, amp3, I31, I32)
 
         
         fmwave = amp * (DFM1 + DFM2 + DFM3)
 
 
-        return fmwave * envelope(t, duration)
+        return fmwave * adsr.envelope()
     
 class DFM_OBOE(SynthBaseClass):
 
@@ -361,10 +445,10 @@ class DFM_OBOE(SynthBaseClass):
 
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
 
         
@@ -448,10 +532,10 @@ class DFM_FrenchHorn(SynthBaseClass):
 
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
 
         
@@ -534,7 +618,7 @@ class DFM_Harpsichord(SynthBaseClass):
         d2 = duration - a2
         
 
-        adsr = LinearADSR(1/k2, a2, d2, r2, modType="linear")          # Sustain time is calculated internally
+        adsr = LinearADSR(1/k2, a2, d2, r2, modType="linear", n = 9.4)          # Sustain time is calculated internally
         adsr.set_total_time(duration, self.sample_rate)
         
         t = adsr.time()
@@ -550,13 +634,13 @@ class DFM_Harpsichord(SynthBaseClass):
 
        
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
         amp3 = W3/normaPesos
-        DFM3 = DFM(t,f31, f32, amp3, I31, I32, a2, k)
+        DFM3 = DFM_1(t,f31, f32, amp3, I31, I32)
 
         
         fmwave = amp * (DFM1 + DFM2 + DFM3)
@@ -653,13 +737,13 @@ class DFM_PipeOrgan(SynthBaseClass):
 
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
         amp3 = W3/normaPesos
-        DFM3 = DFM(t,f31, f32, amp3, I31, I32, a2, k)
+        DFM3 = DFM_1(t,f31, f32, amp3, I31, I32)
 
         
         fmwave = amp * (DFM1 + DFM2 + DFM3)
@@ -741,7 +825,7 @@ class DFM_Trumpet(SynthBaseClass):
         if duration < a2+d2 :
             duration = a2+d2
         
-
+        
         envelope = WoodwindEnvelope(1, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
         total_time = duration + r2                    # Total time is the note duration + Release time
 
@@ -756,13 +840,13 @@ class DFM_Trumpet(SynthBaseClass):
 
         t = np.linspace(0, total_time, int(total_time * self.sample_rate), False)
         amp1 = W1/normaPesos
-        DFM1 = DFM(t,f11, f12, amp1, I11, I12, a2, k)
+        DFM1 = DFM_1(t,f11, f12, amp1, I11, I12)
 
         amp2 = W2/normaPesos
-        DFM2 = DFM(t,f21, f22, amp2, I21, I22, a2, k)
+        DFM2 = DFM_1(t,f21, f22, amp2, I21, I22)
 
         amp3 = W3/normaPesos
-        DFM3 = DFM(t,f31, f32, amp3, I31, I32, a2, k)
+        DFM3 = DFM_1(t,f31, f32, amp3, I31, I32)
 
         
         fmwave = amp * (DFM1 + DFM2 + DFM3)
