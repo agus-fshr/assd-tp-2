@@ -27,8 +27,8 @@ class DelayEffect(EffectBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             BoolParam("active", value=False, text="Active"),
-            NumParam("delay", interval=(0, 1), value=0.012, step=0.001, text="Delay time [s]"),
-            NumParam("feedback", interval=(0, 1), value=0.99, step=0.01, text="Feedback [0, 1]"),
+            NumParam("delay", interval=(0.001, 1), value=0.012, step=0.001, text="Delay time [s]"),
+            NumParam("feedback", interval=(0.01, 1), value=0.99, step=0.01, text="Feedback [0, 1]"),
         )
 
     def process(self, sound):
@@ -40,7 +40,7 @@ class DelayEffect(EffectBaseClass):
             return sound
 
         # Add zeros at the end of the sound array to allow for the delay effect
-        sound = np.append(sound, np.zeros(int(5 * delay_time * self.sample_rate * (1/(1 - feedback*0.999)))))
+        sound = np.append(sound, np.zeros(int(5 * delay_time * self.sample_rate * (1/(1 - feedback*0.9)))))
 
         delay_samples = int(delay_time * self.sample_rate)
         delayed_sound = np.zeros(len(sound) + delay_samples)
