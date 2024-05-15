@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import os
 
 # Set number of samples
-N = 500
+N = 512
 
 # Compile and run the C program
 os.system(f'cd FFT && make clean && make N={N} && ./main')
