@@ -194,7 +194,7 @@ class FlangerEffect(EffectBaseClass):
             NumParam("delay", interval=(0, 15), value=10, step=0.1, text="Delay time [ms]"),
             NumParam("LFO frec", interval=(0, 1), value=0.5, step=0.01, text="LFO frec"),
             NumParam("LFO base", interval=(0.001, 2), value=2, step=0.001, text="LFO base"),
-            NumParam("Gain", interval=(0, 0.99), value=0.5, step=0.01, text="Feedback gain")
+            NumParam("Gain", interval=(-0.99, 0.99), value=0.5, step=0.01, text="Feedback gain")
         )
     
     def process(self, sound):
@@ -214,9 +214,7 @@ class FlangerEffect(EffectBaseClass):
         lfo = lfo_base + signal.sawtooth(2 * np.pi * lfo_freq * nsamples / self.sample_rate,0.5)
         cur_sin = np.abs(lfo)
         cur_delay = np.ceil(sample_rate*cur_sin)
-        # index = np.around(nsamples - self.sample_rate * lfo_amp * lfo)
-        # index[index<0] = 0 
-        # index[index>(length-1)] = length - 1
+        
         
         flanger_effect = np.zeros(length)
         for j in range(sample_rate+1, length):
@@ -231,22 +229,20 @@ class ChorusEffect(EffectBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             BoolParam("active", value=False, text="Active"),
-            # NumParam("delay", interval=(10,25), value=15, step=0.1, text="Max delay time [ms]"),
             NumParam("LFO frec 1", interval=(0, 10), value=1, step=0.01, text="LFO frec 1"),
             NumParam("LFO frec 2", interval=(0, 10), value=0.9, step=0.01, text="LFO frec 2"),
             NumParam("LFO frec 3", interval=(0, 10), value=0.8, step=0.01, text="LFO frec 3"),
             NumParam("LFO frec 4", interval=(0, 10), value=0.7, step=0.01, text="LFO frec 4"),
             NumParam("Gain", interval=(0, 0.99), value=0.7, step=0.01, text="Gain"),
-            NumParam("Gain 1", interval=(0, 0.99), value=0.6, step=0.01, text="Gain 1"),
-            NumParam("Gain 2", interval=(0, 0.99), value=0.5, step=0.01, text="Gain 2"),
-            NumParam("Gain 3", interval=(0, 0.99), value=0.4, step=0.01, text="Gain 3"),
-            NumParam("Gain 4", interval=(0, 0.99), value=0.3, step=0.01, text="Gain 4")
+            NumParam("Gain 1", interval=(-0.99, 0.99), value=0.6, step=0.01, text="Gain 1"),
+            NumParam("Gain 2", interval=(-0.99, 0.99), value=0.5, step=0.01, text="Gain 2"),
+            NumParam("Gain 3", interval=(-0.99, 0.99), value=0.4, step=0.01, text="Gain 3"),
+            NumParam("Gain 4", interval=(-0.99, 0.99), value=0.3, step=0.01, text="Gain 4")
         )
     
     def process(self, sound):
         """ Apply a delay effect to the sound """
         active = self.params["active"]
-        # time_delay = float(self.params["delay"])/1000
         lfo_frec1 = float(self.params["LFO frec 1"])
         lfo_frec2 = float(self.params["LFO frec 2"])
         lfo_frec3 = float(self.params["LFO frec 3"])
