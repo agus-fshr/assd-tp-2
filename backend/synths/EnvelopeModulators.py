@@ -40,7 +40,7 @@ class ModFunction():
 
 
 class LinearADSR():
-    def __init__(self, k, A, D, R, modType="polyFlatTop", n=3.0):
+    def __init__(self, k, A, D, R, modType="polyFlatTop",n=3.0):
         self.k = k
         self.attack = A
         self.decay = D

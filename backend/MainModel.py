@@ -14,7 +14,7 @@ from .effects.Effects import *
 from .utils.ParamObject import ParameterList
 from .utils.AudioPlayer import AudioPlayer
 from .utils.Worker import Worker
-
+from .utils.SynthTrackManager import SynthTrackManager
         
 
 class MainModel:
@@ -26,16 +26,29 @@ class MainModel:
     def __init__(self):
         self.verify()
         self.fileImportWorker = Worker(function=self.import_single_file)
-        self.synthWorker = Worker(function=self.synthWorkerFunction)
+        self.synthTrackManager = SynthTrackManager(framerate=44100)
+
+        self.synthTrackManager.synthTrackComplete.connect(self.on_song_synthesized)
+
+
+    def on_song_synthesized(self, trackName, track_data):
+        self.synthesized_tracks[trackName] = track_data
+
+        self.audioPlayer.set_array(track_data["track_array"])
 
 
     # Add synthesizers here !
     synthesizers = [
         PureToneSynth(),
-        GuitarAdditive(),
         FMSynth(),
+        FM_Bassoon(),
         FMSynthSax(),
         DFM_SAX(),
+        DFM_OBOE(),
+        DFM_FrenchHorn(),
+        DFM_Harpsichord(),
+        DFM_PipeOrgan(),
+        DFM_Trumpet(),
         KSGuitar(),
         KSDrum(),
     ]
@@ -43,7 +56,7 @@ class MainModel:
 
     # Add effects here !
     effects = [
-        # NoEffect(),
+        NoEffect(),
         DelayEffect(),
         SimpleEchoEffect(),
         ReverbEffect(),
@@ -60,15 +73,18 @@ class MainModel:
 
 
 
-    def synthWorkerFunction(self, n0, note, instrument, effect):
-        midiNote = note["Note"]
-        amp = note["Amplitude"]
-        duration = note["Duration"]
-        wave_array = instrument(midiNote, amp, duration)
-        wave_array = effect(wave_array)
-        return n0, wave_array
-    
+    # DO NOT TOUCH, THIS IS THE DATA STRUCTURE FOR SYNTHESIZED TRACKS
+    synthesized_tracks = {
+        # "song1": {
+        #     "description": "A simple pure tone",
+        #     "track_array": np.array([]),
+        #     "instrument": instrument.name,
+        #     "effect": effect.name,
+        # }
+    }
 
+
+    # # # # # # # # # # # #     IMPORT FILES SECTION    # # # # # # # # # # # # 
 
     def import_files(self, onFileImported):
         try:
@@ -83,15 +99,9 @@ class MainModel:
         self.import_with_handler(self.midi_handler, "mid")
         self.fileImportWorker.start()
 
-
-
-
-
-
     def import_with_handler(self, handler, ext):
         for fmeta in self.file_handler.pending_files(ext):
             self.fileImportWorker.add_task((handler, fmeta))            
-
 
     def import_single_file(self, handler, fmeta):
         if handler.import_file(fmeta.path):
@@ -101,6 +111,9 @@ class MainModel:
             fmeta.set_error()
             return False
         
+
+
+
 
     # DO NOT TOUCH THIS FUNCTION
     def verify(self):

@@ -7,21 +7,30 @@ class Worker(QThread):
     - Emits a signal with the result of each finished run
     - Emits a signal when all runs are done
     '''
-    taskComplete = pyqtSignal(object)  # Signal with task output
-    finished = pyqtSignal()  # Signal when all tasks are done
-    onError = pyqtSignal(str)  # Signal when an error occurs
+    taskComplete = pyqtSignal(object)     # Signal when a task is done, returns: result
+    finished = pyqtSignal(str)                  # Signal when all tasks are done, returns the task_key
+    onError = pyqtSignal(str)                   # Signal when an error occurs
 
-    def __init__(self, function):
+    def __init__(self, function, task_key=""):
         super().__init__()
         self.tasks = []
+        # self.task_memory = None
         self.total = 1
         self.current = 0
+        self.task_key = task_key
         self.mutex = QMutex()
         self.infoMutex = QMutex()
         if not callable(function):
             raise Exception("Function must be callable")
         self.function = function
 
+    # def setTaskMemory(self, task_memory):
+    #     ''' Sets the task memory '''
+    #     self.task_memory = task_memory
+
+    # def getTaskMemory(self):
+    #     ''' Returns the task memory '''
+    #     return self.task_memory
 
     def progressBarString(self):
         ''' Returns a string with a progress bar '''
@@ -61,6 +70,7 @@ class Worker(QThread):
         with QMutexLocker(self.infoMutex):
             self.total = len(self.tasks)
 
+
     def run(self):
         with QMutexLocker(self.infoMutex):
             self.current = 0
@@ -85,4 +95,5 @@ class Worker(QThread):
 
         with QMutexLocker(self.infoMutex):
             self.current = self.total
-        self.finished.emit()
+
+        self.finished.emit(self.task_key)

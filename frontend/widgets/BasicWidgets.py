@@ -9,7 +9,7 @@ class Button(QPushButton):
     def __init__(self, text="Click Me", color="black", background_color = "white", 
                         radius=10,
                         shadow_color="grey", shadow_radius=9, hover_color="lightblue", 
-                        click_color="grey", padding=6, on_click=lambda: print("Button Clicked")):
+                        click_color="grey", padding=6, on_click=None):
         super().__init__(text)
         self.radius = radius
         self.padding = padding
@@ -18,7 +18,7 @@ class Button(QPushButton):
 
         if isinstance(on_click, pyqtSignal):
             self.clicked.connect(on_click)
-        else:
+        elif callable(on_click):
             self.clicked.connect(self.on_click_callback)
             self.on_click = on_click
 
@@ -264,11 +264,12 @@ class NumberInput(QWidget):
         else:
             self.textbox.textEdited.connect(self.on_text_change)
 
-        self.slider.valueChanged.connect(self.on_slider_change)
+        self.slider.sliderReleased.connect(self.on_slider_change)
 
         self.on_change = on_change
 
-    def on_slider_change(self, pos):
+    def on_slider_change(self):
+        pos = self.slider.value()
         self.current_value = self.slider_pos_to_value(pos)
         self.textbox.blockSignals(True)
         self.textbox.setText(self.value_to_text(self.current_value))
@@ -311,6 +312,7 @@ class NumberInput(QWidget):
         self.slider.blockSignals(False)
         
         self.on_change(self.current_value)
+
 
     def value(self):
         return self.current_value

@@ -7,10 +7,12 @@ print("Running main.py")
 from frontend.MainWindow import *
 # from frontend.pages.TestPage import *
 from frontend.pages.FilesPage import *
-from frontend.pages.ChordPage import *
 from frontend.pages.TracksPage import *
+from frontend.pages.SynthesizedTracks import *
+from frontend.pages.TrackMixerPage import *
+# from frontend.pages.ChordPage import *
 from frontend.pages.MidiViewerPage import *
-from frontend.pages.MidiPlayerPage import *
+# from frontend.pages.MidiPlayerPage import *
 from frontend.pages.InstrumentPage import *
 from frontend.pages.SoundPlayerPage import *
 # from frontend.pages.TracksMetadataPage import *
@@ -28,12 +30,14 @@ if __name__ == '__main__':
     pages = [
         FilesPage(),
         TracksPage(),
+        SynthesizedTracks(),
+        TrackMixerPage(),
         # TracksMetadataPage(),
-        MidiViewerPage(),
-        InstrumentPage(),
-        ChordPage(),
         SoundPlayerPage(),
-        MIDIPlayerPage(),
+        # ChordPage(),
+        InstrumentPage(),
+        # MIDIPlayerPage(),
+        MidiViewerPage(),
         # TestPage(),
         # ReadMidiPage(),
     ]
