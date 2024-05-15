@@ -117,7 +117,7 @@ class FM_Bassoon(SynthBaseClass):
         self.params = ParameterList(
             # Add your parameters here, using NumParam, ChoiceParam or BoolParam
             NumParam("I1", interval=(-1, 10), value=0, step=0.1, text="Min mod index"),
-            NumParam("I2", interval=(0, 10), value=5, step=0.1, text="Max mod index"),
+            NumParam("I2", interval=(0, 10), value=1.5, step=0.1, text="Max mod index"),
             NumParam("N1", interval=(0, 10), value=5, step=0.1, text="Carrier multiplier"), #Ajustado por Sully y Agus
             NumParam("N2", interval=(0, 10), value=1, step=0.1, text="Modulator multiplier"), #Ajustado por Sully y Agus
             
