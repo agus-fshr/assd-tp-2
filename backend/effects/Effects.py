@@ -128,6 +128,61 @@ class ReverbEffect(EffectBaseClass):
         
         return reverb_effect
 
+class LowPass_ReverbEffect(EffectBaseClass):
+    def __init__(self):
+        super().__init__()
+        self.name = "Lowpass Reverb Effect" # Este nombre es el que se muestra en la interfaz
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            BoolParam("active", value=False, text="Active"),
+            NumParam("delay", interval=(0, 1.2), value=0.5, step=0.01, text="Delay time [s]"),
+            NumParam("Duration", interval=(0, 8), value=1, step=0.1, text="Durantion [repetitions]"),
+            # NumParam("atenuation", interval=(0, 0.99), value=0.5, step=0.01, text="Atenuation"),
+            NumParam("Fb", interval=(25, 1000), value=500, step=1, text="Fb"),
+        )
+    
+    
+    def process(self, sound):
+        """ Apply a delay effect to the sound """
+        delay_time = float(self.params["delay"])
+        fb = float(self.params["Fb"])
+        duratio = float(self.params["Duration"])
+        # atenuation = float(self.params["atenuation"])
+        active = self.params["active"]
+        if not active:
+            return sound
+        
+        delay_samples = int(delay_time * self.sample_rate) +1 
+        
+        #amplio el array
+        new_sound = np.append(np.zeros(delay_samples), sound)
+        new_sound = np.append(new_sound, np.zeros(int(duratio*delay_samples)))
+        n = int(np.ceil((4*self.sample_rate) / fb))
+        
+        sound_out = np.zeros(len(new_sound)+delay_samples)
+        impulse_lowpass = self.low_pass_filter(fb, n)
+        
+        for i in range(delay_samples, len(sound_out)):
+            b = np.convolve(sound_out, impulse_lowpass, mode='valid')
+            sound_out[i] = new_sound[i] + b[i - delay_samples]
+        reverb_effect = sound_out[(2*delay_samples):]
+        
+        return reverb_effect
+
+    #pasa bajos
+    def low_pass_filter(self, fb, n):
+        a1 = (np.tan(np.pi*fb/self.sample_rate)-1)/(np.tan(np.pi*fb/self.sample_rate)+1)
+        x = np.zeros(n)
+        x[0] = 1
+        y = np.zeros(len(x))
+        for i in range(1, len(x)):
+            y[i] = a1*x[i] + x[i-1] - a1*y[i-1]
+        low_pass_output = y
+
+        return low_pass_output
+    
+
 class FlangerEffect(EffectBaseClass):
     def __init__(self):
         super().__init__()

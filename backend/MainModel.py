@@ -45,6 +45,7 @@ class MainModel:
         DelayEffect(),
         SimpleEchoEffect(),
         ReverbEffect(),
+        LowPass_ReverbEffect(),
         FlangerEffect(),
         ReberbRIR()
     ]
