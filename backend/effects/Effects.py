@@ -194,7 +194,6 @@ class FlangerEffect(EffectBaseClass):
             NumParam("delay", interval=(0, 15), value=10, step=0.1, text="Delay time [ms]"),
             NumParam("LFO frec", interval=(0, 1), value=0.5, step=0.01, text="LFO frec"),
             NumParam("LFO base", interval=(0.001, 2), value=2, step=0.001, text="LFO base"),
-            NumParam("LFO depth", interval=(0, 0.01), value=0.008, step=0.0001, text="LFO depth"),
             NumParam("Gain", interval=(0, 0.99), value=0.5, step=0.01, text="Feedback gain")
         )
     
@@ -203,7 +202,6 @@ class FlangerEffect(EffectBaseClass):
         active = self.params["active"]
         delay_time = float(self.params["delay"])/1000
         lfo_freq = float(self.params["LFO frec"])
-        lfo_amp = float(self.params["LFO depth"])
         lfo_base = float(self.params["LFO base"])
         feedback_gain = float(self.params["Gain"])
         if not active:
