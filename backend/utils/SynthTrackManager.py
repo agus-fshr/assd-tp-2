@@ -100,8 +100,8 @@ class SynthTrackManager(QObject):
         except Exception as e:
             print(__file__, '\t', e)
             self.errorOccurred.emit(str(e))
-            self.synthWorker.cancel()
-            self.synthWorker.wait()
+            self.worker.cancel()
+            self.worker.wait()
             return
 
 

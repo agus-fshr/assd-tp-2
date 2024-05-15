@@ -40,7 +40,6 @@ class MainModel:
     # Add synthesizers here !
     synthesizers = [
         PureToneSynth(),
-        GuitarAdditive(),
         FMSynth(),
         FMSynthSax(),
         DFM_SAX(),

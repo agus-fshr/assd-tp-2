@@ -9,6 +9,7 @@ from frontend.MainWindow import *
 from frontend.pages.FilesPage import *
 from frontend.pages.TracksPage import *
 from frontend.pages.SynthesizedTracks import *
+from frontend.pages.TrackMixerPage import *
 # from frontend.pages.ChordPage import *
 from frontend.pages.MidiViewerPage import *
 # from frontend.pages.MidiPlayerPage import *
@@ -30,10 +31,11 @@ if __name__ == '__main__':
         FilesPage(),
         TracksPage(),
         SynthesizedTracks(),
+        TrackMixerPage(),
         # TracksMetadataPage(),
-        InstrumentPage(),
-        # ChordPage(),
         SoundPlayerPage(),
+        # ChordPage(),
+        InstrumentPage(),
         # MIDIPlayerPage(),
         MidiViewerPage(),
         # TestPage(),
