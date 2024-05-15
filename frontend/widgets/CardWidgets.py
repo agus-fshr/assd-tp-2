@@ -56,7 +56,12 @@ class CardWidget(QWidget):
                 self.containerLayout.addWidget(child)
             elif isinstance(child, list):
                 for c in child:
-                    self.containerLayout.addWidget(c)
+                    if isinstance(c, QWidget):
+                        self.containerLayout.addWidget(c)
+                    elif isinstance(c, QHBoxLayout) or isinstance(c, QVBoxLayout):
+                        self.containerLayout.addLayout(c)
+                    else:
+                        raise Exception("Child must be a QWidget or a list of QWidget")
             elif isinstance(child, QHBoxLayout) or isinstance(child, QVBoxLayout):
                 self.containerLayout.addLayout(child)
             else:
@@ -139,6 +144,9 @@ class CardListWidget(QWidget):
         for card in cardList:
             self.addCard(card)
 
+    def __iter__(self):
+        return iter(self.children)
+
     def addCard(self, cardWidget):
         """Add a CardWidget to the list."""
         self.containerLayout.addWidget(cardWidget)
@@ -159,6 +167,13 @@ class CardListWidget(QWidget):
             self.children.remove(cardWidget)
             self.containerLayout.removeWidget(cardWidget)
             cardWidget.deleteLater()
+
+    def popCard(self):
+        """Remove the last card from the list."""
+        if self.children:
+            card = self.children.pop()
+            self.containerLayout.removeWidget(card)
+            card.deleteLater()
     
     def applyStyles(self):
         # You can add styles specific to the card list here

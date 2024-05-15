@@ -44,7 +44,7 @@ class SynthesizedTracks(BaseClassPage):
         self.playSelected = Button("Set Visible Audio to Play", on_click=self.play_selected)
 
         self.addEffectSelector = DropDownMenu("Add Effect", onChoose=self.on_effect_selected, showSelected=False)
-        saveDataBtn = Button("Save Data", background_color="lightgreen", hover_color="white")
+        saveDataBtn = Button("Save Changes", background_color="lightgreen", hover_color="white")
         saveDataBtn.clicked.connect(self.save_edited_data)
         saveWAVButton = Button("Export WAV", on_click=self.saveWAV, background_color="lightblue", hover_color="white")
 
@@ -87,6 +87,9 @@ class SynthesizedTracks(BaseClassPage):
 
 
     def saveWAV(self):
+        self.model.audioPlayer.stop()
+        self.model.audioPlayer.set_array(self.mix_array, self.framerate)
+
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         name = self.trackSelector.selected

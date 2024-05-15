@@ -264,11 +264,12 @@ class NumberInput(QWidget):
         else:
             self.textbox.textEdited.connect(self.on_text_change)
 
-        self.slider.valueChanged.connect(self.on_slider_change)
+        self.slider.sliderReleased.connect(self.on_slider_change)
 
         self.on_change = on_change
 
-    def on_slider_change(self, pos):
+    def on_slider_change(self):
+        pos = self.slider.value()
         self.current_value = self.slider_pos_to_value(pos)
         self.textbox.blockSignals(True)
         self.textbox.setText(self.value_to_text(self.current_value))
@@ -311,6 +312,7 @@ class NumberInput(QWidget):
         self.slider.blockSignals(False)
         
         self.on_change(self.current_value)
+
 
     def value(self):
         return self.current_value

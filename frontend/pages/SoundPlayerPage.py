@@ -28,11 +28,14 @@ class SoundPlayerPage(BaseClassPage):
         topHLayout = QHBoxLayout()
 
         importCSVButton = Button("Import CSV", on_click=self.on_import_csv)
+        importFromMemoryButton = Button("Import from Song Played", on_click=self.on_import_from_memory)
 
         # Setup top layout
         topHLayout.addWidget(self.dropDown)
         topHLayout.addSpacing(20)
         topHLayout.addWidget(importCSVButton)
+        topHLayout.addSpacing(20)
+        topHLayout.addWidget(importFromMemoryButton)
         topHLayout.addStretch(1)
 
         # Setup audio player widget
@@ -94,6 +97,10 @@ class SoundPlayerPage(BaseClassPage):
         
         self.dropDown.set_options(options)
 
+
+    def on_import_from_memory(self):
+        time, array = self.model.audioPlayer.get_numpy_data()
+        self.plotWidget.plot(time, array)
 
     # Callback to set the selected sound to play
     def on_sound_selected(self, name, path):
