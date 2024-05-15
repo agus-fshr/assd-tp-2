@@ -19,6 +19,7 @@ class KSDrum(SynthBaseClass):
             ChoiceParam("modType", options=["cos", "sin", "log", "polyFlatTop", "poly", "exp"], value="sin", text="Env Mod function"),
             NumParam("modN", interval=(0.1, 20), value=3, step=0.1, text="Mod function N"),
             NumParam("extraTime", interval=(0.0, 2.0), value=0.1, step=0.01, text="Extra Time"),
+            NumParam("Probability", interval=(0.0, 1.0), value=0.5, step=0.01, text="Probability"),
         )
 
     def init_wavetable(self, amp, stretch, freq):
@@ -42,8 +43,9 @@ class KSDrum(SynthBaseClass):
 
         duration += self.params["extraTime"]
         n_samples = int(duration * self.sample_rate)
+        probability = self.params["Probability"]
 
-        out = self.karplus_strong(wavetable, n_samples, stretch, probability=0.5)
+        out = self.karplus_strong(wavetable, n_samples, stretch, probability)
 
         t = duration
         r_coef = self.params["r_factor"]
@@ -54,9 +56,9 @@ class KSDrum(SynthBaseClass):
 
         adsr.set_total_time(t, self.sample_rate)
 
-        return out * adsr.envelope()
+        return out * adsr.envelope() * 1e16
 
-    def karplus_strong(self, wavetable, n_samples, stretch_factor, probability=0.5):
+    def karplus_strong(self, wavetable, n_samples, stretch_factor, probability):
 
         samples = []
 
