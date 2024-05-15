@@ -57,7 +57,7 @@ class MainModel:
     # Add effects here !
     effects = [
         NoEffect(),
-        DelayEffect(),
+        # DelayEffect(),
         SimpleEchoEffect(),
         ReverbEffect(),
         # LowPass_ReverbEffect(),

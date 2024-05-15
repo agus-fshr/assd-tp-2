@@ -231,11 +231,11 @@ class ChorusEffect(EffectBaseClass):
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
             BoolParam("active", value=False, text="Active"),
-            NumParam("delay", interval=(10,25), value=15, step=0.1, text="Delay time [ms]"),
-            NumParam("LFO frec 1", interval=(0, 1), value=1, step=0.01, text="LFO frec 1"),
-            NumParam("LFO frec 2", interval=(0, 1), value=0.9, step=0.01, text="LFO frec 2"),
-            NumParam("LFO frec 3", interval=(0, 1), value=0.8, step=0.01, text="LFO frec 3"),
-            NumParam("LFO frec 4", interval=(0, 1), value=0.7, step=0.01, text="LFO frec 4"),
+            # NumParam("delay", interval=(10,25), value=15, step=0.1, text="Max delay time [ms]"),
+            NumParam("LFO frec 1", interval=(0, 10), value=1, step=0.01, text="LFO frec 1"),
+            NumParam("LFO frec 2", interval=(0, 10), value=0.9, step=0.01, text="LFO frec 2"),
+            NumParam("LFO frec 3", interval=(0, 10), value=0.8, step=0.01, text="LFO frec 3"),
+            NumParam("LFO frec 4", interval=(0, 10), value=0.7, step=0.01, text="LFO frec 4"),
             NumParam("Gain", interval=(0, 0.99), value=0.7, step=0.01, text="Gain"),
             NumParam("Gain 1", interval=(0, 0.99), value=0.6, step=0.01, text="Gain 1"),
             NumParam("Gain 2", interval=(0, 0.99), value=0.5, step=0.01, text="Gain 2"),
@@ -246,7 +246,7 @@ class ChorusEffect(EffectBaseClass):
     def process(self, sound):
         """ Apply a delay effect to the sound """
         active = self.params["active"]
-        time_delay = float(self.params["delay"])/1000
+        # time_delay = float(self.params["delay"])/1000
         lfo_frec1 = float(self.params["LFO frec 1"])
         lfo_frec2 = float(self.params["LFO frec 2"])
         lfo_frec3 = float(self.params["LFO frec 3"])
@@ -261,6 +261,8 @@ class ChorusEffect(EffectBaseClass):
         length = len(sound)
         nsamples = np.array(range(length))
         
+        
+        time_delay = 0.025
         rate = [lfo_frec1, lfo_frec2, lfo_frec3, lfo_frec4]
         nb_effect = len(rate)
         
