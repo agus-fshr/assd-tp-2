@@ -128,6 +128,61 @@ class ReverbEffect(EffectBaseClass):
         
         return reverb_effect
 
+class LowPass_ReverbEffect(EffectBaseClass):
+    def __init__(self):
+        super().__init__()
+        self.name = "Lowpass Reverb Effect" # Este nombre es el que se muestra en la interfaz
+
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            BoolParam("active", value=False, text="Active"),
+            NumParam("delay", interval=(0, 1.2), value=0.5, step=0.01, text="Delay time [s]"),
+            NumParam("Duration", interval=(0, 8), value=1, step=0.1, text="Durantion [repetitions]"),
+            # NumParam("atenuation", interval=(0, 0.99), value=0.5, step=0.01, text="Atenuation"),
+            NumParam("Fb", interval=(25, 1000), value=500, step=1, text="Fb"),
+        )
+    
+    
+    def process(self, sound):
+        """ Apply a delay effect to the sound """
+        delay_time = float(self.params["delay"])
+        fb = float(self.params["Fb"])
+        duratio = float(self.params["Duration"])
+        # atenuation = float(self.params["atenuation"])
+        active = self.params["active"]
+        if not active:
+            return sound
+        
+        delay_samples = int(delay_time * self.sample_rate) +1 
+        
+        #amplio el array
+        new_sound = np.append(np.zeros(delay_samples), sound)
+        new_sound = np.append(new_sound, np.zeros(int(duratio*delay_samples)))
+        n = int(np.ceil((4*self.sample_rate) / fb))
+        
+        sound_out = np.zeros(len(new_sound)+delay_samples)
+        impulse_lowpass = self.low_pass_filter(fb, n)
+        
+        for i in range(delay_samples, len(sound_out)):
+            b = np.convolve(sound_out, impulse_lowpass, mode='valid')
+            sound_out[i] = new_sound[i] + b[i - delay_samples]
+        reverb_effect = sound_out[(2*delay_samples):]
+        
+        return reverb_effect
+
+    #pasa bajos
+    def low_pass_filter(self, fb, n):
+        a1 = (np.tan(np.pi*fb/self.sample_rate)-1)/(np.tan(np.pi*fb/self.sample_rate)+1)
+        x = np.zeros(n)
+        x[0] = 1
+        y = np.zeros(len(x))
+        for i in range(1, len(x)):
+            y[i] = a1*x[i] + x[i-1] - a1*y[i-1]
+        low_pass_output = y
+
+        return low_pass_output
+    
+
 class FlangerEffect(EffectBaseClass):
     def __init__(self):
         super().__init__()
@@ -135,30 +190,99 @@ class FlangerEffect(EffectBaseClass):
 
         # Estos son los parametros que se muestran en la interfaz y se pueden editar
         self.params = ParameterList(
-            BoolParam("active", value=False, text="Active")
+            BoolParam("active", value=False, text="Active"),
+            NumParam("delay", interval=(0, 15), value=10, step=0.1, text="Delay time [ms]"),
+            NumParam("LFO frec", interval=(0, 1), value=0.5, step=0.01, text="LFO frec"),
+            NumParam("LFO base", interval=(0.001, 2), value=2, step=0.001, text="LFO base"),
+            NumParam("Gain", interval=(0, 0.99), value=0.5, step=0.01, text="Feedback gain")
         )
     
     def process(self, sound):
         """ Apply a delay effect to the sound """
         active = self.params["active"]
+        delay_time = float(self.params["delay"])/1000
+        lfo_freq = float(self.params["LFO frec"])
+        lfo_base = float(self.params["LFO base"])
+        feedback_gain = float(self.params["Gain"])
         if not active:
             return sound
         length = len(sound)
         nsamples = np.array(range(length))
         
-        lfo_freq = 1/2
-        lfo_amp = 0.008
-        lfo = 2 + signal.sawtooth(2 * np.pi * lfo_freq * nsamples / self.sample_rate,0.5)
-        index = np.around(nsamples - self.sample_rate * lfo_amp * lfo)
-        index[index<0] = 0 
-        index[index>(length-1)] = length - 1
+        
+        sample_rate = int(np.around(delay_time*self.sample_rate))
+        lfo = lfo_base + signal.sawtooth(2 * np.pi * lfo_freq * nsamples / self.sample_rate,0.5)
+        cur_sin = np.abs(lfo)
+        cur_delay = np.ceil(sample_rate*cur_sin)
+        # index = np.around(nsamples - self.sample_rate * lfo_amp * lfo)
+        # index[index<0] = 0 
+        # index[index>(length-1)] = length - 1
         
         flanger_effect = np.zeros(length)
-        for j in range(length):
-            flanger_effect[j] = sound[j] + sound[int(index[j])]
+        for j in range(sample_rate+1, length):
+            flanger_effect[j] = sound[j] + sound[j - int(cur_delay[j])]*feedback_gain
         return flanger_effect
     
+class ChorusEffect(EffectBaseClass):
+    def __init__(self):
+        super().__init__()
+        self.name = "Chorus Effect" # Este nombre es el que se muestra en la interfaz
 
+        # Estos son los parametros que se muestran en la interfaz y se pueden editar
+        self.params = ParameterList(
+            BoolParam("active", value=False, text="Active"),
+            NumParam("delay", interval=(10,25), value=15, step=0.1, text="Delay time [ms]"),
+            NumParam("LFO frec 1", interval=(0, 1), value=1, step=0.01, text="LFO frec 1"),
+            NumParam("LFO frec 2", interval=(0, 1), value=0.9, step=0.01, text="LFO frec 2"),
+            NumParam("LFO frec 3", interval=(0, 1), value=0.8, step=0.01, text="LFO frec 3"),
+            NumParam("LFO frec 4", interval=(0, 1), value=0.7, step=0.01, text="LFO frec 4"),
+            NumParam("Gain", interval=(0, 0.99), value=0.7, step=0.01, text="Gain"),
+            NumParam("Gain 1", interval=(0, 0.99), value=0.6, step=0.01, text="Gain 1"),
+            NumParam("Gain 2", interval=(0, 0.99), value=0.5, step=0.01, text="Gain 2"),
+            NumParam("Gain 3", interval=(0, 0.99), value=0.4, step=0.01, text="Gain 3"),
+            NumParam("Gain 4", interval=(0, 0.99), value=0.3, step=0.01, text="Gain 4")
+        )
+    
+    def process(self, sound):
+        """ Apply a delay effect to the sound """
+        active = self.params["active"]
+        time_delay = float(self.params["delay"])/1000
+        lfo_frec1 = float(self.params["LFO frec 1"])
+        lfo_frec2 = float(self.params["LFO frec 2"])
+        lfo_frec3 = float(self.params["LFO frec 3"])
+        lfo_frec4 = float(self.params["LFO frec 4"])
+        gain = float(self.params["Gain"])
+        gain1 = float(self.params["Gain 1"])
+        gain2 = float(self.params["Gain 2"])
+        gain3 = float(self.params["Gain 3"])
+        gain4 = float(self.params["Gain 4"])
+        if not active:
+            return sound
+        length = len(sound)
+        nsamples = np.array(range(length))
+        
+        rate = [lfo_frec1, lfo_frec2, lfo_frec3, lfo_frec4]
+        nb_effect = len(rate)
+        
+        amp = [gain1, gain2, gain3, gain4]
+        
+        
+        sin_ref = np.array([np.sin(2*np.pi*nsamples*(rate[j]/self.sample_rate)) for j in range(nb_effect)])
+        
+        max_sample_delay = int(np.around(time_delay*self.sample_rate))
+        chorus_effect = np.zeros(length)
+        for i in range(max_sample_delay):
+            chorus_effect[i] = sound[i]
+        
+        cur_sin = np.abs(sin_ref)
+        cur_delay = np.ceil(max_sample_delay*cur_sin)
+        for i in range(max_sample_delay + 1, length):
+            chorus_effect[i] = gain*sound[i] + amp[0]*sound[i-int(cur_delay[0][i])] + amp[1]*sound[i-int(cur_delay[1][i])] 
+            + amp[2]*sound[i-int(cur_delay[2][i])] + amp[3]*sound[i-int(cur_delay[3][i])]
+        
+        return chorus_effect
+
+    
 
 class ReberbRIR(EffectBaseClass):
     def __init__(self):
