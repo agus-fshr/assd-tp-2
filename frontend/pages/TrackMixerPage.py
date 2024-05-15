@@ -251,10 +251,10 @@ class TrackMixerPage(BaseClassPage):
             if not track.muted:
                 self.mix_array[:len(array)] += array * track.volume
                 
+        self.mix_array = self.mix_array * self.masterVolume.value()
+
         if self.activateGainControl.isChecked():
             self.mix_array, _ = self.dynamic_range_compression(self.mix_array, segment_size=500, threshold=0.98)
-
-        self.mix_array = self.mix_array * self.masterVolume.value()
         
         array_batches = np.array_split(self.mix_array, self.mix_array.size // self.batchSize.value())
         # iterate over
