@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 
 
 class CardWidget(QWidget):
-    def __init__(self, child, icon=QStyle.SP_DriveCDIcon, mainTitle="Card", width=None, height=None, iconSize=64):
+    def __init__(self, child=None, icon=QStyle.SP_DriveCDIcon, title="Card", subtitle="subt", width=None, height=None, iconSize=64):
         super(CardWidget, self).__init__()
         
         # Container widget
@@ -16,9 +16,6 @@ class CardWidget(QWidget):
         self.containerLayout.setSpacing(10)
         self.container.setLayout(self.containerLayout)
 
-        # Add a vertical layout for the contents (Title and Child widget)
-        self.contentLayout = QVBoxLayout()
-        self.contentLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         
         # Set up the shadow effect for the container widget
         self.shadowEffect = QGraphicsDropShadowEffect()
@@ -36,18 +33,26 @@ class CardWidget(QWidget):
         self.iconLabel.setAlignment(Qt.AlignCenter)
         
         # Main Title
-        self.titleLabel = QLabel(mainTitle)
-        self.titleLabel.setFont(QFont('Arial', 16, QFont.Bold))
-        self.titleLabel.setAlignment(Qt.AlignLeft)
+        titleLabel = QLabel(title)
+        titleLabel.setFont(QFont('Arial', 16, QFont.Bold))
+        titleLabel.setAlignment(Qt.AlignLeft)
+        subtitleLabel = QLabel(subtitle)
         
         # Child Widget
         self.child = child
+
+        # Add a vertical layout for the contents (Title and Child widget)
+        titlesLayout = QVBoxLayout()
+        titlesLayout.setAlignment(Qt.AlignTop | Qt.AlignLeft)
         
         # Add widgets to container layout
-        self.contentLayout.addWidget(self.titleLabel)
-        self.contentLayout.addWidget(self.child)
+        titlesLayout.addWidget(titleLabel)
+        titlesLayout.addWidget(subtitleLabel)
+
         self.containerLayout.addWidget(self.iconLabel)
-        self.containerLayout.addLayout(self.contentLayout)
+        self.containerLayout.addLayout(titlesLayout)
+        if self.child is not None:
+            self.containerLayout.addWidget(self.child)
         self.containerLayout.addStretch(1)
         
         # Main layout for the widget

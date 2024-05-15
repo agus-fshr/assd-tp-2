@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QTabWidget
 from PyQt5.QtGui import QIcon
 from frontend.pages.BaseClassPage import BaseClassPage
 
+
 # DO NOT TOUCH THIS CODE
 class MainWindow(QMainWindow):
     """ 
@@ -25,7 +26,6 @@ class MainWindow(QMainWindow):
     def initUI(self, pages):
         self.setWindowTitle('Sintetizador MIDI')
         self.setWindowIcon(QIcon('frontend/assets/icon.png'))
-
         # center window on screen
         screen = QApplication.primaryScreen()
         rect = screen.availableGeometry()
@@ -51,7 +51,11 @@ class MainWindow(QMainWindow):
 
         # set tab change event
         tab_widget.currentChanged.connect(self.tab_changed)
-        tab_widget.setStyleSheet("QWidget { background-color: #f5f5f5 }")
+        tab_widget.setStyleSheet(f"""
+            QWidget {{ 
+                background-color: "#f5f5f5" 
+            }}
+        """)
 
         self.setCentralWidget(tab_widget)
         self.show()

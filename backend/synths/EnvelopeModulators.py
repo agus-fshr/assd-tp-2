@@ -140,7 +140,7 @@ class WoodwindEnvelope():
         
         # Attack phase 1
         attack_mask = t < (self.attack)
-        output[attack_mask] = self.A * (t[attack_mask] / self.attack)**2 * self.k
+        output[attack_mask] = self.A * (t[attack_mask] / self.attack) * self.k
 
         # Decay phase
         decay_mask = (t >= self.attack) & (t < self.attack + self.decay)
