@@ -336,7 +336,7 @@ class DFM_SAX(SynthBaseClass):
         normaPesos = np.sqrt(W1**2 + W2**2 + W3**2)
 
         if duration < a2+d2 :
-            duration = a2+d2
+            duration = a2+d2+r2
         
         adsr = LinearADSR(1/k2, a2, d2, r2, modType="exp", n = n_var )          # Sustain time is calculated internally
         adsr.set_total_time(duration, self.sample_rate)
@@ -430,7 +430,7 @@ class DFM_OBOE(SynthBaseClass):
         normaPesos = np.sqrt(W1**2 + W2**2)
 
         if duration < a2+d2 :
-            duration = a2+d2
+            duration = a2+d2+r2
         
 
         envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
@@ -517,7 +517,7 @@ class DFM_FrenchHorn(SynthBaseClass):
         normaPesos = np.sqrt(W1**2 + W2**2)
 
         if duration < a2+d2 :
-            duration = a2+d2
+            duration = a2+d2+r2
         
 
         envelope = WoodwindEnvelope(amp, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
@@ -720,7 +720,7 @@ class DFM_PipeOrgan(SynthBaseClass):
         normaPesos = np.sqrt(W1**2 + W2**2 + W3**2)
 
         if duration < a2+d2 :
-            duration = a2+d2
+            duration = a2+d2+r2
         
 
         envelope = WoodwindEnvelope(1, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
@@ -823,7 +823,7 @@ class DFM_Trumpet(SynthBaseClass):
         normaPesos = np.sqrt(W1**2 + W2**2 + W3**2)
 
         if duration < a2+d2 :
-            duration = a2+d2
+            duration = a2+d2+r2
         
         
         envelope = WoodwindEnvelope(1, 1/k2, a2, d2, r2)          # Sustain time is calculated internally
