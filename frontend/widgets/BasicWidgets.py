@@ -9,7 +9,7 @@ class Button(QPushButton):
     def __init__(self, text="Click Me", color="black", background_color = "white", 
                         radius=10,
                         shadow_color="grey", shadow_radius=9, hover_color="lightblue", 
-                        click_color="grey", padding=6, on_click=lambda: print("Button Clicked")):
+                        click_color="grey", padding=6, on_click=None):
         super().__init__(text)
         self.radius = radius
         self.padding = padding
@@ -18,7 +18,7 @@ class Button(QPushButton):
 
         if isinstance(on_click, pyqtSignal):
             self.clicked.connect(on_click)
-        else:
+        elif callable(on_click):
             self.clicked.connect(self.on_click_callback)
             self.on_click = on_click
 

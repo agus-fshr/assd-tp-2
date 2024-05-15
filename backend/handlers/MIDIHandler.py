@@ -9,6 +9,8 @@ class MidiNoteData:
         self.duration = 0.0
         self.note = note
         self.velocity = velocity
+        self.amplitude = 0.0
+        self.delay = 0.0
 
     def set_duration(self, time_off):
         self.time_off = time_off
@@ -95,8 +97,11 @@ class MidiMusicData:
 
         #           0: time, 1: on_off, 2: velocity
         note_data = MidiNoteData(note, velocity)
+        
+        # Note ON
         if on_off:
             note_data.time_on = absTime
+            note_data.amplitude = velocity / 127
         else:
             note_data.time_off = absTime
 

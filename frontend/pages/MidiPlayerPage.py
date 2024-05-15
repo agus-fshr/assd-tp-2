@@ -28,9 +28,9 @@ class MIDIPlayerPage(BaseClassPage):
         self.volume = NumberInput("Volume", interval=(0, 1), step=0.01, default=0.2)
 
         self.midiSelector = DropDownMenu("Select MIDI File", onChoose=self.on_midi_selected)
-        self.trackSelector = DropDownMenu("Select Track", onChoose=self.on_track_selected)
+        # self.trackSelector = DropDownMenu("Select Track", onChoose=self.on_track_selected)
 
-        synthButton = Button("Synthesize", on_click=self.synthesize, background_color="lightblue", hover_color="white")
+        synthButton = Button("Synthesize", on_click=lambda: None, background_color="lightblue", hover_color="white")
         synthButton.setFixedWidth(100)
 
         saveWAVButton = Button("Save WAV", on_click=self.saveWAV)
@@ -57,7 +57,7 @@ class MIDIPlayerPage(BaseClassPage):
         topHLayout.addWidget(self.effectSelector)
         topHLayout.addStretch(1)
         topHLayout.addWidget(self.midiSelector)
-        topHLayout.addWidget(self.trackSelector)
+        # topHLayout.addWidget(self.trackSelector)
 
         # Setup controls layout
         controlsHLayout.addWidget(self.timeLimiter)
@@ -96,57 +96,6 @@ class MIDIPlayerPage(BaseClassPage):
         if filename:
             self.model.audioPlayer.save_to_file(filename)
 
-
-    # Synthesize a sound using the selected instrument and effect
-    def synthesize(self):
-
-        self.song_length = 0
-        for note in self.noteArr:
-            self.song_length += int(note["Delay"]*1.01 * self.model.audioPlayer.framerate)
-        
-        self.song_length += int(self.noteArr[-1]["Duration"] * self.model.audioPlayer.framerate)
-
-        print(f"Song Length (Samples): {self.song_length}")
-        
-        self.song_array = np.zeros(self.song_length + self.model.audioPlayer.framerate * 1)
-
-        self.model.synthWorker.cancel()
-        self.model.synthWorker.wait()
-
-        n0 = 0
-        for i, note in enumerate(self.noteArr):
-            delay = note["Delay"]
-
-            instrument = self.synthSelector.selected
-            effect = self.effectSelector.selected
-
-            n0 += int(delay * self.model.audioPlayer.framerate)
-            self.model.synthWorker.add_task((n0, note, instrument, effect))
-
-        self.model.synthWorker.disconnectAll()
-        self.model.synthWorker.taskComplete.connect(self.on_note_synthesized)
-        self.model.synthWorker.finished.connect(self.on_song_synthesized)
-        self.model.synthWorker.onError.connect( lambda e: print(f"Synth Worker Error: {e}"))
-
-        self.model.synthWorker.start()
-
-
-    def on_note_synthesized(self, n0_wave):
-        n0, wave_array = n0_wave
-        try:
-            if n0 + wave_array.size >= self.song_array.size:
-                print("ERROR: Song too short or note too long. Adding more zeros to song_array")
-                zeros_needed = n0 + wave_array.size - self.song_array.size + 1  # +1 to avoid off-by-one error
-                self.song_array = np.append(self.song_array, np.zeros(zeros_needed))
-                return
-
-            self.song_array[n0 : n0 + wave_array.size] += wave_array
-            print(self.model.synthWorker.progressBarString())
-        except Exception as e:
-            print(e)
-            self.model.synthWorker.cancel()
-            self.model.synthWorker.wait()
-            return
 
 
     def on_song_synthesized(self):
@@ -194,31 +143,6 @@ class MIDIPlayerPage(BaseClassPage):
         self.midiSelector.set_options(options)
 
 
-    def on_track_selected(self, name, channelData):
-        self.noteArr = []
-
-        notes = channelData["notes"]
-
-        lastTime = 0.0
-
-        for n in notes:
-            d = n.time_on - lastTime
-            lastTime = n.time_on
-
-            if n.time_off is not None and n.time_off > self.timeLimiter.value():
-                print("Reached time limit!")
-                break
-
-            note = {}
-            note["Note"] = n.note
-            note["Amplitude"] = (n.velocity / 127) * self.volume.value()
-            note["Duration"] = n.duration
-            note["Delay"] = d
-
-            self.noteArr.append(note)
-            print(f"Note added! n={n.note}, t0 ={n.time_on:.02f}, t1={n.time_off:.02f}, d = {d:.02f}")
-
-
 
     # Callback for when a MIDI file is selected from the dropdown
     def on_midi_selected(self, name, path):
@@ -226,8 +150,8 @@ class MIDIPlayerPage(BaseClassPage):
 
         options = {}
 
-        self.trackSelector.selected = None
-        self.trackSelector.selected_title = None
+        # self.trackSelector.selected = None
+        # self.trackSelector.selected_title = None
 
         for chKey in midi_data.channels():
             channelData = midi_data.getChannelData(chKey)
@@ -236,7 +160,7 @@ class MIDIPlayerPage(BaseClassPage):
             
             options[title] = channelData
 
-        self.trackSelector.set_options(options)
+        # self.trackSelector.set_options(options)
 
 
     def on_tab_focus(self):
