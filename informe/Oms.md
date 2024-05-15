@@ -7,7 +7,7 @@ En esta sección se va a explicar cada efecto implementado
 La implentación del eco fue la siguiente
 
 <p align="center">
-  <img src="Eco_simple.png" alt="Eco simple" width="500">
+  <img src="img/Eco_simple.png" alt="Eco simple diagrama en bloques" width="500">
 </p>
 
 En donde la función transferencia es $$H(z) = \frac{z^{-\tau}}{1-gz^{-\tau}}$$ al expresar esto como una ecuación en diferencias obtenemos 
@@ -15,7 +15,7 @@ $$y(n) = x(n-\tau) + y(n-\tau)g$$
 en donde $\tau$ es el tiempo de dealy, este es del tamaño de la señal, y $g$ es la ganancia del lazo de realimentación, este valor debe ser $0<g<1$ para que el lazo sea estable. La impletentación en el codigo permite seleccionar la cantidad de repeticiones del eco, expresado en veces. De forma tal que la respuesta al escalón esta dada 
 
 <p align="center">
-  <img src="respuesta al escalon.png" alt="Eco simple" width="400">
+  <img src="img/respuesta al escalon.png" alt="Respuesta al escalón eco simple" width="400">
 </p>
 
 donde la respuesta al escalon esta dada de la siguiente forma
@@ -40,7 +40,7 @@ donde $h(n)$ es una RIR.
 La implentación esta basada en el siguiente esquema
 
 <p align="center">
-  <img src="flanger.png" alt="Eco simple" width="400">
+  <img src="img/flanger.png" alt="Flanger diagrama en bloques" width="400">
 </p>
 
 Esta es su ecuación en diferencias
@@ -54,7 +54,7 @@ donde $M(n)$ es una senal discreta y periodica, modelada con un **LFO**, (Low Fr
 La implementación es similar a la del Flanger, teniendo un diagrama en bloques parecido.
 
 <p align="center">
-  <img src="Blank diagram.png" alt="FFT en Python vs. C para N=128" width="500">
+  <img src="img/Blank diagram.png" alt="Chorus diagrama en bloques" width="500">
 </p>
 
 Es la implementación en paralelo de 4 chorus, donde el delay de cada uno va entre 10 $ms$ y 25 $ms$. La razón por la que se implementan 4 en paralelo es para mejorar el efecto. Su función transferencia es de la siguiente manera
