@@ -30,8 +30,9 @@ class SynthesizedTracks(BaseClassPage):
         self.track_selected = QLabel("No track selected")
         self.track_selected.setFont(QFont("Arial", 14, QFont.Bold))
         self.track_selected.setAlignment(Qt.AlignCenter)
-        self.hint = QLabel("Select Synthesized Track:")
-        self.trackSelector = DropDownMenu("Select track", onChoose=self.on_track_selected, showSelected=False)
+        self.hint = QLabel("Select a Track:")
+        self.trackSelector = DropDownMenu("From Synthesized tracks", onChoose=self.on_track_selected, showSelected=False)
+        self.wavSelector = DropDownMenu("From WAV files", onChoose=self.on_wav_selected, showSelected=False)
 
         self.batchSize = NumberInput("Plot resolution", interval=(1, 4410), step=1, default=1000, on_change=self.display_track)
 
@@ -60,6 +61,7 @@ class SynthesizedTracks(BaseClassPage):
         # Setup top layout
         trackHlayout.addWidget(self.hint)
         trackHlayout.addWidget(self.trackSelector)
+        trackHlayout.addWidget(self.wavSelector)
         trackHlayout.addSpacing(20)
         trackHlayout.addStretch(1)
         trackHlayout.addWidget(self.batchSize)
@@ -88,7 +90,7 @@ class SynthesizedTracks(BaseClassPage):
 
     def saveWAV(self):
         self.model.audioPlayer.stop()
-        self.model.audioPlayer.set_array(self.mix_array, self.framerate)
+        self.model.audioPlayer.set_array(self.current_array, self.framerate)
 
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -249,6 +251,22 @@ class SynthesizedTracks(BaseClassPage):
         return output_wave, volume_adjustment_factors
     
 
+    # Callback to set the selected sound to play
+    def on_wav_selected(self, name, path):
+        self.model.audioPlayer.set_from_file(path)
+
+        _, array = self.model.audioPlayer.get_numpy_data()
+        self.original_array = array
+        self.display_track()
+        filename = path.split("/")[-1]
+        self.model.synthesized_tracks[filename] = {
+            "track_array": array,
+            "framerate": self.model.audioPlayer.framerate,
+            "instrument": "WAV",
+            "effect": "None",
+        }
+        self.refresh_wav_options()
+
 
     def load_effect_options(self):
         options = {}
@@ -257,8 +275,18 @@ class SynthesizedTracks(BaseClassPage):
         self.addEffectSelector.set_options(options)
 
 
+    def refresh_wav_options(self):
+        options = {}
+        for fmeta in self.model.file_handler.available_files("wav"):
+            options[fmeta.name] = fmeta.path
+        
+        self.wavSelector.set_options(options)
 
     # Refresh dropdown options looking for new MIDI files
     def on_tab_focus(self):
+        self.refresh_wav_options()
         self.refresh_track_options()
         self.load_effect_options()
+
+
+    # Refresh dropdown options looking for newly imported .WAV files
