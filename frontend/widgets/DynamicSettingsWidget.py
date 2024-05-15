@@ -5,12 +5,13 @@ from PyQt5.QtGui import QFont
 from .BasicWidgets import SwitchButton, NumberInput, DropDownMenu, TextInput
 
 class DynamicSettingsWidget(QWidget):
-    def __init__(self, paramList=None, title="Dynamic Settings", on_edit=lambda: None):
+    def __init__(self, paramList=None, title="Dynamic Settings", on_edit=lambda: None, sliderRelease=True):
         super().__init__()
         self.paramList = paramList
         self.on_edit = on_edit
         self.title = title
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.sliderRelease = sliderRelease
         self.initUI()
 
     def initUI(self):
@@ -77,7 +78,7 @@ class DynamicSettingsWidget(QWidget):
 
             elif param.type == "Number":
                 settingWidget = NumberInput(param.text, interval=param.interval, step=param.step, default=param.value, 
-                                     on_change= lambda v, k=key: self.on_param_set(k, v))
+                                     on_change= lambda v, k=key: self.on_param_set(k, v), sliderRelease=self.sliderRelease)
             
             elif param.type == "Choice":
                 opt_dict = {}

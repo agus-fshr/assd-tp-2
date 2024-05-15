@@ -211,7 +211,7 @@ class Slider(QWidget):
 
 # Number Input class
 class NumberInput(QWidget):
-    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=100, callOnEnter=True):
+    def __init__(self, label="Number", interval=(0, 100), step=1, default=0, on_change=lambda value: None, minWidth=100, callOnEnter=True, sliderRelease=True):
         super().__init__()
         layout = QVBoxLayout()
         hlayout = QHBoxLayout()
@@ -264,7 +264,10 @@ class NumberInput(QWidget):
         else:
             self.textbox.textEdited.connect(self.on_text_change)
 
-        self.slider.sliderReleased.connect(self.on_slider_change)
+        if sliderRelease:
+            self.slider.sliderReleased.connect(self.on_slider_change)
+        else:
+            self.slider.valueChanged.connect(self.on_slider_change)
 
         self.on_change = on_change
 

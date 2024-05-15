@@ -74,7 +74,7 @@ class FindPeaksAddon(AddonBaseClass):
             NumParam("minDistance", value=50, interval=(0.01, 1000), step=0.01, text="Minimum Peak Distance"),
             NumParam("threshold", value=0, interval=(0, 1), step=0.00001, text="Threshold (vertical distance to its neighboring samples)"),
         )
-        settingsWidget = DynamicSettingsWidget(paramList=self.settings, on_edit=self.find_peaks)
+        settingsWidget = DynamicSettingsWidget(paramList=self.settings, on_edit=self.find_peaks, sliderRelease=False)
         settingsWidget.setMinimumHeight(350)
         self.textEdit = QTextEdit()
         self.textEdit.setReadOnly(True)
