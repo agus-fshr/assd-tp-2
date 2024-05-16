@@ -334,6 +334,23 @@ $$y(n) = x(n)g + x(n-M_1(n))g_1 + x(n-M_2(n))g_2 + x(n-M_3(n))g_3 + x(n-M_4(n))g
 
 Donde $M_n$ es el delay de cada etapa y $g_n$ su respectiva ganancia y $g$ la ganancia del sonido original.
 
+# Control de Amplitud
+Al sumar notas, se puede dar el caso de que la amplitud del sea mayor al valor máximo, $\pm 1$, por lo que se debe escalar en dicho caso. El problema es que si se escala el audio en su totalidad, las partes en las que la amplitud era baja pueden ser atenuadas hasta el punto que no sea audible, lo que no es deseable. Lo que se plantea entonces, es utilizar un algoritmo el cual pueda detectar los puntos que estén fuera del valor límite y aplicarles un escalamiento.
+
+## Algoritmo
+
+Se encontró en una patente un algoritmo en el cual se tiene un arreglo de valores, los cuales deben estar limitados entre $C$ y $-C$, y mediante un factor de escala particular para cada posición del arreglo, se se dejan los valores excedentes a $C$ con una amplitud menor o igual a $C$. 
+
+El método consiste en analizar por separado el arreglo, en fragmentos de tamaño N. Se usa además otro arreglo auxiliar que son los M valores que le siguen al fragmento. Se encuentran los valores de los picos de amplitud ($X_1$, $X_2$) y sus índices ($n_1$ , $n_2$), así como las posiciones donde se comienza a sobrepasarse el nivel $C$ ($n_{L1}$  , $n_{L2}$) y donde termina la región en la que se sobrepasa $C$ ($n_{R1}$ , $n_{R2}$). Se tienen entonces distintas secciones del fragmento, tal como se ve en la imagen siguiente
+
+<p align="center">
+  <img src="informe/img/secciones.png" alt="Secciones Fragmento" width="500">
+</p>
+
+Para cada una de las secciones se calcula un factor de escala que será función de la posición en el arreglo, y será una recta. Ésta recta dependerá de: qué tanto se pase el valor máximo de $C$, el índice donde comienza a sobrepasarse $C$, entre otros factores, como por ejemplo el factor de escala inicial (el del elemento final de la anterior iteración). Con estas rectas calculadas, se escala el fragmento de tamaño N, y el de M no ya que es solo una referencia para lo que pasará a futuro, y que se pueda ir modificando el factor de escala según se necesite. Una vez terminado con el fragmento de N muestras, se tomarán los elementos a partir del primer elemento del framento de tamaño M y se repetirá el procedimiento. El factor de escala cambia suavemente debido a que un cambio brusco distorsionaría el audio.
+
+Por otra parte, si no se pasa nunca el valor de $C$, el factor de escala será siempre $1$. Si se escaló en algún punto de la señal ciertas posiciones del arreglo y luego no se encuentran más posiciones con amplitud mayor a $C$, el  factor de escala subirá lentamente hasta $1$. Los detalles matemáticos de cómo se calcula cada recta y los distintos casos son explicados excelentemente en la [patente]((https://www.freepatentsonline.com/8208659.pdf)), y el programa fue basado en los procedimientos detallados.
+
 
 # Bibliografía
 - [The Synthesis of Complex Audio Spectra by Means of Frequency Modulation](https://web.eecs.umich.edu/~fessler/course/100/misc/chowning-73-tso.pdf)
@@ -348,4 +365,4 @@ Donde $M_n$ es el delay de cada etapa y $g_n$ su respectiva ganancia y $g$ la ga
 - [Basoon First Notes](https://ettonehome.weebly.com/bassoon-first-notes.html)
 - [Synthesis of Wind-Instrument Tones](https://physics.byu.edu/docs/publication/2477)
 - [Musical aero-acoustics of the clarinet](https://www.researchgate.net/publication/45624695_Musical_aero-acoustics_of_the_clarinet)
-
+- [Method and apparatus for scaling signals to prevent amplitude clipping](https://www.freepatentsonline.com/8208659.pdf)
