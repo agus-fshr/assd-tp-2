@@ -5,6 +5,32 @@ Grupo #5 | Integrantes:
 - Fisher, Agustín
 - Oms, Mariano Alejandro
 
+## Lista de contenidos
+- [FFT](#fft)
+  - [Implementación en C](#implementacion-en-c)
+  - [Comparacion con numpy.fft.fft()](#comparacion-con-numpyfftfft)
+- [Sintesis por Modelado Fisico con Karplus-Strong](#sintesis-por-modelado-fisico-con-karplus-strong-1)
+- [Modulación FM](#modulación-fm)
+  - [Reflexiones](#reflexiones)
+  - [Espectro Armónico](#espectro-armónico)
+  - [Envolventes](#envolventes)
+  - [Implementación FM](#implementación-fm)
+  - [Modulación DFM](#modulación-dfm)
+  - [Implementación DFM](#implementación-dfm)
+- [Síntetis por Muestras](#síntetis-por-muestras)
+  - [Time Stretch](#time-stretch)
+  - [Pitch Shift](#pitch-shift)
+- [Efectos de Audio](#efectos-de-audio)
+  - [Eco Simple](#eco-simple)
+  - [Reverberador plano](#reverberador-plano)
+  - [Reververador por convolución](#reververador-por-convolución)
+  - [Flanger](#flanger)
+  - [Chorus](#chorus)
+- [Control de Amplitud](#control-de-amplitud)
+  - [Algoritmo](#algoritmo)
+- [Bibliografía](#bibliografía)
+
+
 # FFT
 ### Implementacion en C
 Para la implementacion en C del algoritmo de la FFT se eligio usar el algoritmo de Cooley-Tukey con Decimation-in-Time (DIT). La implementacion en sencilla.
@@ -194,7 +220,7 @@ la forma normalizada de la función $A(t)$. Y la forma normalizada del índice d
 
 Si se necesita que el índice de modulación comience en un valor mayor al que termina, la última función será restada al índice de modulación inicial.
 
-## Implementación
+## Implementación FM
 
 Ahora que se tienen las formas de las funciones, es hora de darle vida a los instrumentos. Según el paper 1 de la bibliografía, para generar el sonido de un clarinete, los parámetros son:
 
@@ -220,7 +246,7 @@ Para por ejemplo producir un sonido parecido al de un fagot (basoon), los parám
 - $I_2 = 1.5$
 
 
-# Modulación DFM
+## Modulación DFM
 
 Por otro lado, se investigó otra forma de modular en frecuencia, que usa en vez de una frecuencia de portadora fija y un seno modificando la frecuencia instantánea, se tienen dos senoidales con un índice de modulación fijo, es decir
 
@@ -245,7 +271,7 @@ Otros ejemplos de parámetros son:
 ![alt text](informe/img/Trumpet.png)
 
 
-# Implementación
+## Implementación DFM
 En Python, se realizaron dichos algoritmos mediante el uso de funciones de numpy como el sin() y las envolventes se fabricaron mediante combinaciones de funciones del estilo.
 
 Por otro lado, todos los parámetros de los instrumentos son modificables durante la ejecución del programa, sin la necesidad de volver a compilar, aunque tienen un valor por defecto al iniciar el programa, que se considera el valor óptimo, para que luego el usuario modifique a gusto dichas variables. Se pueden modificar cosas como el tiempo de ataque de la envolvente o de la I(t), los parámetros $N_1$, $N_2$, etc.
@@ -377,6 +403,10 @@ El método consiste en analizar por separado el arreglo, en fragmentos de tamañ
 </p>
 
 Para cada una de las secciones se calcula un factor de escala que será función de la posición en el arreglo, y será una recta. Ésta recta dependerá de: qué tanto se pase el valor máximo de $C$, el índice donde comienza a sobrepasarse $C$, entre otros factores, como por ejemplo el factor de escala inicial (el del elemento final de la anterior iteración). Con estas rectas calculadas, se escala el fragmento de tamaño N, y el de M no ya que es solo una referencia para lo que pasará a futuro, y que se pueda ir modificando el factor de escala según se necesite. Una vez terminado con el fragmento de N muestras, se tomarán los elementos a partir del primer elemento del framento de tamaño M y se repetirá el procedimiento. El factor de escala cambia suavemente debido a que un cambio brusco distorsionaría el audio.
+
+<p align="center">
+  <img src="informe/img/Niveles_Volumen_Control_Amplitud.png" alt="Niveles de Volumen" width="800">
+</p>
 
 Por otra parte, si no se pasa nunca el valor de $C$, el factor de escala será siempre $1$. Si se escaló en algún punto de la señal ciertas posiciones del arreglo y luego no se encuentran más posiciones con amplitud mayor a $C$, el  factor de escala subirá lentamente hasta $1$. Los detalles matemáticos de cómo se calcula cada recta y los distintos casos son explicados excelentemente en la [patente]((https://www.freepatentsonline.com/8208659.pdf)), y el programa fue basado en los procedimientos detallados.
 
