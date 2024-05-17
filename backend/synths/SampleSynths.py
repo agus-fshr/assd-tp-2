@@ -1,65 +1,104 @@
 from backend.utils.ParamObject import NumParam, ChoiceParam, BoolParam, ParameterList
-from .SynthBaseClass import SynthBaseClass
+from .SynthBaseClass import SynthBaseClass, noteNameToMidi
 from scipy import signal
 import numpy as np
-from .SampleSynthUtils import shift_pitch, extend, smooth
-from scipy.io import wavfile
+import wave
+import os
+from librosa import effects
+from pyrubberband.pyrb import time_stretch
 
-# Add the sample files here lmao
-# violin_sample_rate, violin_data = wavfile.read('')
-# flute_sample_rate, flute_data = wavfile.read('')
-# trumpet_sample_rate, trumpet_data = wavfile.read('')
-# piano_sample_rate, piano_data = wavfile.read('')
+piano_samples_path = "backend/synths/samples/piano"
+saxo_tenor_samples_path = "backend/synths/samples/saxo_tenor"
+saxo_soprano_samples_path = "backend/synths/samples/saxo_soprano"
 
-
-class SampleSynth(SynthBaseClass):
-    def __init__(self):
+class SampleSynthBaseClass(SynthBaseClass):
+    def __init__(self, instrument, path):
         super().__init__()
-        self.name = "Sample Synthesizer"
+        self.instrument = instrument
+        self.name = instrument + " Samples"
+        self.params = ParameterList()
+        
+        print("Loading available samples...")
+        self.samples = self.load_samples(path)
 
-        self.params = ParameterList(
-            ChoiceParam(name="Instrument", options=["Piano", "Violin", "Trumpet", "Flute"], text="Piano"),
-        )
+        self.sample_rate = 44100
 
-        self.instrument = self.params["Instrument"]
+        # compute intermediate notes using pitch shifting
+        print(f"Computing intermediate notes for {instrument}...")
 
-        match self.instrument:
-            case 'violin':
-                self.sample_rate = violin_sample_rate
-                self.data = violin_data
-                self.fundamental_frequency = 261
+        min_note = min(self.samples.keys())
+        max_note = max(self.samples.keys())
+        for note in range(min_note - 2, max_note + 2):
+            if note not in self.samples:
+                self.compute_note(note)
 
-            case 'flute':
-                self.sample_rate = flute_sample_rate
-                self.data = flute_data
-                self.fundamental_frequency = 392
+    def compute_note(self, note):
+        if note in self.samples:
+            return self.samples[note]
+        else:
+            closest_note = min(self.samples.keys(), key=lambda n: abs(note - n))
+            shift = note - closest_note
+            sample = self.samples[closest_note]
+            sample = effects.pitch_shift(sample, sr=self.sample_rate, n_steps=shift)
+            self.samples[note] = sample
+            print(f"Computed note {note} for {self.instrument}")
+            return sample
 
-            case 'piano':
-                self.sample_rate = piano_sample_rate
-                self.data = piano_data
-                self.fundamental_frequency = 261
+    def load_samples(self, path):
+        print(f"Loading samples from {path}")
+        samples = {}
+        for file in os.listdir(path):
+            if file.endswith(".wav"):
+                name = file.split(".")[0]
+                if name.isdigit():
+                    note = int(name)
+                else:
+                    note = noteNameToMidi[name]
+                wave_read = wave.open(f"{path}/{file}", "rb")
+                array = np.frombuffer(wave_read.readframes(wave_read.getnframes()), dtype=np.int16)
+                sample_rate = wave_read.getframerate()
 
-            case 'trumpet':
-                self.sample_rate = trumpet_sample_rate
-                self.data = trumpet_data
-                self.fundamental_frequency = 261
+                # Resample to 44100 Hz
+                if sample_rate != self.sample_rate:
+                    array = signal.resample(array, int(len(array) * self.sample_rate / sample_rate))
+
+                array = array.astype(np.float32) / 32768.0
+                samples[note] = np.array(array)
+        return samples
+
 
     def generate(self, note, amp, duration):
+        if note in self.samples:
+            sample = self.samples[note]
+        else:
+            sample = self.compute_note(note)
+
+        sample_duration = len(sample) / self.sample_rate
+        if np.abs(sample_duration - duration) < 0.05:
+            pass
+        elif duration < 0.002:
+            sample = np.zeros(int(duration * self.sample_rate))
+        else:
+            sample = effects.time_stretch(sample, rate = sample_duration / duration)
+
+        max_value = np.max(np.abs(sample))
         
-        f_ratio = note / self.fundamental_frequency
-        new_signal = shift_pitch(self.data, self.sample_rate, f_ratio)
-        time = np.arange(0, len(new_signal) / self.sample_rate, 1 / self.sample_rate)
-        out = extend(new_signal, time, duration, self.sample_rate, self.instrument)
+        sample = sample * amp / max_value
 
-        return out * 0.1
+        return sample
 
 
+class PianoSampleSynth(SampleSynthBaseClass):
+    def __init__(self):
+        super().__init__("Piano", piano_samples_path)
 
+class SaxoTenorSampleSynth(SampleSynthBaseClass):
+    def __init__(self):
+        super().__init__("Saxo Tenor", saxo_tenor_samples_path)
 
-
-
-
-
+class SaxoSopranoSampleSynth(SampleSynthBaseClass):
+    def __init__(self):
+        super().__init__("Saxo Soprano", saxo_soprano_samples_path)
 
 
 # class YourSynth(SynthBaseClass):

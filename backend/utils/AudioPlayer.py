@@ -277,6 +277,17 @@ class AudioPlayer(QObject):
         self.set_wave_object(wave.open(io_data, 'rb'))
 
 
+    def get_numpy_data_from_file(self, file_path):
+        try:
+            with wave.open(file_path, 'rb') as wo:
+                wo.rewind()
+                arr = np.frombuffer(wo.readframes(wo.getnframes()), dtype=np.int16)
+                time = np.linspace(0, len(arr) / wo.getframerate(), len(arr))
+                return time, np.clip(arr / 32767.0, -1.0, 1.0)
+        except Exception as e:
+            self.errorOccurred.emit(str(e))
+            return None, None
+
     def set_from_file(self, file_path):
         try:
             self.set_wave_object(wave.open(file_path, 'rb'))
