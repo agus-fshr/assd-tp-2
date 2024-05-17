@@ -274,26 +274,26 @@ Para realizar la síntesis por muestras, primero se obtuvieron algunas muestras 
 
 La idea es que el programa precompute las notas intermedias restantes utilizando las muestras más cercanas para no distorsionar tanto el sonido.
 
-Las dos funciones principales son `pitch_shift` y `time_stretch` de la librería `librosa`, utilizada para música y análisis de audio. Veremos la lógica interna de estas funciones a continuación:
+Las dos funciones principales son `pitch_shift` y `time_stretch` de la librería [`librosa`, utilizada para música y análisis de audio](https://librosa.org/). Veremos la lógica interna de estas funciones a continuación:
 
 ## Time Stretch
 
 La función `time_stretch` en `librosa` cambia la velocidad de una señal de audio sin afectar su tono. Hace esto usando una técnica llamada vocoder de fase. Aquí está una explicación paso a paso de cómo funciona:
 
-1. **Short Time Fourier Transform (STFT)**: La función primero calcula la transformada de Fourier a corto plazo (STFT) del audio de entrada. La STFT es una forma de analizar el contenido de frecuencia de una señal a lo largo del tiempo. Hace esto dividiendo la señal en segmentos temporales y calculando la transformada de Fourier de cada segmento. El resultado es una matriz 2D donde una dimensión representa el tiempo (cada segmento) y la otra dimensión representa la frecuencia. De hecho un espectrogramas consiste en hacer una STFT.
+1. **Short Time Fourier Transform (STFT)**: La función primero calcula la transformada de Fourier a corto plazo (STFT) del audio de entrada. La STFT es una forma de analizar el contenido de frecuencia de una señal a lo largo del tiempo. Hace esto dividiendo la señal en segmentos temporales y calculando la transformada de Fourier de cada segmento. El resultado es una matriz 2D donde una dimensión representa el tiempo (cada segmento) y la otra dimensión representa la frecuencia para cada segmento temporal. De hecho un espectrograma consiste en hacer una STFT.
 
-2. **Phase Vocoder**: Luego, la función aplica un vocoder de fase al output de la STFT. El vocoder de fase es una técnica para cambiar la velocidad de una señal sin afectar su tono. Hace esto modificando las fases del STFT de una manera que preserva las relaciones de fase relativas entre diferentes frecuencias.
+2. **Phase Vocoder**: Luego, la función aplica un vocoder de fase al output de la STFT. El vocoder de fase es una técnica para cambiar la velocidad de una señal sin afectar su tono. Hace esto modificando las fases del STFT interpolando información presente en los dominios de frecuencia y tiempo de las señales de audio mediante el uso de la información de la STFT, de manera que preserva las relaciones de fase relativas entre diferentes frecuencias.
 
 3. **STFT inversa**: Luego, la función calcula la STFT inversa del STFT vocoder de fase. La STFT inversa es una forma de convertir de nuevo del dominio de la frecuencia al dominio del tiempo. El resultado es el audio estirado en el tiempo.
 
+## Pitch Shift
+
+1. La función `pitch_shift` en `librosa` realiza un cambio de tono cambiando la velocidad del audio y luego remuestreándolo a la tasa de muestreo original:
+
+1. **Estiramiento de tiempo**: La función primero realiza un estiramiento de tiempo en el audio de entrada usando la función `time_stretch` explicada anteriormente.
 
 
-1. La función `pitch_shift` en `librosa` realiza un cambio de tono cambiando la velocidad del audio y luego remuestreándolo a la tasa de muestreo original. Aquí está una explicación paso a paso de cómo funciona:
-
-1. **Estiramiento de tiempo**: La función primero realiza un estiramiento de tiempo en el audio de entrada `y` usando la función `time_stretch`.
-
-
-2. **Remuestreo**: El audio estirado en el tiempo se remuestrea entonces desde la tasa de muestreo original. El remuestreo es el proceso de cambiar la tasa de muestreo de una señal de audio. En este caso, la tasa de muestreo se incrementa si el audio se aceleró y se disminuye si el audio se ralentizó. Esto devuelve la velocidad del audio a su valor original, pero el tono permanece cambiado.
+2. **Remuestreo**: El audio estirado en el tiempo se remuestrea con la tasa de muestreo original y se hace una interpolación. El remuestreo es el proceso de cambiar la tasa de muestreo de una señal de audio. En este caso, la tasa de muestreo se incrementa si el audio se aceleró y se disminuye si el audio se ralentizó. Esto devuelve la velocidad del audio a su valor original, pero el tono permanece cambiado.
 
 Entonces, en resumen, la función `pitch_shift` cambia el tono del audio acelerándolo o ralentizándolo y luego remuestreándolo a la velocidad original.
   
