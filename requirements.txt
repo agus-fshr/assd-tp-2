@@ -7,3 +7,5 @@ pyqtgraph==0.13.6
 scipy==1.13.0
 sympy==1.12
 matplotlib==3.8.4
+resampy==0.4.3
+librosa==0.10.2

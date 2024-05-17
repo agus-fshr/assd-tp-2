@@ -5,7 +5,6 @@ import numpy as np
 import wave
 import os
 from librosa import effects
-from pyrubberband.pyrb import time_stretch
 
 piano_samples_path = "backend/synths/samples/piano"
 saxo_tenor_samples_path = "backend/synths/samples/saxo_tenor"
@@ -39,7 +38,7 @@ class SampleSynthBaseClass(SynthBaseClass):
             closest_note = min(self.samples.keys(), key=lambda n: abs(note - n))
             shift = note - closest_note
             sample = self.samples[closest_note]
-            sample = effects.pitch_shift(sample, sr=self.sample_rate, n_steps=shift)
+            sample = effects.pitch_shift(sample, sr=self.sample_rate, n_steps=shift, res_type="kaiser_best")
             self.samples[note] = sample
             print(f"Computed note {note} for {self.instrument}")
             return sample
