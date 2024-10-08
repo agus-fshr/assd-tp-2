@@ -1,9 +1,15 @@
-# ASSD TP #2
+# Sintetizador de Instrumentos y Track Mixer MIDI
 Grupo #5 | Integrantes:
 - Casas, Agustín
 - Dalzotto, Rafael
 - Fisher, Agustín
 - Oms, Mariano Alejandro
+
+<p align="center">
+  <img src="peak_finder_screenshot.png" width=800 >
+  <img src="spectrogram_screenshot.png" width=800 >
+  <img src="track_mixer_screenshot.png" width=800 >
+</p>
 
 ## Lista de contenidos
 - [FFT](#fft)
